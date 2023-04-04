@@ -30,7 +30,7 @@ pip install -r requirements.txt
 ### Running the code
 ```bash
 source activate <your-env>
-python3 -m tobefilled -c configuration.json
+python3 -m mcda_sensitivity_analysis -c configuration.json
 ```
 where an example of `configuration.json` can be found in `test/resources/tobefilled.json`.
 

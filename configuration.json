@@ -1,5 +1,5 @@
 {
-  "input_matrix_path": "/path/to/input_matrix.csv",
+  "input_matrix_path": "tests/resources/input_matrix_without_uncert.csv",
   "marginal_distribution_for_each_indicator": ["norm", "lnorm", "beta"],
   "polarity_for_each_indicator": ["pol1","pol2","pol3"],
   "monte_carlo_runs": 100,
