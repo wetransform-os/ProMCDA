@@ -3,9 +3,9 @@ A tool to estimate ranks of alternatives and their uncertainties based on the Mu
 
 ### Input information needed
 The following input information are contained in the `configuration.json` file:
-- input matrix (e.g. `path/input_matrix.csv`), a table where rows represent the alternatives and the columns represent the indicators
-  - input matrix without uncertainties for the indicators (see an example here: `tests/resources/tobefilled`)
-  - input matrix with uncertainties for the indicators (see an example here: `tests/resources/tobefilled`)
+- input matrix, a table where rows represent the alternatives and the columns represent the indicators
+  - input matrix without uncertainties for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`)
+  - input matrix with uncertainties for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`)
 - list with names of marginal distributions for each indicator (see an example here: `tests/resources/tobefilled`); the available distributions are 
   - exact, "exact",
   - uniform distribution, "uniform"
@@ -32,7 +32,7 @@ pip install -r requirements.txt
 source activate <your-env>
 python3 -m mcda_sensitivity_analysis -c configuration.json
 ```
-where an example of `configuration.json` can be found in `test/resources/tobefilled.json`.
+where an example of `configuration.json` can be found in `mcda/configuration.json`.
 
 ### What does the code do: overview
 If N=1 and the input matrix has no uncertainties associated to the indicators, then:

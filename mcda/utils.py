@@ -11,8 +11,6 @@ def read_input_matrix(input_matrix_path: str) -> pd.DataFrame():
     except Exception as e:
         print(e)
 
-
-
 #def save_result() ->:
 
 
