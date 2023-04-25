@@ -1,5 +1,10 @@
 # MCDTool
 A tool to estimate ranks of alternatives and their uncertainties based on the Multi Criteria Decision Analysis approach.
+The variability of the MCDA scores are caused by:
+- the uncertainty associated with the indicators
+- the sensitivity of the algorithm to the different pairs of norm/agg functions.
+
+The tool can be used also as a simple MCDA ranking tool with no variability (see also below).
 
 ### Input information needed
 The following input information are contained in the `configuration.json` file:
@@ -15,10 +20,16 @@ The following input information are contained in the `configuration.json` file:
   - negative Binomial distribution, "ng"
   - beta distribution, "beta"
 - list of polarities for each indicator, "+" or "-"
-- number of Monte Carlo runs, "N" (default is 1)
+- number of Monte Carlo runs, "N" (default is 0, no variability is considered; N should be a sufficient big number, e.g. larger or equal than 1000)
 - the number of cores used for the parallelization, "numCores"
 - list of weights for each indicator - if no list is given, then the weights are sampled between 0 and 1 with at each Monte Carlo run
 - output file (e.g. `path/output_file.csv`).
+
+In case the variability of results is of no interest, then:
+- the input matrix should be the one without uncertainties associated to the indicators
+- the marginal distribution associated to the indicators should all be of the kind "exact"
+- cores=1
+- N=1
 
 ### Requirements
 ```bash
@@ -27,12 +38,17 @@ source activate <choose-a-name-like-mcda>
 pip install -r requirements.txt
 ```
 
-### Running the code
+### Running the code (from root dir)
 ```bash
 source activate <your-env>
-python3 -m mcda_sensitivity_analysis -c configuration.json
+python3 -m mcda.mcda_run -c configuration_w_uncertainty.json
 ```
-where an example of `configuration.json` can be found in `mcda/configuration.json`.
+where an example of configuration file can be found in `mcda/configuration_w_uncertainty.json` or `mcda/configuration_without_uncertainty.json`.
+
+### Running the tests
+```bash
+python3 -m pytest -s tests/unit_tests/test_mcda_run.py -vv
+```
 
 ### What does the code do: overview
 If N=1 and the input matrix has no uncertainties associated to the indicators, then:

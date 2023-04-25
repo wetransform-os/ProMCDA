@@ -1,0 +1,9 @@
+{
+  "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
+  "marginal_distribution_for_each_indicator": ["norm", "exact", "beta", "norm", "exact", "beta"],
+  "polarity_for_each_indicator": ["pol1","pol2","pol3", "pol4","pol5","pol6"],
+  "monte_carlo_runs": 10,
+  "no_cores": 1,
+  "weight_for_each_indicator" : [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+  "output_file_path": "/path/to/output.csv"
+}
