@@ -4,10 +4,10 @@ import json
 
 
 
-def read_input_matrix(input_matrix_path: str) -> pd.DataFrame():
+def read_matrix(input_matrix_path: str) -> pd.DataFrame():
     try:
         with open(input_matrix_path, 'r') as fp:
-            return pd.read_csv(fp, sep=';')
+            return pd.read_csv(fp, sep=';', decimal='.')
     except Exception as e:
         print(e)
 

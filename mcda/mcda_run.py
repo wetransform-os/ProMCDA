@@ -6,6 +6,7 @@ import sys
 
 from mcda.configuration.config import Config
 from mcda.utils import *
+from mcda.mcda_without_variability import MCDAWithoutVar
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
@@ -16,22 +17,24 @@ def main(input_config: dict):
     config = Config(input_config)
 
     logger.info("Read input matrix at {}".format(config.input_matrix_path))
-    input_matrix = read_input_matrix(config.input_matrix_path)
+    input_matrix = read_matrix(config.input_matrix_path)
+    logger.info("Alternatives are {}".format(input_matrix.columns[0]))
+    input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0],axis=1) # drop first column with alternatives
 
     logger.info("Marginal distributions: {}".format(config.marginal_distribution_for_each_indicator))
     marginal_pdf = config.marginal_distribution_for_each_indicator
 
     if all(element == 'exact' for element in marginal_pdf):
        # every column of the input matrix represents an indicator
-        no_indicators = input_matrix.shape[1]-1
-        logger.info("Number of alternatives: {}".format(input_matrix.shape[0]))
+        no_indicators = input_matrix_no_alternatives.shape[1]
+        logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
         logger.info("Number of indicators: {}".format(no_indicators))
     else:
         # non-exact indicators in the input matrix are associated to a column representing its mean
         # and a second column representing its std
         no_non_exact = len(marginal_pdf) - marginal_pdf.count('exact')
-        no_indicators = input_matrix.shape[1]-1-no_non_exact
-        logger.info("Number of alternatives: {}".format(input_matrix.shape[0]))
+        no_indicators = input_matrix_no_alternatives.shape[1]-no_non_exact
+        logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
         logger.info("Number of indicators: {}".format(no_indicators))
 
     logger.info("Number of Monte Carlo runs: {}".format(config.monte_carlo_runs))
@@ -60,8 +63,8 @@ def main(input_config: dict):
             raise ValueError('If the number of Monte-Carlo runs is larger than 0, at least some of the marginal distributions are expected to be non-exact')
         else:
             logger.info("Start MCDA without variability")
+            mcda_no_var = MCDAWithoutVar(config, input_matrix_no_alternatives)
     else:
-        print("none all exact")
         if (config.monte_carlo_runs > 0):
             if (config.monte_carlo_runs < 1000):
                 logger.info("The number of Monte-Carlo runs is only {}".format(config.monte_carlo_runs))
@@ -70,6 +73,7 @@ def main(input_config: dict):
                 # variability
                 logger.info("Start MCDA with variability")
             else:
+                # variability
                 logger.info("Start MCDA with variability")
         else:
             logger.error('Error Message', stack_info=True)

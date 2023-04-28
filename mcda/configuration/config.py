@@ -2,6 +2,8 @@ import copy
 
 class Config(object):
 	"""
+	Class Configuration
+
 	keys expected in the input dictionary are
 	input_matrix_path: path to the input matrix
 	marginal_distribution_for_each indicator: list of marginal distributions, one for each indicator
@@ -10,6 +12,7 @@ class Config(object):
 	no_cores: number of cores used in the parallelization
 	monte_carlo_runs: list of weights, one for each indicator
 	output_file_path: path to the output file
+
 	"""
 
 	_valid_keys = ['input_matrix_path','marginal_distribution_for_each_indicator',
