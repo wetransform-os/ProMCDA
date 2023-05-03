@@ -30,8 +30,8 @@ class Normalization(object):
 
         data = np.array(data)
 
-        max_val = np.min(data)
-        min_val = np.max(data)
+        max_val = np.max(data, axis=0)
+        min_val = np.min(data, axis=0)
 
         if (feature_range == (0,1)):
             scaled_data = (data - min_val) / (max_val - min_val)
@@ -60,7 +60,7 @@ class Normalization(object):
 
         # for + polarity
         x = indicators_plus.to_numpy() # returns a numpy array
-        min_max_scaler = preprocessing.MinMaxScaler(feature_range=feature_range)
+        min_max_scaler = preprocessing.MinMaxScaler(feature_range=feature_range, copy=False)
         x_scaled = min_max_scaler.fit_transform(x)
         indicators_scaled_minmax_plus = pd.DataFrame(x_scaled)
 
@@ -70,7 +70,7 @@ class Normalization(object):
         indicators_scaled_minmax_minus = pd.DataFrame(y_scaled)
 
         # merge back scaled values for positive and negative polarities
-        indicators_scaled_minmax = pd.DataFrame(columns=range(original_shape[1]))
+        indicators_scaled_minmax = pd.DataFrame(index=range(original_shape[0]), columns=range(original_shape[1]))
         for i,index_p in enumerate(ind_plus): indicators_scaled_minmax.iloc[:, index_p] = indicators_scaled_minmax_plus.iloc[:, i]
         for j, index_n in enumerate(ind_minus): indicators_scaled_minmax.iloc[:, index_n]=indicators_scaled_minmax_minus.loc[:,j]
 

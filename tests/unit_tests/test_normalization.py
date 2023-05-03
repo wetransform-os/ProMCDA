@@ -10,13 +10,13 @@ class TestNormalization(unittest.TestCase):
 
     def test_minmax(self):
         # Given
-        polarities = ("-","-","+", "+","+","+") # same as in MCDTool/configuration_without_uncertainty.json
+        polarities = ("-","-","+","+","+","+") # same as in MCDTool/configuration_without_uncertainty.json
         input_matrix = read_matrix("tests/resources/input_matrix_without_uncert.csv")
         input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0],axis=1) # drop first column with alternatives
                                                                                          # in the code this is happening in mcda_run
         # When
         expected_res_01 = read_matrix('tests/resources/normalization/res_minmax_pol_01.csv')
-        #expected_res_no0 = read_matrix('tests/resources/normalization/res_minmax_no0.csv')
+        expected_res_no0 = read_matrix('tests/resources/normalization/res_minmax_no0.csv')
 
         norm = Normalization(input_matrix_no_alternatives)
         res_01 = norm.minmax(polarities, feature_range=(0, 1))
@@ -31,7 +31,7 @@ class TestNormalization(unittest.TestCase):
         assert isinstance(res_01, pd.DataFrame)
         assert isinstance(res_no0, pd.DataFrame)
         assert_frame_equal(res_01, expected_res_01, check_like=True)
-        #assert_frame_equal(res_no0, expected_res_no0, check_like=True)
+        assert_frame_equal(res_no0, expected_res_no0, check_like=True)
 
         if __name__ == '__main__':
             unittest.main()

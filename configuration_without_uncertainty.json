@@ -1,7 +1,7 @@
 {
   "input_matrix_path": "tests/resources/input_matrix_without_uncert.csv",
   "marginal_distribution_for_each_indicator": ["exact", "exact", "exact", "exact", "exact", "exact"],
-  "polarity_for_each_indicator": ["-","-","+", "+","+","+"],
+  "polarity_for_each_indicator": ["-","-","+","+","+","+"],
   "monte_carlo_runs": 0,
   "no_cores": 1,
   "weight_for_each_indicator" : [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
