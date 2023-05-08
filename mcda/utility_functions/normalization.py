@@ -62,9 +62,9 @@ class Normalization(object):
         min_val = np.min(data, axis=0)
 
         if (feature_range == (0,1)):
-            scaled_data = (data - min_val) / (max_val - min_val)
+            scaled_data = (max_val - data) / (max_val - min_val)
         else:
-            scaled_data = (data - min_val) / (max_val - min_val)*(1-0.1) + 0.1
+            scaled_data = (max_val - data) / (max_val - min_val)*(1-0.1) + 0.1
 
         return scaled_data
 
