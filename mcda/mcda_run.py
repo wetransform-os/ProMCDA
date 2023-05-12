@@ -3,6 +3,7 @@
 import logging
 import time
 import sys
+import os
 
 from mcda.configuration.config import Config
 from mcda.utils import *
@@ -10,7 +11,7 @@ from mcda.mcda_without_variability import MCDAWithoutVar
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
-logger = logging.getLogger("mcda_sensitivity_analysis")
+logger = logging.getLogger("MCDTool")
 
 def main(input_config: dict):
     logger.info("Loading the configuration file")
@@ -18,7 +19,7 @@ def main(input_config: dict):
 
     logger.info("Read input matrix at {}".format(config.input_matrix_path))
     input_matrix = read_matrix(config.input_matrix_path)
-    logger.info("Alternatives are {}".format(input_matrix.columns[0]))
+    logger.info("Alternatives are {}".format(input_matrix.iloc[:,0].tolist()))
     input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0],axis=1) # drop first column with alternatives
 
     logger.info("Marginal distributions: {}".format(config.marginal_distribution_for_each_indicator))
@@ -44,7 +45,13 @@ def main(input_config: dict):
     polar = config.polarity_for_each_indicator
 
     logger.info("Weights: {}".format(config.weight_for_each_indicator))
-    weight = config.weight_for_each_indicator
+    weights = config.weight_for_each_indicator
+
+    if sum(weights) != 1:
+        weights = [val/sum(weights) for val in weights]
+        weights_rounded = [round(elem, 2) for elem in weights]
+        logger.info("The sum of the weights of the indicators is not equal to 1, their values have been normalized: {}".format(weights_rounded))
+
 
     cores = config.no_cores
 
@@ -52,7 +59,7 @@ def main(input_config: dict):
     if no_indicators != len(polar):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The no. of polarities does not correspond to the no. of indicators')
-    if no_indicators != len(weight):
+    if no_indicators != len(weights):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The no. of weights does not correspond to the no. of indicators')
 

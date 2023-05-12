@@ -38,6 +38,8 @@ class TestConfig(unittest.TestCase):
 
         # Then
         assert config is not input_config # but it's a deep copy
+        assert isinstance (input_config, dict)
+        assert input_config == config._config
 
     def test_init_should_raise_exception(self):
         # Given
@@ -74,5 +76,5 @@ class TestConfig(unittest.TestCase):
         assert config.weight_for_each_indicator == input_config['weight_for_each_indicator']
         assert config.output_file_path == input_config['output_file_path']
 
-        if __name__ == '__main__':
-            unittest.main()
+if __name__ == '__main__':
+    unittest.main()

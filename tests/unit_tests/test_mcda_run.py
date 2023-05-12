@@ -2,7 +2,6 @@ import unittest
 import pytest
 
 from mcda.mcda_run import main
-from mcda.configuration.config import Config
 
 class TestMCDA(unittest.TestCase):
 
@@ -41,5 +40,5 @@ class TestMCDA(unittest.TestCase):
         with pytest.raises(ValueError):
             main(input_config_2)
 
-    if __name__ == '__main__':
-        unittest.main()
+if __name__ == '__main__':
+    unittest.main()

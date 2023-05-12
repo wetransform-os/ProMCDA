@@ -1,13 +1,16 @@
 import pandas as pd
 import argparse
 import json
-
+import os
 
 
 def read_matrix(input_matrix_path: str) -> pd.DataFrame():
     try:
-        with open(input_matrix_path, 'r') as fp:
-            return pd.read_csv(fp, sep=';', decimal='.')
+        file_path = os.path.dirname(os.path.realpath(__file__))
+        filename = file_path + '/../' + input_matrix_path #TODO: is there any more pythonistic way to extract the path?
+        with open(filename, 'r') as fp:
+            test = pd.read_csv(fp, sep=';', decimal='.')
+            return test
     except Exception as e:
         print(e)
 

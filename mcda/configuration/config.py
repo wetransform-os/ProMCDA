@@ -42,8 +42,8 @@ class Config(object):
 		int_values = self._int_values
 		list_values = self._list_values
 
+		self._validate(input_config, valid_keys, str_values, int_values, list_values)
 		self._config = copy.deepcopy(input_config)
-		self._validate(self._config, valid_keys, str_values, int_values, list_values)
 
 
 	def _validate(self, input_config, valid_keys, str_values, int_values, list_values):
@@ -69,6 +69,7 @@ class Config(object):
 
 	def get_property(self, property_name: str):
 		return self._config[property_name]
+
 
 	@property
 	def input_matrix_path(self):

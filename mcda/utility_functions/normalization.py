@@ -2,7 +2,7 @@ import copy
 import logging
 import numpy as np
 import pandas as pd
-from typing import List, Union
+from typing import List
 from sklearn import preprocessing
 
 class Normalization(object):
@@ -22,7 +22,7 @@ class Normalization(object):
 
     """
 
-    def __init__(self, input_matrix: pd.DataFrame(), polarities):
+    def __init__(self, input_matrix: pd.DataFrame(), polarities:list):
 
         self._input_matrix = copy.deepcopy(input_matrix)
         self.polarities = polarities
@@ -68,12 +68,11 @@ class Normalization(object):
 
         return scaled_data
 
-    def minmax(self, feature_range) -> pd.DataFrame():
+    def minmax(self, feature_range:list) -> pd.DataFrame():
         """
         Normalizes the indicators by using the scaling method min-max.
         Different feature ranges are possible.
-
-        :returns: pd.DataFrame()
+        :returns: pd.DataFrame() of same shape as the input
         """
 
         original_shape = self._input_matrix.shape
@@ -103,10 +102,10 @@ class Normalization(object):
         return indicators_scaled_minmax
 
 
-    def target(self, feature_range) -> pd.DataFrame():
+    def target(self, feature_range:list) -> pd.DataFrame():
         """
         Normalizes indicators using the scaling method target.
-        :return: pd.DataFrame()
+        :return: pd.DataFrame() of same shape as the input
         """
 
         original_shape = self._input_matrix.shape
@@ -138,7 +137,7 @@ class Normalization(object):
     def standardized(self) -> pd.DataFrame():
         """
         Normalizes indicators using the scaling method standardized (i.e. Z-score).
-        :return: pd.DataFrame()
+        :return: pd.DataFrame() of same shape as the input
         """
 
         original_shape = self._input_matrix.shape
@@ -163,7 +162,7 @@ class Normalization(object):
     def rank(self) -> pd.DataFrame():
         """
         Normalizes indicators using the scaling method rank.
-        :return: pd.DataFrame()
+        :return: pd.DataFrame() of same shape as the input
         """
         original_shape = self._input_matrix.shape
 

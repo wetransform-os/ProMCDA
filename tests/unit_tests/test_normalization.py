@@ -1,8 +1,7 @@
-import pytest
 import unittest
+
 from pandas.testing import assert_frame_equal
 
-from mcda.mcda_run import main
 from mcda.utils import *
 from mcda.utility_functions.normalization import Normalization
 
@@ -79,7 +78,6 @@ class TestNormalization(unittest.TestCase):
         assert_frame_equal(res, expected_res, check_like=True)
 
 
-
     def test_rank(self):
         # Given
         polarities = TestNormalization.get_input_polarities()
@@ -95,6 +93,5 @@ class TestNormalization(unittest.TestCase):
         assert isinstance(res, pd.DataFrame)
         assert_frame_equal(res, expected_res, check_like=True)
 
-
-        if __name__ == '__main__':
-            unittest.main()
+if __name__ == '__main__':
+    unittest.main()

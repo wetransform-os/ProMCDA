@@ -22,7 +22,7 @@ The following input information are contained in the `configuration.json` file:
 - list of polarities for each indicator, "+" or "-"
 - number of Monte Carlo runs, "N" (default is 0, no variability is considered; N should be a sufficient big number, e.g. larger or equal than 1000)
 - the number of cores used for the parallelization, "numCores"
-- list of weights for each indicator - if no list is given, then the weights are sampled between 0 and 1 with at each Monte Carlo run
+- list of weights for each indicator - the sum should always be equal to 1 or the values will be corrected
 - output file (e.g. `path/output_file.csv`).
 
 In case the variability of results is of no interest, then:
