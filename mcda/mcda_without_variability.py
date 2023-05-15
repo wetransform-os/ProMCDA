@@ -1,6 +1,4 @@
-import logging
 import copy
-import numpy as np
 import pandas as pd
 
 from mcda.configuration.config import Config
@@ -16,7 +14,7 @@ class MCDAWithoutVar():
 
     :input:  configuration dictionary
              input_matrix with no alternatives column
-    :output:
+    :output: write csv files with the scores, normalized scores and ranks; log file
 
     """
 
@@ -28,7 +26,7 @@ class MCDAWithoutVar():
     def normalize_indicators(self) -> dict:
         """
         Get the input matrix.
-        :return: a df that concatenates the normalized values of each indicator per normalization method.
+        :return: a dictionary that contains the normalized values of each indicator per normalization method.
         Normalization functions implemented: minmax; target; standardized; rank
         """
         config = Config(self._config)
@@ -51,19 +49,47 @@ class MCDAWithoutVar():
 
         return normalized_indicators
 
-    def aggregate_indicators(self, normalized_indicators, weights) -> pd.DataFrame():
+    def aggregate_indicators(self, normalized_indicators: dict, weights: list) -> pd.DataFrame():
         """
         Get the normalized indicators per normalization methods in a dictionary.
         :return: aggregated scores per each alternative, and per each normalization method.
-        Aggregation functions implemented: weighted-sum;
+        Aggregation functions implemented: weighted-sum; geometric; harmonic; minimum
         """
 
         self.normalized_indicators = normalized_indicators
         self.weights = weights
 
         agg = Aggregation(self.weights)
-        scores_weighted_sum_minmax = agg.weighted_sum(self.normalized_indicators["minmax"])
 
-        # vector of scores (lenght = no. alternatives) estimated by the weighted-sum method, per each different normalization functions
+        scores_weighted_sum_standardized = agg.weighted_sum(self.normalized_indicators["standardized"])
+        scores_weighted_sum_minmax = agg.weighted_sum(self.normalized_indicators["minmax_01"])
+        scores_weighted_sum_target = agg.weighted_sum(self.normalized_indicators["target_01"])
+        scores_weighted_sum_rank = agg.weighted_sum(self.normalized_indicators["rank"])
 
-        #return scores
+        scores_geometric_standardized = agg.geometric(self.normalized_indicators["standardized"])
+        scores_geometric_minmax = agg.geometric(self.normalized_indicators["minmax_no0"])
+        scores_geometric_target = agg.geometric(self.normalized_indicators["target_no0"])
+        scores_geometric_rank = agg.geometric(self.normalized_indicators["rank"])
+
+        scores_harmonic_standardized = agg.harmonic(self.normalized_indicators["standardized"])
+        scores_harmonic_minmax = agg.harmonic(self.normalized_indicators["minmax_no0"])
+        scores_harmonic_target = agg.harmonic(self.normalized_indicators["target_no0"])
+        scores_harmonic_rank = agg.harmonic(self.normalized_indicators["rank"])
+
+        scores_minimum_standardized = agg.minimum(self.normalized_indicators["standardized"])
+        scores_minimum_minmax = agg.minimum(self.normalized_indicators["minmax_01"])
+        scores_minimum_target = agg.minimum(self.normalized_indicators["target_01"])
+        scores_minimum_rank = agg.minimum(self.normalized_indicators["rank"])
+
+        scores = pd.concat([scores_weighted_sum_standardized,scores_weighted_sum_minmax,scores_weighted_sum_target,scores_weighted_sum_rank,
+                            scores_geometric_standardized,scores_geometric_minmax,scores_geometric_target,scores_geometric_rank,
+                            scores_harmonic_standardized,scores_harmonic_minmax,scores_harmonic_target,scores_harmonic_rank,
+                            scores_minimum_standardized,scores_minimum_minmax,scores_minimum_target,scores_minimum_rank], axis=1)
+        col_names = ['ws-stand', 'ws-minmax', 'ws-target', 'ws-rank',
+                     'geom-stand', 'geom-minmax', 'geom-target', 'geom-rank',
+                     'harm-stand', 'harm-minmax', 'harm-target', 'harm-rank',
+                     'min-stand', 'min-minmax', 'min-target', 'min-rank']
+
+        scores.columns=col_names
+
+        return scores

@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+from sklearn import preprocessing
 import logging
 import time
 import sys
@@ -52,7 +53,6 @@ def main(input_config: dict):
         weights_rounded = [round(elem, 2) for elem in weights]
         logger.info("The sum of the weights of the indicators is not equal to 1, their values have been normalized: {}".format(weights_rounded))
 
-
     cores = config.no_cores
 
     # checks on the number of indicators, weights, and polarities
@@ -70,7 +70,24 @@ def main(input_config: dict):
             raise ValueError('If the number of Monte-Carlo runs is larger than 0, at least some of the marginal distributions are expected to be non-exact')
         else:
             logger.info("Start MCDA without variability")
+            # estimate the scores
             mcda_no_var = MCDAWithoutVar(config, input_matrix_no_alternatives)
+            normalized_indicators = mcda_no_var.normalize_indicators()
+            scores = mcda_no_var.aggregate_indicators(normalized_indicators, config.weight_for_each_indicator)
+            # normalize the scores
+            x = scores.to_numpy()
+            min_max_scaler = preprocessing.MinMaxScaler()
+            x_scaled = min_max_scaler.fit_transform(x)
+            normalized_scores = pd.DataFrame(x_scaled)
+            # estimate the ranks
+            ranks = scores.rank(pct=True)
+            # save output files
+            logger.info("Saving results in {}".format(config.output_file_path))
+            save_df(scores, config.output_file_path, 'scores.csv')
+            save_df(normalized_scores, config.output_file_path, 'normalized_scores.csv')
+            save_df(ranks, config.output_file_path, 'ranks.csv')
+            save_config(config, config.output_file_path, 'configuration.json')
+            logger.info("Finished MCDA without variability: check the output files")
     else:
         if (config.monte_carlo_runs > 0):
             if (config.monte_carlo_runs < 1000):
@@ -86,8 +103,8 @@ def main(input_config: dict):
             logger.error('Error Message', stack_info=True)
             raise ValueError('If the number of Monte-Carlo runs is 0, all marginal distributions are expected to be exact')
 
-    # logger.info("Saving results in {}".format(config.output_file_path))
-    # save_result(res, config.output_file_path)
+    # logger.info("Saving results in {}".format(config.output_path))
+    # save_result(res, config.output_path)
 
 if __name__ == '__main__':
     config_path = parse_args()

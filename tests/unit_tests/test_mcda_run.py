@@ -14,7 +14,7 @@ class TestMCDA(unittest.TestCase):
             "monte_carlo_runs": 10,
             "no_cores": 17,
             "weight_for_each_indicator": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-            "output_file_path": "/path/to/output.csv"
+            "output_path": "/path/to/output"
         }
 
     @staticmethod
@@ -26,7 +26,7 @@ class TestMCDA(unittest.TestCase):
             "monte_carlo_runs": 0,
             "no_cores": 17,
             "weight_for_each_indicator": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-            "output_file_path": "/path/to/output.csv"
+            "output_path": "/path/to/output"
         }
 
     def test_main(self):

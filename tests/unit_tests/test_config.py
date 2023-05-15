@@ -14,7 +14,7 @@ class TestConfig(unittest.TestCase):
             "monte_carlo_runs": 10,
             "no_cores": 17,
             "weight_for_each_indicator": [0.5, 0.5, 0.5],
-            "output_file_path": "/path/to/output.csv"
+            "output_path": "/path/to/output.csv"
         }
 
     @staticmethod
@@ -26,7 +26,7 @@ class TestConfig(unittest.TestCase):
             "monte_carlo_runs": 10,
             "no_cores": 17,
             "weight_for_each_indicator": [0.5, 0.5, 0.5],
-            "output_file_path": "/path/to/output.csv"
+            "output_path": "/path/to/output.csv"
         }
 
     def test_init(self):
@@ -74,7 +74,7 @@ class TestConfig(unittest.TestCase):
         assert config.monte_carlo_runs == input_config['monte_carlo_runs']
         assert config.no_cores == input_config['no_cores']
         assert config.weight_for_each_indicator == input_config['weight_for_each_indicator']
-        assert config.output_file_path == input_config['output_file_path']
+        assert config.output_file_path == input_config['output_path']
 
 if __name__ == '__main__':
     unittest.main()

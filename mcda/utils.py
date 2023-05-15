@@ -33,3 +33,13 @@ def get_config(config_path: str) -> dict:
             return json.load(fp)
     except Exception as e:
         print(e)
+
+
+def save_df(df: pd.DataFrame, folder_path: str, filename: str):
+    result_path = os.path.join(folder_path, filename)
+    df.to_csv(path_or_buf=result_path)
+
+def save_config(config: dict, folder_path: str, filename: str):
+    result_path = os.path.join(folder_path, filename)
+    with open(result_path, 'w') as fp:
+        json.dump(config, fp)

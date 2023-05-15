@@ -11,18 +11,18 @@ class Config(object):
 	monte_carlo_runs: number of MC runs
 	no_cores: number of cores used in the parallelization
 	monte_carlo_runs: list of weights, one for each indicator
-	output_file_path: path to the output file
+	output_path: path to the output file
 
 	"""
 
 	_valid_keys = ['input_matrix_path','marginal_distribution_for_each_indicator',
 				   'polarity_for_each_indicator','monte_carlo_runs',
-				   'no_cores','weight_for_each_indicator','output_file_path']
+				   'no_cores','weight_for_each_indicator','output_path']
 
 	_list_values: list[str] = ['marginal_distribution_for_each_indicator','polarity_for_each_indicator',
 					'weight_for_each_indicator']
 
-	_str_values = ['input_matrix_path','output_file_path']
+	_str_values = ['input_matrix_path','output_path']
 
 	_int_values = ['monte_carlo_runs','no_cores']
 
@@ -97,4 +97,4 @@ class Config(object):
 
 	@property
 	def output_file_path(self):
-		return self.get_property('output_file_path')
+		return self.get_property('output_path')
