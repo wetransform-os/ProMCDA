@@ -1,7 +1,7 @@
 import copy
 import numpy as np
 import pandas as pd
-from typing import List
+from typing import List, Tuple, Any
 from sklearn import preprocessing
 
 class Normalization(object):
@@ -27,7 +27,7 @@ class Normalization(object):
         self.polarities = polarities
 
 
-    def _cast_polarities(self) -> List:
+    def _cast_polarities(self) -> tuple[list[int], list[int], pd.DataFrame, pd.DataFrame]:
         """
         Identifies indicators with positive
         or negative polarity (by indexes) and
@@ -45,7 +45,7 @@ class Normalization(object):
         return (ind_plus, ind_minus, indicators_plus, indicators_minus)
 
     @staticmethod
-    def reversed_minmax_scaler(data, feature_range):
+    def reversed_minmax_scaler(data, feature_range: tuple):
         """
         Rescales the indicators in a reversed scale
         where the smallest the value the better,
@@ -67,7 +67,7 @@ class Normalization(object):
 
         return scaled_data
 
-    def minmax(self, feature_range:list) -> pd.DataFrame():
+    def minmax(self, feature_range:tuple) -> pd.DataFrame():
         """
         Normalizes the indicators by using the scaling method min-max.
         Different feature ranges are possible.
@@ -101,7 +101,7 @@ class Normalization(object):
         return indicators_scaled_minmax
 
 
-    def target(self, feature_range:list) -> pd.DataFrame():
+    def target(self, feature_range:tuple) -> pd.DataFrame():
         """
         Normalizes indicators using the scaling method target.
         :return: pd.DataFrame() of same shape as the input

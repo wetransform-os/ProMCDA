@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-from sklearn import preprocessing
 import logging
 import time
 import sys
@@ -75,18 +74,19 @@ def main(input_config: dict):
             normalized_indicators = mcda_no_var.normalize_indicators()
             scores = mcda_no_var.aggregate_indicators(normalized_indicators, config.weight_for_each_indicator)
             # normalize the scores
-            x = scores.to_numpy()
-            min_max_scaler = preprocessing.MinMaxScaler()
-            x_scaled = min_max_scaler.fit_transform(x)
-            normalized_scores = pd.DataFrame(x_scaled)
+            normalized_scores = rescale_minmax(scores)
+            normalized_scores.insert(0, 'Alternatives', input_matrix.iloc[:,0])
             # estimate the ranks
             ranks = scores.rank(pct=True)
+            ranks.insert(0, 'Alternatives', input_matrix.iloc[:,0])
             # save output files
             logger.info("Saving results in {}".format(config.output_file_path))
+            check_path_exists(config.output_file_path)
+            scores.insert(0, 'Alternatives', input_matrix.iloc[:,0])
             save_df(scores, config.output_file_path, 'scores.csv')
             save_df(normalized_scores, config.output_file_path, 'normalized_scores.csv')
             save_df(ranks, config.output_file_path, 'ranks.csv')
-            save_config(config, config.output_file_path, 'configuration.json')
+            save_config(input_config, config.output_file_path, 'configuration.json')
             logger.info("Finished MCDA without variability: check the output files")
     else:
         if (config.monte_carlo_runs > 0):

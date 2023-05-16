@@ -25,7 +25,7 @@ class Aggregation(object):
 
         self.weights = weights
 
-    def weighted_sum(self, norm_indicators: pd.DataFrame()) -> pd.Series():
+    def weighted_sum(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
         """
         Weighted-sum or additive aggregation function.
         Gets as input the normalized values of the indicators in a matrix
@@ -39,7 +39,7 @@ class Aggregation(object):
 
         return scores
 
-    def geometric(self, norm_indicators: pd.DataFrame()) -> pd.Series():
+    def geometric(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
         """
         Geometric aggregation function works only with strictly positive
         normalized indicator values (i.e. not with minmax and target with feature range (0,1))
@@ -58,7 +58,7 @@ class Aggregation(object):
 
         return scores
 
-    def harmonic(self, norm_indicators: pd.DataFrame()) -> pd.Series():
+    def harmonic(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
         """
         Harmonic aggregation function works only with strictly positive
         normalized indicator values (i.e. not with minmax and target with feature range (0,1))
@@ -78,7 +78,7 @@ class Aggregation(object):
 
         return scores
 
-    def minimum(self, norm_indicators: pd.DataFrame()) -> pd.Series():
+    def minimum(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
         """
         Minimum aggregation function. It does not consider the weights.
         Gets as input the normalized values of the indicators

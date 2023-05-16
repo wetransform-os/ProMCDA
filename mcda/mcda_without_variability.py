@@ -18,7 +18,7 @@ class MCDAWithoutVar():
 
     """
 
-    def __init__(self, config: dict, input_matrix: pd.DataFrame()):
+    def __init__(self, config: object, input_matrix: pd.DataFrame()):
 
         self._config = copy.deepcopy(config)
         self._input_matrix = copy.deepcopy(input_matrix)
@@ -29,15 +29,14 @@ class MCDAWithoutVar():
         :return: a dictionary that contains the normalized values of each indicator per normalization method.
         Normalization functions implemented: minmax; target; standardized; rank
         """
-        config = Config(self._config)
-        norm = Normalization(self._input_matrix)
+        norm = Normalization(self._input_matrix, self._config.polarity_for_each_indicator)
 
-        indicators_scaled_minmax_01 = norm.minmax(config.polarity_for_each_indicator, feature_range=(0, 1))
-        indicators_scaled_minmax_no0 = norm.minmax(config.polarity_for_each_indicator, feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
-        indicators_scaled_target_01 = norm.target(config.polarity_for_each_indicator, feature_range=(0, 1))
-        indicators_scaled_target_no0 = norm.target(config.polarity_for_each_indicator, feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
-        indicators_scaled_standardized = norm.standardized(config.polarity_for_each_indicator)
-        indicators_scaled_rank = norm.rank(config.polarity_for_each_indicator)
+        indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
+        indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
+        indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
+        indicators_scaled_target_no0 = norm.target(feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
+        indicators_scaled_standardized = norm.standardized()
+        indicators_scaled_rank = norm.rank()
 
         normalized_indicators = {"standardized": indicators_scaled_standardized,
                                  "minmax_01":  indicators_scaled_minmax_01,
