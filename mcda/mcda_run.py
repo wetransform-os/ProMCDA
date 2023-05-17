@@ -87,6 +87,9 @@ def main(input_config: dict):
             save_df(normalized_scores, config.output_file_path, 'normalized_scores.csv')
             save_df(ranks, config.output_file_path, 'ranks.csv')
             save_config(input_config, config.output_file_path, 'configuration.json')
+            # plots
+            plot_norm_scores = plot_norm_scores_without_uncert(normalized_scores)
+            save_figure(plot_norm_scores, config.output_file_path, "MCDA_no_var.png")
             logger.info("Finished MCDA without variability: check the output files")
     else:
         if (config.monte_carlo_runs > 0):
