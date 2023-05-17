@@ -2,6 +2,7 @@ import unittest
 from unittest import TestCase
 
 from mcda.mcda_without_variability import MCDAWithoutVar
+from mcda.configuration.config import Config
 from mcda.utils import *
 
 class TestMCDA_without_variability(unittest.TestCase):
@@ -30,6 +31,7 @@ class TestMCDA_without_variability(unittest.TestCase):
     def test_normalize_indicators(self):
         # Given
         config = TestMCDA_without_variability.get_test_config()
+        config = Config(config)
         input_matrix = TestMCDA_without_variability.get_input_matrix()
 
         # When
@@ -49,10 +51,11 @@ class TestMCDA_without_variability(unittest.TestCase):
     def test_aggregate_indicators(self):
         # Given
         config = TestMCDA_without_variability.get_test_config()
+        config = Config(config)
         input_matrix = TestMCDA_without_variability.get_input_matrix()
 
         # When
-        weights = config["weight_for_each_indicator"]
+        weights = config.weight_for_each_indicator
         MCDA_no_var = MCDAWithoutVar(config, input_matrix)
         normalized_indicators = MCDA_no_var.normalize_indicators()
         res = MCDA_no_var.aggregate_indicators(normalized_indicators, weights)

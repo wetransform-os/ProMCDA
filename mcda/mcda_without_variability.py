@@ -18,8 +18,7 @@ class MCDAWithoutVar():
 
     """
 
-    def __init__(self, config: object, input_matrix: pd.DataFrame()):
-
+    def __init__(self, config: Config, input_matrix: pd.DataFrame()):
         self._config = copy.deepcopy(config)
         self._input_matrix = copy.deepcopy(input_matrix)
 
