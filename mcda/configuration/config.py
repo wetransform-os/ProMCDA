@@ -2,6 +2,8 @@ import copy
 
 class Config(object):
 	"""
+	Class Configuration
+
 	keys expected in the input dictionary are
 	input_matrix_path: path to the input matrix
 	marginal_distribution_for_each indicator: list of marginal distributions, one for each indicator
@@ -9,17 +11,18 @@ class Config(object):
 	monte_carlo_runs: number of MC runs
 	no_cores: number of cores used in the parallelization
 	monte_carlo_runs: list of weights, one for each indicator
-	output_file_path: path to the output file
+	output_path: path to the output file
+
 	"""
 
 	_valid_keys = ['input_matrix_path','marginal_distribution_for_each_indicator',
 				   'polarity_for_each_indicator','monte_carlo_runs',
-				   'no_cores','weight_for_each_indicator','output_file_path']
+				   'no_cores','weight_for_each_indicator','output_path']
 
 	_list_values: list[str] = ['marginal_distribution_for_each_indicator','polarity_for_each_indicator',
 					'weight_for_each_indicator']
 
-	_str_values = ['input_matrix_path','output_file_path']
+	_str_values = ['input_matrix_path','output_path']
 
 	_int_values = ['monte_carlo_runs','no_cores']
 
@@ -39,8 +42,8 @@ class Config(object):
 		int_values = self._int_values
 		list_values = self._list_values
 
+		self._validate(input_config, valid_keys, str_values, int_values, list_values)
 		self._config = copy.deepcopy(input_config)
-		self._validate(self._config, valid_keys, str_values, int_values, list_values)
 
 
 	def _validate(self, input_config, valid_keys, str_values, int_values, list_values):
@@ -66,6 +69,7 @@ class Config(object):
 
 	def get_property(self, property_name: str):
 		return self._config[property_name]
+
 
 	@property
 	def input_matrix_path(self):
@@ -93,4 +97,4 @@ class Config(object):
 
 	@property
 	def output_file_path(self):
-		return self.get_property('output_file_path')
+		return self.get_property('output_path')

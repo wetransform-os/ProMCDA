@@ -1,0 +1,9 @@
+{
+  "input_matrix_path": "/Users/flaminia/Documents/work/MCDA/tests/resources/input_matrix_with_uncert.csv",
+  "marginal_distribution_for_each_indicator": ["norm", "exact", "beta", "norm", "exact", "beta"],
+  "polarity_for_each_indicator": ["-","-","+", "+","+","+"],
+  "monte_carlo_runs": 10,
+  "no_cores": 1,
+  "weight_for_each_indicator" : [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+  "output_path": "/path/to/output"
+}
