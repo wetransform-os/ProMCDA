@@ -1,19 +1,18 @@
 import plotly.graph_objects as go
 from sklearn import preprocessing
+from os.path import abspath
 import pandas as pd
 import numpy as np
 import argparse
-import kaleido
 import json
 import os
 
 
 def read_matrix(input_matrix_path: str) -> pd.DataFrame():
     try:
-        file_path = os.path.dirname(os.path.realpath(__file__))
-        filename = file_path + '/../' + input_matrix_path #TODO: is there any more pythonistic way to extract the path?
+        filename = abspath(input_matrix_path)
         with open(filename, 'r') as fp:
-            test = pd.read_csv(fp, sep=';', decimal='.')
+            test = pd.read_csv(fp, sep="[,;:]", decimal='.')
             return test
     except Exception as e:
         print(e)
