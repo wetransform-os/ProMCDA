@@ -2,7 +2,8 @@
 A tool to estimate ranks of alternatives and their uncertainties based on the Multi Criteria Decision Analysis approach.
 The variability of the MCDA scores are caused by:
 - the uncertainty associated with the indicators
-- the sensitivity of the algorithm to the different pairs of norm/agg functions.
+- the sensitivity of the algorithm to the different pairs of norm/agg functions
+- the randomness that can be associated to the weights (TODO: implement)
 
 The tool can be used also as a simple MCDA ranking tool with no variability (see also below).
 
