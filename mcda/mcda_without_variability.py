@@ -75,18 +75,15 @@ class MCDAWithoutVar():
         scores_harmonic_rank = agg.harmonic(self.normalized_indicators["rank"])
 
         scores_minimum_standardized = agg.minimum(self.normalized_indicators["standardized"])
-        scores_minimum_minmax = agg.minimum(self.normalized_indicators["minmax_01"])
-        scores_minimum_target = agg.minimum(self.normalized_indicators["target_01"])
-        scores_minimum_rank = agg.minimum(self.normalized_indicators["rank"])
 
         scores = pd.concat([scores_weighted_sum_standardized,scores_weighted_sum_minmax,scores_weighted_sum_target,scores_weighted_sum_rank,
                             scores_geometric_standardized,scores_geometric_minmax,scores_geometric_target,scores_geometric_rank,
                             scores_harmonic_standardized,scores_harmonic_minmax,scores_harmonic_target,scores_harmonic_rank,
-                            scores_minimum_standardized,scores_minimum_minmax,scores_minimum_target,scores_minimum_rank], axis=1)
+                            scores_minimum_standardized], axis=1)
         col_names = ['ws-stand', 'ws-minmax', 'ws-target', 'ws-rank',
                      'geom-stand', 'geom-minmax', 'geom-target', 'geom-rank',
                      'harm-stand', 'harm-minmax', 'harm-target', 'harm-rank',
-                     'min-stand', 'min-minmax', 'min-target', 'min-rank']
+                     'min-stand']
 
         scores.columns=col_names
 

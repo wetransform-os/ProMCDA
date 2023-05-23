@@ -61,3 +61,10 @@ If else, N>1 and the input matrix has uncertaities associate to some or all the 
 - for each N, and for each indicator, a value is sampled from the relative assigned marginal distribution: one of N input matrix is created
 - normalizations and aggregations are performed as in points 1,2,3 of the case N=1: a list of all the results is created
 - mean and std of all the results are estimated across (N x pairs of combinations) 
+
+
+### General information and references
+The code implements 4 normalization and 4 aggregation functions. However, not all combinations are 
+meaningful or mathematically acceptable. For more details refer to Table 6 in 
+[*Gasser et al.*, 2020](https://www.sciencedirect.com/science/article/pii/S1470160X19307241)
+

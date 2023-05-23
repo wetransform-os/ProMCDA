@@ -63,7 +63,7 @@ class TestMCDA_without_variability(unittest.TestCase):
         col_names = ['ws-stand', 'ws-minmax', 'ws-target', 'ws-rank',
                      'geom-stand', 'geom-minmax', 'geom-target', 'geom-rank',
                      'harm-stand', 'harm-minmax', 'harm-target', 'harm-rank',
-                     'min-stand', 'min-minmax', 'min-target', 'min-rank']
+                     'min-stand']
 
         # Then
         assert isinstance(res, pd.DataFrame)
