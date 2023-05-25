@@ -42,7 +42,8 @@ class Aggregation(object):
     def geometric(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
         """
         Geometric aggregation function works only with strictly positive
-        normalized indicator values (i.e. not with minmax and target with feature range (0,1))
+        normalized indicator values (i.e. not with minmax and target with feature range (0,1);
+        not with standardized with feature range ('-inf','+inf')).
         Gets as input the normalized values of the indicators in a matrix
         and estimates the scores over the indicators, per alternative.
 
@@ -61,7 +62,8 @@ class Aggregation(object):
     def harmonic(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
         """
         Harmonic aggregation function works only with strictly positive
-        normalized indicator values (i.e. not with minmax and target with feature range (0,1))
+        normalized indicator values (i.e. not with minmax, and target with feature range (0,1);
+        not with standardized with feature range ('-inf','+inf')).
         Gets as input the normalized values of the indicators in a matrix
         and estimates the scores over the indicators, per alternative.
 

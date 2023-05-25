@@ -1,7 +1,6 @@
 import copy
 import numpy as np
 import pandas as pd
-from typing import List, Tuple, Any
 from sklearn import preprocessing
 
 class Normalization(object):
@@ -133,7 +132,7 @@ class Normalization(object):
         return indicators_scaled_target
 
 
-    def standardized(self) -> pd.DataFrame():
+    def standardized(self,feature_range: tuple) -> pd.DataFrame():
         """
         Normalizes indicators using the scaling method standardized (i.e. Z-score).
         :return: pd.DataFrame() of same shape as the input
@@ -147,13 +146,21 @@ class Normalization(object):
         indicators_plus = pol[2]
         indicators_minus = pol[3]
 
-        indicators_scaled_stand_plus = (indicators_plus - indicators_plus.mean(axis=0))/indicators_plus.std(axis=0) # for + polarity
-        indicators_scaled_stand_minus = (indicators_minus.mean(axis=0) - indicators_minus)/indicators_minus.std(axis=0) # for - polarity
+        indicators_scaled_stand_plus = (indicators_plus - indicators_plus.mean(axis=0)) / indicators_plus.std(axis=0)  # for + polarity
+        indicators_scaled_stand_minus = (indicators_minus.mean(axis=0) - indicators_minus) / indicators_minus.std(axis=0)  # for - polarity
 
         # merge back scaled values for positive and negative polarities
         indicators_scaled_standardized = pd.DataFrame(index=range(original_shape[0]), columns=range(original_shape[1]))
         for i,index_p in enumerate(ind_plus): indicators_scaled_standardized.iloc[:, index_p] = indicators_scaled_stand_plus.iloc[:, i]
         for j, index_n in enumerate(ind_minus): indicators_scaled_standardized.iloc[:, index_n] = indicators_scaled_stand_minus.iloc[:,j]
+
+        if feature_range == ('-inf','+inf'):
+            pass
+        else:
+            if indicators_scaled_standardized.lt(0).values.any():
+                indicators_scaled_standardized = indicators_scaled_standardized + abs(indicators_scaled_standardized.min())+0.1
+            else:
+                indicators_scaled_standardized = indicators_scaled_standardized + 0.1
 
         return indicators_scaled_standardized
 

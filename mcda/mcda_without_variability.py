@@ -34,10 +34,12 @@ class MCDAWithoutVar():
         indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
         indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
         indicators_scaled_target_no0 = norm.target(feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
-        indicators_scaled_standardized = norm.standardized()
+        indicators_scaled_standardized_any = norm.standardized(feature_range=('-inf', '+inf'))
+        indicators_scaled_standardized_no0 = norm.standardized(feature_range=(0.1, '+inf'))
         indicators_scaled_rank = norm.rank()
 
-        normalized_indicators = {"standardized": indicators_scaled_standardized,
+        normalized_indicators = {"standardized_any": indicators_scaled_standardized_any,
+                                 "standardized_no0": indicators_scaled_standardized_no0,
                                  "minmax_01":  indicators_scaled_minmax_01,
                                  "minmax_no0": indicators_scaled_minmax_no0,
                                  "target_01":  indicators_scaled_target_01,
@@ -59,22 +61,22 @@ class MCDAWithoutVar():
 
         agg = Aggregation(self.weights)
 
-        scores_weighted_sum_standardized = agg.weighted_sum(self.normalized_indicators["standardized"])
+        scores_weighted_sum_standardized = agg.weighted_sum(self.normalized_indicators["standardized_any"])
         scores_weighted_sum_minmax = agg.weighted_sum(self.normalized_indicators["minmax_01"])
         scores_weighted_sum_target = agg.weighted_sum(self.normalized_indicators["target_01"])
         scores_weighted_sum_rank = agg.weighted_sum(self.normalized_indicators["rank"])
 
-        scores_geometric_standardized = agg.geometric(self.normalized_indicators["standardized"])
+        scores_geometric_standardized = agg.geometric(self.normalized_indicators["standardized_no0"])
         scores_geometric_minmax = agg.geometric(self.normalized_indicators["minmax_no0"])
         scores_geometric_target = agg.geometric(self.normalized_indicators["target_no0"])
         scores_geometric_rank = agg.geometric(self.normalized_indicators["rank"])
 
-        scores_harmonic_standardized = agg.harmonic(self.normalized_indicators["standardized"])
+        scores_harmonic_standardized = agg.harmonic(self.normalized_indicators["standardized_no0"])
         scores_harmonic_minmax = agg.harmonic(self.normalized_indicators["minmax_no0"])
         scores_harmonic_target = agg.harmonic(self.normalized_indicators["target_no0"])
         scores_harmonic_rank = agg.harmonic(self.normalized_indicators["rank"])
 
-        scores_minimum_standardized = agg.minimum(self.normalized_indicators["standardized"])
+        scores_minimum_standardized = agg.minimum(self.normalized_indicators["standardized_any"])
 
         scores = pd.concat([scores_weighted_sum_standardized,scores_weighted_sum_minmax,scores_weighted_sum_target,scores_weighted_sum_rank,
                             scores_geometric_standardized,scores_geometric_minmax,scores_geometric_target,scores_geometric_rank,

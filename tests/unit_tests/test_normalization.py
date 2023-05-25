@@ -68,14 +68,19 @@ class TestNormalization(unittest.TestCase):
         input_matrix_no_alternatives = TestNormalization.get_input_matrix()
 
         # When
-        expected_res = read_matrix('tests/resources/normalization/res_standardized.csv')
+        expected_res_any = read_matrix('tests/resources/normalization/res_standardized_any.csv')
+        expected_res_no0 = read_matrix('tests/resources/normalization/res_standardized_no0.csv')
         norm = Normalization(input_matrix_no_alternatives,polarities)
-        res = norm.standardized()
-        res.columns = res.columns.astype('str') # to match the type of columns in the two dfs
+        res_any = norm.standardized(feature_range=('-inf', '+inf'))
+        res_no0 = norm.standardized(feature_range=(0.1, '+inf'))
+        res_any.columns = res_any.columns.astype('str') # to match the type of columns in the two dfs
+        res_no0.columns = res_no0.columns.astype('str')
 
         # Then
-        assert isinstance(res, pd.DataFrame)
-        assert_frame_equal(res, expected_res, check_like=True)
+        assert isinstance(res_any, pd.DataFrame)
+        assert isinstance(res_no0, pd.DataFrame)
+        assert_frame_equal(res_any, expected_res_any, check_like=True)
+        assert_frame_equal(res_no0, expected_res_no0, check_like=True)
 
 
     def test_rank(self):
