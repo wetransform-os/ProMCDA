@@ -1,6 +1,7 @@
 import unittest
 
 from pandas.testing import assert_frame_equal
+from numpy.testing import assert_almost_equal
 
 from mcda.utils import *
 from mcda.utility_functions.normalization import Normalization
@@ -39,6 +40,10 @@ class TestNormalization(unittest.TestCase):
         assert isinstance(res_no0, pd.DataFrame)
         assert_frame_equal(res_01, expected_res_01, check_like=True)
         assert_frame_equal(res_no0, expected_res_no0, check_like=True)
+        assert_almost_equal(res_01.to_numpy().min(), 0)
+        assert_almost_equal(res_01.to_numpy().max(),1)
+        assert_almost_equal(res_no0.to_numpy().min(),0.1)
+        assert_almost_equal(res_no0.to_numpy().max(),1)
 
 
     def test_target(self):
@@ -60,7 +65,10 @@ class TestNormalization(unittest.TestCase):
         assert isinstance(res_no0, pd.DataFrame)
         assert_frame_equal(res_01, expected_res_01, check_like=True)
         assert_frame_equal(res_no0, expected_res_no0, check_like=True)
-
+        assert_almost_equal(res_01.to_numpy().min(), 0)
+        assert_almost_equal(res_01.to_numpy().max(), 1)
+        assert_almost_equal(res_no0.to_numpy().min(), 0.1)
+        assert_almost_equal(res_no0.to_numpy().max(), 1)
 
     def test_standardized(self):
         # Given
@@ -81,7 +89,7 @@ class TestNormalization(unittest.TestCase):
         assert isinstance(res_no0, pd.DataFrame)
         assert_frame_equal(res_any, expected_res_any, check_like=True)
         assert_frame_equal(res_no0, expected_res_no0, check_like=True)
-
+        assert_almost_equal(res_no0.to_numpy().min(), 0.1)
 
     def test_rank(self):
         # Given

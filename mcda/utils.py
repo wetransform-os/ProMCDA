@@ -87,6 +87,30 @@ def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     fig.show()
     return fig
 
+def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
+    no_of_combinations = scores.shape[1]-1
+    fig = go.Figure(layout_yaxis_title="MCDA rough score")
+    i = 0
+    while i <= no_of_combinations - 1:
+        fig.add_trace(go.Bar(
+            name=scores.columns[i+1],
+            x=scores['Alternatives'][:].values.tolist(),
+            y=scores.iloc[:, i + 1],
+        ))
+        i = i + 1
+    fig.update_layout(barmode='group', height=600, width=1000,
+                      title='<b>MCDA analysis<b>',
+                      title_font_size=22,
+
+                      xaxis=dict(
+                          tickmode="array",
+                          tickvals=np.arange(0, len(scores['Alternatives'][:])),
+                          ticktext=scores['Alternatives'][:],
+                          tickangle=45)
+                      )
+    fig.show()
+    return fig
+
 
 def save_figure(figure: object, folder_path: str, filename: str):
     result_path = os.path.join(folder_path, filename)

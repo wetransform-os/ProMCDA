@@ -75,7 +75,6 @@ class MCDAWithoutVar():
         scores_harmonic_minmax = agg.harmonic(self.normalized_indicators["minmax_no0"])
         scores_harmonic_target = agg.harmonic(self.normalized_indicators["target_no0"])
         scores_harmonic_rank = agg.harmonic(self.normalized_indicators["rank"])
-
         scores_minimum_standardized = agg.minimum(self.normalized_indicators["standardized_any"])
 
         scores = pd.concat([scores_weighted_sum_standardized,scores_weighted_sum_minmax,scores_weighted_sum_target,scores_weighted_sum_rank,
