@@ -24,6 +24,8 @@ class Aggregation(object):
     def __init__(self, weights: list):
 
         self.weights = weights
+        if sum(self.weights) != 1:
+            self.weights = [val / sum(self.weights) for val in self.weights]
 
     def weighted_sum(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
         """

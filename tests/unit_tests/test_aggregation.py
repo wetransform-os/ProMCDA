@@ -26,6 +26,17 @@ class TestAggregation(unittest.TestCase):
 
         return weights
 
+    def test_init(self):
+        # Given
+        weights = TestAggregation.get_weights()
+
+        # When
+        agg = Aggregation(weights)
+
+        # Then
+        assert sum(agg.weights) == pytest.approx(1, 0.1)
+
+
     def test_weighted_sum(self):
         # Given
         weights = TestAggregation.get_weights()

@@ -48,7 +48,7 @@ def main(input_config: dict):
     weights = config.weight_for_each_indicator
 
     if sum(weights) != 1:
-        weights = [val/sum(weights) for val in weights]
+        weights = [val/sum(weights) for val in weights] # the normalization is perfomed again in Aggregation, here is only for logging purposes
         weights_rounded = [round(elem, 2) for elem in weights]
         logger.info("The sum of the weights of the indicators is not equal to 1, their values have been normalized: {}".format(weights_rounded))
 
