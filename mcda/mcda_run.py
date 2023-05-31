@@ -48,7 +48,7 @@ def main(input_config: dict):
     weights = config.weight_for_each_indicator
 
     if sum(weights) != 1:
-        weights = [val/sum(weights) for val in weights]
+        weights = [val/sum(weights) for val in weights] # the normalization is perfomed again in Aggregation, here is only for logging purposes
         weights_rounded = [round(elem, 2) for elem in weights]
         logger.info("The sum of the weights of the indicators is not equal to 1, their values have been normalized: {}".format(weights_rounded))
 
@@ -89,7 +89,10 @@ def main(input_config: dict):
             save_config(input_config, config.output_file_path, 'configuration.json')
             # plots
             plot_norm_scores = plot_norm_scores_without_uncert(normalized_scores)
-            save_figure(plot_norm_scores, config.output_file_path, "MCDA_no_var.png")
+            save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores_no_var.png")
+            plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
+            save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores_no_var.png")
+
             logger.info("Finished MCDA without variability: check the output files")
     else:
         if (config.monte_carlo_runs > 0):

@@ -40,7 +40,8 @@ class TestMCDA_without_variability(unittest.TestCase):
 
         # Then
         assert isinstance(res, dict)
-        TestCase.assertIn(self, member='standardized', container=res.keys())
+        TestCase.assertIn(self, member='standardized_any', container=res.keys())
+        TestCase.assertIn(self, member='standardized_no0', container=res.keys())
         TestCase.assertIn(self, member='minmax_01', container=res.keys())
         TestCase.assertIn(self, member='minmax_no0', container=res.keys())
         TestCase.assertIn(self, member='target_01', container=res.keys())
