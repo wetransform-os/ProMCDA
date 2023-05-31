@@ -157,10 +157,7 @@ class Normalization(object):
         if feature_range == ('-inf','+inf'):
             pass
         else:
-            if indicators_scaled_standardized.lt(0).values.any():
-                indicators_scaled_standardized = indicators_scaled_standardized + abs(indicators_scaled_standardized.min())+0.1
-            else:
-                indicators_scaled_standardized = indicators_scaled_standardized + 0.1
+            indicators_scaled_standardized = indicators_scaled_standardized + abs(indicators_scaled_standardized.min())+0.1
 
         return indicators_scaled_standardized
 

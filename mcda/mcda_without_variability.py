@@ -66,16 +66,16 @@ class MCDAWithoutVar():
         scores_weighted_sum_target = agg.weighted_sum(self.normalized_indicators["target_01"])
         scores_weighted_sum_rank = agg.weighted_sum(self.normalized_indicators["rank"])
 
-        scores_geometric_standardized = agg.geometric(self.normalized_indicators["standardized_no0"])
-        scores_geometric_minmax = agg.geometric(self.normalized_indicators["minmax_no0"])
-        scores_geometric_target = agg.geometric(self.normalized_indicators["target_no0"])
-        scores_geometric_rank = agg.geometric(self.normalized_indicators["rank"])
+        scores_geometric_standardized = pd.Series(agg.geometric(self.normalized_indicators["standardized_no0"]))
+        scores_geometric_minmax = pd.Series(agg.geometric(self.normalized_indicators["minmax_no0"]))
+        scores_geometric_target = pd.Series(agg.geometric(self.normalized_indicators["target_no0"]))
+        scores_geometric_rank = pd.Series(agg.geometric(self.normalized_indicators["rank"]))
 
-        scores_harmonic_standardized = agg.harmonic(self.normalized_indicators["standardized_no0"])
-        scores_harmonic_minmax = agg.harmonic(self.normalized_indicators["minmax_no0"])
-        scores_harmonic_target = agg.harmonic(self.normalized_indicators["target_no0"])
-        scores_harmonic_rank = agg.harmonic(self.normalized_indicators["rank"])
-        scores_minimum_standardized = agg.minimum(self.normalized_indicators["standardized_any"])
+        scores_harmonic_standardized = pd.Series(agg.harmonic(self.normalized_indicators["standardized_no0"]))
+        scores_harmonic_minmax = pd.Series(agg.harmonic(self.normalized_indicators["minmax_no0"]))
+        scores_harmonic_target = pd.Series(agg.harmonic(self.normalized_indicators["target_no0"]))
+        scores_harmonic_rank = pd.Series(agg.harmonic(self.normalized_indicators["rank"]))
+        scores_minimum_standardized = pd.Series(agg.minimum(self.normalized_indicators["standardized_any"]))
 
         scores = pd.concat([scores_weighted_sum_standardized,scores_weighted_sum_minmax,scores_weighted_sum_target,scores_weighted_sum_rank,
                             scores_geometric_standardized,scores_geometric_minmax,scores_geometric_target,scores_geometric_rank,

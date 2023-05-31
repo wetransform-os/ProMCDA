@@ -1,6 +1,8 @@
 import sys
 import logging
 import pandas as pd
+import numpy as np
+from scipy import stats
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
@@ -29,21 +31,23 @@ class Aggregation(object):
 
     def weighted_sum(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
         """
-        Weighted-sum or additive aggregation function.
-        Gets as input the normalized values of the indicators in a matrix
+        Weighted-sum or additive aggregation function
+        gets as input the normalized values of the indicators in a matrix
         and estimates the scores over the indicators, per alternative.
 
         :gets: pd.DataFrame() of shape (no.alternatives x no.indicators)
         :returns: pd.Series of length = no. of alternatives
         """
 
+        print(self.weights)
+        print(norm_indicators)
         scores = (norm_indicators * self.weights).sum(axis=1)
 
         return scores
 
-    def geometric(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
+    def geometric(self, norm_indicators: pd.DataFrame()) -> np.ndarray:
         """
-        Geometric aggregation function works only with strictly positive
+        The weighted geometric mean works only with strictly positive
         normalized indicator values (i.e. not with minmax and target with feature range (0,1);
         not with standardized with feature range ('-inf','+inf')).
         Gets as input the normalized values of the indicators in a matrix
@@ -55,15 +59,15 @@ class Aggregation(object):
 
         if (norm_indicators == 0).any().any():
             logger.error('Error Message', stack_info=True)
-            raise ValueError('Geometric aggregation cannot work with 0 values normalized indicators')
+            raise ValueError('Weighted geometric mean cannot work with 0 values normalized indicators')
         else:
-            scores = (norm_indicators ** self.weights).product(axis=1)
+            scores = stats.mstats.gmean(norm_indicators, axis=1, weights=self.weights)
 
         return scores
 
-    def harmonic(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
+    def harmonic(self, norm_indicators: pd.DataFrame()) -> np.ndarray:
         """
-        Harmonic aggregation function works only with strictly positive
+        The weighted harmonic mean works only with strictly positive
         normalized indicator values (i.e. not with minmax, and target with feature range (0,1);
         not with standardized with feature range ('-inf','+inf')).
         Gets as input the normalized values of the indicators in a matrix
@@ -76,9 +80,9 @@ class Aggregation(object):
 
         if (norm_indicators == 0).any().any():
             logger.error('Error Message', stack_info=True)
-            raise ValueError('Harmonic aggregation cannot work with 0 values normalized indicators')
+            raise ValueError('With 0 values normalized indicators, the weighted harmonic mean will output 0s')
         else:
-            scores = no_indicators/((self.weights/norm_indicators).sum(axis=1))
+            scores = stats.hmean(norm_indicators, axis=1, weights=self.weights)
 
         return scores
 

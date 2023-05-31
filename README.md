@@ -64,10 +64,13 @@ If else, N>1 and the input matrix has uncertaities associate to some or all the 
 
 
 ### General information and references
+The normalization functions are implemented by following [*Langhans et al.*, 2014](https://www.sciencedirect.com/science/article/abs/pii/S1470160X14002167)
+
 The normalization functions *minmax*, t*arget* and *standardized* can produce negative or zero values, therefore a shift to positive values
 is implemented so that they can be used also together with the aggregation functions *geometric* and *harmonic* (which require positive values). 
 
 The code implements 4 normalization and 4 aggregation functions. However, not all combinations are 
 meaningful or mathematically acceptable. For more details refer to Table 6 in 
 [*Gasser et al.*, 2020](https://www.sciencedirect.com/science/article/pii/S1470160X19307241)
+
 

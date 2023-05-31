@@ -22,7 +22,8 @@ class TestAggregation(unittest.TestCase):
 
     @staticmethod
     def get_weights():
-        weights = (0.5, 0.5, 0.5, 0.5, 0.5, 0.5) # same as in MCDTool/configuration_without_uncertainty.json
+        weights_non_norm = (0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
+        weights = [val/sum(weights_non_norm) for val in weights_non_norm]
 
         return weights
 
@@ -58,13 +59,13 @@ class TestAggregation(unittest.TestCase):
         wrong_normalized_matrix = TestAggregation.get_normalized_input_matrix_w_0()
 
         # When
-        expected_res = (normalized_matrix**weights).product(axis=1)
+        expected_res = (normalized_matrix**np.asarray(weights)).product(axis=1)
         agg = Aggregation(weights)
         res = agg.geometric(normalized_matrix)
 
         # Then
-        assert isinstance(res, pd.Series)
-        assert_series_equal(res, expected_res, check_like=True)
+        assert isinstance(res, np.ndarray)
+        assert_series_equal(pd.Series(res), expected_res, check_like=True)
         with pytest.raises(ValueError):
             agg.geometric(wrong_normalized_matrix)
 
@@ -73,16 +74,15 @@ class TestAggregation(unittest.TestCase):
         weights = TestAggregation.get_weights()
         normalized_matrix = TestAggregation.get_normalized_input_matrix()
         wrong_normalized_matrix = TestAggregation.get_normalized_input_matrix_w_0()
-        no_indicators = normalized_matrix.shape[1]
 
         # When
-        expected_res = no_indicators/((weights/normalized_matrix).sum(axis=1))
+        expected_res = 1/((weights/normalized_matrix).sum(axis=1))
         agg = Aggregation(weights)
         res = agg.harmonic(normalized_matrix)
 
         # Then
-        assert isinstance(res, pd.Series)
-        assert_series_equal(res, expected_res, check_like=True)
+        assert isinstance(res, np.ndarray)
+        assert_series_equal(pd.Series(res), expected_res, check_like=True)
         with pytest.raises(ValueError):
             agg.harmonic(wrong_normalized_matrix)
 
