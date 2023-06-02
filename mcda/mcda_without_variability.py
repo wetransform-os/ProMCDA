@@ -7,10 +7,11 @@ from mcda.utility_functions.aggregation import Aggregation
 
 class MCDAWithoutVar():
     """
-    Class MCDA without variability
+    Class MCDA without indicators' variability
 
     This class allows one to run MCDA without considering the uncertainties related to the indicators.
     All indicators are associated to the exact type of marginal distribution.
+    However, it's possible to have randomly sampled weights.
 
     :input:  configuration dictionary
              input_matrix with no alternatives column
