@@ -45,12 +45,16 @@ def main(input_config: dict):
     polar = config.polarity_for_each_indicator
 
     logger.info("Weights: {}".format(config.weight_for_each_indicator))
-    weights = config.weight_for_each_indicator
-
-    if sum(weights) != 1:
-        weights = [val/sum(weights) for val in weights] # the normalization is perfomed again in Aggregation, here is only for logging purposes
-        weights_rounded = [round(elem, 2) for elem in weights]
-        logger.info("The sum of the weights of the indicators is not equal to 1, their values have been normalized: {}".format(weights_rounded))
+    if config.weight_for_each_indicator["random_weights"] == "no":
+        fixed_weights = config.weight_for_each_indicator
+        norm_fixed_weights = check_norm_sum_weights(fixed_weights)
+    else:
+        no_runs = config.weight_for_each_indicator["no_samples"]
+        random_weights = randomly_sample_weights(no_indicators, no_runs)
+        norm_random_weights = []
+        for weights in random_weights:
+            weights = check_norm_sum_weights(weights)
+            norm_random_weights.append(weights)
 
     cores = config.no_cores
 
@@ -58,9 +62,9 @@ def main(input_config: dict):
     if no_indicators != len(polar):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The no. of polarities does not correspond to the no. of indicators')
-    if no_indicators != len(weights):
+    if no_indicators != len(fixed_weights):
         logger.error('Error Message', stack_info=True)
-        raise ValueError('The no. of weights does not correspond to the no. of indicators')
+        raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
 
     # checks on the settings for non-variability/variability
     if (len(set(config.marginal_distribution_for_each_indicator))==1):
@@ -68,12 +72,18 @@ def main(input_config: dict):
             logger.error('Error Message', stack_info=True)
             raise ValueError('If the number of Monte-Carlo runs is larger than 0, at least some of the marginal distributions are expected to be non-exact')
         else:
-            logger.info("Start MCDA without variability")
-            # estimate the scores
+            logger.info("Start MCDA without indicators' variability")
             mcda_no_var = MCDAWithoutVar(config, input_matrix_no_alternatives)
+            # normalize the indicators
             normalized_indicators = mcda_no_var.normalize_indicators()
-            scores = mcda_no_var.aggregate_indicators(normalized_indicators, config.weight_for_each_indicator)
-            # normalize the scores
+            # estimate the scores through aggregation
+            if config.weight_for_each_indicator["random_weights"] == "no":
+                scores = mcda_no_var.aggregate_indicators(normalized_indicators, norm_fixed_weights)
+            else:
+                args_for_parallel_agg = [(lst, normalized_indicators) for lst in norm_random_weights]
+                all_scores = parallelize_aggregation(args_for_parallel_agg)
+                print(all_scores)
+            # normalize the output scores
             normalized_scores = rescale_minmax(scores)
             normalized_scores.insert(0, 'Alternatives', input_matrix.iloc[:,0])
             # estimate the ranks

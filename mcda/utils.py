@@ -1,9 +1,11 @@
 import plotly.graph_objects as go
 from sklearn import preprocessing
 from os.path import abspath
+from typing import List
 import pandas as pd
 import numpy as np
 import argparse
+import random
 import json
 import os
 
@@ -62,6 +64,23 @@ def rescale_minmax(scores: pd.DataFrame) -> pd.DataFrame():
     normalized_scores.columns = scores.columns
 
     return normalized_scores
+
+def randomly_sample_weights(no_weights: int, no_runs:int) -> List[list]:
+    ''' The function generates 'no_runs;
+        Each list has 'no_weights' elements.'''
+    list_of_weights = []
+    for _ in range(no_runs):
+        lst = [random.uniform(0, 1) for _ in range(no_weights)]
+        list_of_weights.append(lst)
+
+    return list_of_weights
+
+def check_norm_sum_weights(weights: list) -> list:
+    if sum(weights) != 1:
+        norm_weights = [val/sum(weights) for val in weights]
+        return norm_weights
+    else:
+        return weights
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     no_of_combinations = scores.shape[1]-1
