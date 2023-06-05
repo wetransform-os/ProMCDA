@@ -1,6 +1,5 @@
 from mcda.utility_functions.aggregation import Aggregation
 import pandas as pd
-import multiprocess as mp
 import multiprocessing
 from typing import List, Tuple
 
@@ -64,3 +63,12 @@ def parallelize_aggregation(args: List[tuple]) -> List[pd.DataFrame]:
     pool.join()
 
     return res
+
+def estimate_runs_mean_std(res: List[pd.DataFrame])->List[pd.DataFrame]:
+    all_runs = pd.concat(res, axis=0)
+    by_index = all_runs.groupby(all_runs.index)
+    df_means = by_index.mean()
+    df_stds = by_index.std()
+    all_scores_mean_std = [df_means, df_stds]
+
+    return all_scores_mean_std
