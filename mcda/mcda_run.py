@@ -87,8 +87,6 @@ def main(input_config: dict):
                 args_for_parallel_agg = [(lst, normalized_indicators) for lst in norm_random_weights]
                 all_weights = parallelize_aggregation(args_for_parallel_agg)
                 all_weights_means, all_weights_stds = estimate_runs_mean_std(all_weights)
-                print(all_weights)
-                print(all_weights_means)
             # normalize the output scores (no randomness)
             if not scores.empty:
                 normalized_scores = rescale_minmax(scores)
@@ -117,7 +115,7 @@ def main(input_config: dict):
             # plots
             if not scores.empty:
                 plot_norm_scores = plot_norm_scores_without_uncert(normalized_scores)
-                save_figure(plot_norm_scores, config.output_file_path, "MCDA_no_var.png")
+                save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores_no_var.png")
                 plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
                 save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores_no_var.png")
             elif not all_weights_means.empty:

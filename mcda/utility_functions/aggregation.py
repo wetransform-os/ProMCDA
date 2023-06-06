@@ -74,7 +74,7 @@ class Aggregation(object):
             logger.error('Error Message', stack_info=True)
             raise ValueError('Harmonic aggregation cannot work with 0 values normalized indicators')
         else:
-            scores = no_indicators/((self.weights/norm_indicators).sum(axis=1))
+            scores = 1/((self.weights/norm_indicators).sum(axis=1))
 
         return scores
 

@@ -68,12 +68,13 @@ def rescale_minmax(scores: pd.DataFrame) -> pd.DataFrame():
 
 
 def randomly_sample_weights(no_weights: int, no_runs: int) -> List[list]:
-    ''' The function generates 'no_runs;
+    ''' The function generates 'no_runs' lists of weights;
         Each list has 'no_weights' elements.'''
     list_of_weights = []
     for _ in range(no_runs):
-        #lst = [random.uniform(0, 1) for _ in range(no_weights)]
-        lst = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+        #lst = [random.uniform(0, 1),0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+        lst = [random.uniform(0, 1) for _ in range(no_weights)]
+        #lst = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
         list_of_weights.append(lst)
 
     return list_of_weights
