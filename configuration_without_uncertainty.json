@@ -9,5 +9,5 @@
       "no_samples": 10000,
       "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
                                 },
-  "output_path": "/Users/flaminia/Desktop/MCDA_randomness_1_weight_10000_runs/"
+  "output_path": "/Users/flaminia/Desktop/MCDA_rand_weights_10000_runs/"
 }
