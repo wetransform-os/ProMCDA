@@ -93,6 +93,7 @@ def main(input_config: dict):
                 normalized_scores.insert(0, 'Alternatives', input_matrix.iloc[:,0])
             elif not all_weights_means.empty:
                 all_weights_means.insert(0, 'Alternatives', input_matrix.iloc[:,0])
+                all_weights_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
             # estimate the ranks
             if not scores.empty:
                 ranks = scores.rank(pct=True)

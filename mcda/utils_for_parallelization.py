@@ -47,17 +47,6 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict) -
 
 def parallelize_aggregation(args: List[tuple]) -> List[pd.DataFrame]:
 
-    # processes = []
-    #
-    # for arg in args:
-    #     process = mp.Process(target=initialize_and_call_aggregation, args=(arg,))
-    #     process.start()
-    #
-    #     processes.append(process)
-    #
-    #     for process in processes:
-    #         process.join()
-
     # create a synchronous multiprocessing pool with the desired number of processes
     pool = multiprocessing.Pool()
     res = pool.map(initialize_and_call_aggregation, args)
