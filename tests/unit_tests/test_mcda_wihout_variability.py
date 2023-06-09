@@ -26,7 +26,6 @@ class TestMCDA_without_variability(unittest.TestCase):
             "output_path": "/path/to/output"
         }
 
-
     @staticmethod
     def get_input_matrix():
         input_matrix = read_matrix("tests/resources/input_matrix_without_uncert.csv")
@@ -39,7 +38,6 @@ class TestMCDA_without_variability(unittest.TestCase):
         list_df = [TestMCDA_without_variability.get_input_matrix(),TestMCDA_without_variability.get_input_matrix()]
 
         return list_df
-
 
     def test_normalize_indicators(self):
         # Given
@@ -94,14 +92,12 @@ class TestMCDA_without_variability(unittest.TestCase):
         std = {'col1': [0,0,0,0,0,0], 'col2': [0,0,0,0,0,0], 'col3': [0,0,0,0,0,0], 'col4': [0,0,0,0,0,0]}
         df_std = pd.DataFrame(data=std)
 
-
         # Then
         assert len(res) ==2
-        assert isinstance(res,list)
+        assert isinstance(res, list)
         assert isinstance(res[0], pd.DataFrame)
         assert res[0].to_numpy().all() == TestMCDA_without_variability.get_input_matrix().to_numpy().all()
         assert res[1].to_numpy().all() == df_std.to_numpy().all()
-
 
 
 if __name__ == '__main__':
