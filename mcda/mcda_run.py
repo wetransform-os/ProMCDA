@@ -7,6 +7,7 @@ import os
 
 from mcda.configuration.config import Config
 from mcda.utils import *
+from mcda.utils_for_parallelization import *
 from mcda.mcda_without_variability import MCDAWithoutVar
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
@@ -45,12 +46,16 @@ def main(input_config: dict):
     polar = config.polarity_for_each_indicator
 
     logger.info("Weights: {}".format(config.weight_for_each_indicator))
-    weights = config.weight_for_each_indicator
-
-    if sum(weights) != 1:
-        weights = [val/sum(weights) for val in weights] # the normalization is perfomed again in Aggregation, here is only for logging purposes
-        weights_rounded = [round(elem, 2) for elem in weights]
-        logger.info("The sum of the weights of the indicators is not equal to 1, their values have been normalized: {}".format(weights_rounded))
+    if config.weight_for_each_indicator["random_weights"] == "no":
+        fixed_weights = config.weight_for_each_indicator["given_weights"]
+        norm_fixed_weights = check_norm_sum_weights(fixed_weights)
+    else:
+        no_runs = config.weight_for_each_indicator["no_samples"]
+        random_weights = randomly_sample_weights(no_indicators, no_runs)
+        norm_random_weights = []
+        for weights in random_weights:
+            weights = check_norm_sum_weights(weights)
+            norm_random_weights.append(weights)
 
     cores = config.no_cores
 
@@ -58,9 +63,9 @@ def main(input_config: dict):
     if no_indicators != len(polar):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The no. of polarities does not correspond to the no. of indicators')
-    if no_indicators != len(weights):
+    if no_indicators != len(config.weight_for_each_indicator["given_weights"]):
         logger.error('Error Message', stack_info=True)
-        raise ValueError('The no. of weights does not correspond to the no. of indicators')
+        raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
 
     # checks on the settings for non-variability/variability
     if (len(set(config.marginal_distribution_for_each_indicator))==1):
@@ -68,32 +73,58 @@ def main(input_config: dict):
             logger.error('Error Message', stack_info=True)
             raise ValueError('If the number of Monte-Carlo runs is larger than 0, at least some of the marginal distributions are expected to be non-exact')
         else:
-            logger.info("Start MCDA without variability")
-            # estimate the scores
+            scores = pd.DataFrame()
+            all_weights_means = pd.DataFrame()
+            logger.info("Start MCDA without variability for the indicators")
+            t = time.time()
             mcda_no_var = MCDAWithoutVar(config, input_matrix_no_alternatives)
+            # normalize the indicators
             normalized_indicators = mcda_no_var.normalize_indicators()
-            scores = mcda_no_var.aggregate_indicators(normalized_indicators, config.weight_for_each_indicator)
-            # normalize the scores
-            normalized_scores = rescale_minmax(scores)
-            normalized_scores.insert(0, 'Alternatives', input_matrix.iloc[:,0])
+            # estimate the scores through aggregation
+            if config.weight_for_each_indicator["random_weights"] == "no":
+                scores = mcda_no_var.aggregate_indicators(normalized_indicators, norm_fixed_weights)
+            else:
+                args_for_parallel_agg = [(lst, normalized_indicators) for lst in norm_random_weights]
+                all_weights = parallelize_aggregation(args_for_parallel_agg)
+                all_weights_means, all_weights_stds = estimate_runs_mean_std(all_weights)
+            # normalize the output scores (no randomness)
+            if not scores.empty:
+                normalized_scores = rescale_minmax(scores)
+                normalized_scores.insert(0, 'Alternatives', input_matrix.iloc[:,0])
+            elif not all_weights_means.empty:
+                all_weights_means.insert(0, 'Alternatives', input_matrix.iloc[:,0])
+                all_weights_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
             # estimate the ranks
-            ranks = scores.rank(pct=True)
-            ranks.insert(0, 'Alternatives', input_matrix.iloc[:,0])
+            if not scores.empty:
+                ranks = scores.rank(pct=True)
+                ranks.insert(0, 'Alternatives', input_matrix.iloc[:,0])
+            elif not all_weights_means.empty:
+                ranks = all_weights_means.rank(pct=True)
             # save output files
             logger.info("Saving results in {}".format(config.output_file_path))
             check_path_exists(config.output_file_path)
-            scores.insert(0, 'Alternatives', input_matrix.iloc[:,0])
-            save_df(scores, config.output_file_path, 'scores.csv')
-            save_df(normalized_scores, config.output_file_path, 'normalized_scores.csv')
-            save_df(ranks, config.output_file_path, 'ranks.csv')
+            if not scores.empty:
+                scores.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+                save_df(scores, config.output_file_path, 'scores.csv')
+                save_df(normalized_scores, config.output_file_path, 'normalized_scores.csv')
+                save_df(ranks, config.output_file_path, 'ranks.csv')
+            elif not all_weights_means.empty:
+                save_df(all_weights_means, config.output_file_path, 'score_means.csv')
+                save_df(all_weights_stds, config.output_file_path, 'score_stds.csv')
+                save_df(ranks, config.output_file_path, 'ranks.csv')
             save_config(input_config, config.output_file_path, 'configuration.json')
             # plots
-            plot_norm_scores = plot_norm_scores_without_uncert(normalized_scores)
-            save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores_no_var.png")
-            plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
-            save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores_no_var.png")
-
+            if not scores.empty:
+                plot_norm_scores = plot_norm_scores_without_uncert(normalized_scores)
+                save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores_no_var.png")
+                plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
+                save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores_no_var.png")
+            elif not all_weights_means.empty:
+                plot_weight_mean_scores = plot_mean_scores(all_weights_means, all_weights_stds)
+                save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_weights_var.png")
             logger.info("Finished MCDA without variability: check the output files")
+            elapsed = time.time() - t
+            logger.info("All calculations finished in seconds {}".format(elapsed))
     else:
         if (config.monte_carlo_runs > 0):
             if (config.monte_carlo_runs < 1000):

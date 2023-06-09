@@ -3,7 +3,7 @@ A tool to estimate ranks of alternatives and their uncertainties based on the Mu
 The variability of the MCDA scores are caused by:
 - the uncertainty associated with the indicators
 - the sensitivity of the algorithm to the different pairs of norm/agg functions
-- the randomness that can be associated to the weights (TODO: implement)
+- the randomness that can be associated to the weights (also as single source of randomness)
 
 The tool can be used also as a simple MCDA ranking tool with no variability (see also below).
 
@@ -23,7 +23,11 @@ The following input information are contained in the `configuration.json` file:
 - list of polarities for each indicator, "+" or "-"
 - number of Monte Carlo runs, "N" (default is 0, no variability is considered; N should be a sufficient big number, e.g. larger or equal than 1000)
 - the number of cores used for the parallelization, "numCores"
-- list of weights for each indicator - the sum should always be equal to 1 or the values will be corrected
+- list of weights for each indicator 
+    - should the weights be randomly sampled by mean of a Monte Carlo sampling? (*yes* or *no*)
+    - if *no*, a list of weights should be given as input
+    - if *yes*, the number of samples should be given as input
+    - the sum of the weights should always be equal to 1 or the values will be rescaled
 - output file (e.g. `path/output_file.csv`).
 
 In case the variability of results is of no interest, then:

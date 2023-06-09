@@ -39,8 +39,6 @@ class Aggregation(object):
         :returns: pd.Series of length = no. of alternatives
         """
 
-        print(self.weights)
-        print(norm_indicators)
         scores = (norm_indicators * self.weights).sum(axis=1)
 
         return scores
