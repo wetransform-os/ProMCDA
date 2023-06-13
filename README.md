@@ -7,7 +7,7 @@ The variability of the MCDA scores are caused by:
 
 The tool can be used also as a simple MCDA ranking tool with no variability (see also below).
 
-### Input information needed
+### Input information needed in the configuration file
 The following input information are contained in the `configuration.json` file:
 - input matrix, a table where rows represent the alternatives and the columns represent the indicators
   - input matrix without uncertainties for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`)
@@ -26,8 +26,10 @@ The following input information are contained in the `configuration.json` file:
 - list of weights for each indicator 
     - should the weights be randomly sampled by mean of a Monte Carlo sampling? (*yes* or *no*)
     - if *no*, a list of weights should be given as input
+    - if *yes*, should the process be *iterative* (*yes*, i.e. randomness is associated to one weight at time) or not ("no", i.e. randomness is associated to all the weights at the same time)?
     - if *yes*, the number of samples should be given as input
-    - the sum of the weights should always be equal to 1 or the values will be rescaled
+    - the sum of the weights should always be equal to 1 or the values will be rescaled using minmax rescaler
+    - depending on the different options, the other information are disregard
 - output file (e.g. `path/output_file.csv`).
 
 In case the variability of results is of no interest, then:
@@ -56,11 +58,19 @@ python3 -m pytest -s tests/unit_tests/test_mcda_run.py -vv
 ```
 
 ### What does the code do: overview
-If N=1 and the input matrix has no uncertainties associated to the indicators, then:
+If N=0 and the input matrix has no uncertainties associated to the indicators, then:
 - the indicator values are normalized by mean of all the possible normalization methods 
 - the normalized indicators are aggregated by mean of all the possible aggregation methods, by considering their assigned weights
-- results of all the combinations normalization/aggregation are provided
-If else, N>1 and the input matrix has uncertaities associate to some or all the indicators, then:
+- the results of all the combinations normalization/aggregation are provided
+
+If else N=0, the input matrix has no uncertainties associated to the indicators, but the weights are randomly sampled, then:
+- all weights or one weight at time are randomly sampled from a uniform distribution [0,1]
+- the weights are normalized
+- if all weights are sampled together, MCDA receives n-inputs; if the weights are sampled one at time, MCD will receive n-inputs x no_weights times
+- iterations 1,2 of the first condition follow
+- the results of all the combinations normalization/aggregation are provided in the form of mean and std over all the runs (if the weights are iteratively sampled, this applies for no_indicators-times)
+
+If else, N>1 and the input matrix has uncertainties associate to some or all the indicators, then:
 - for each indicator, the meand and standard deviation (std) are extracted from the input matrix
 - for each N, and for each indicator, a value is sampled from the relative assigned marginal distribution: one of N input matrix is created
 - normalizations and aggregations are performed as in points 1,2,3 of the case N=1: a list of all the results is created

@@ -29,7 +29,7 @@ class Config(object):
 
     _dict_values = ['weight_for_each_indicator']
 
-    _keys_of_dict_values = {'weight_for_each_indicator': ['random_weights', 'no_samples', 'given_weights']}
+    _keys_of_dict_values = {'weight_for_each_indicator': ['random_weights', 'iterative', 'no_samples', 'given_weights']}
 
     def __init__(self, input_config: dict):
         """

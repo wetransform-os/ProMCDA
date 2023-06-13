@@ -15,6 +15,7 @@ class TestMCDA(unittest.TestCase):
             "no_cores": 17,
             "weight_for_each_indicator" : {
                 "random_weights": "no",
+                "iterative": "no",
                 "no_samples": 10000,
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
                                            },
@@ -31,6 +32,7 @@ class TestMCDA(unittest.TestCase):
             "no_cores": 17,
             "weight_for_each_indicator" : {
                 "random_weights": "no",
+                "iterative": "no",
                 "no_samples": 10000,
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
                                            },

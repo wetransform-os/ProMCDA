@@ -16,6 +16,7 @@ class TestConfig(unittest.TestCase):
             "no_cores": 17,
             "weight_for_each_indicator": {
                 "random_weights": "yes",
+                "iterative": "no",
                 "no_samples": 3,
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
             },
@@ -32,6 +33,7 @@ class TestConfig(unittest.TestCase):
             "no_cores": 17,
             "weight_for_each_indicator": {
                 "random_weights": "yes",
+                "iterative": "no",
                 "no_samples": 3,
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
                                          },
@@ -48,6 +50,7 @@ class TestConfig(unittest.TestCase):
             "no_cores": 17,
             "weight_for_each_indicator": {
                 "error_key": "yes",
+                "iterative": "yes",
                 "no_samples": 3,
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
             },
