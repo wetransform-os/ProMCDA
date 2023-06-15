@@ -112,12 +112,12 @@ def check_norm_sum_weights(weights: list) -> list:
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     no_of_combinations = scores.shape[1] - 1
-    fig = go.Figure(layout_yaxis_range=[-1.5, 1.5], layout_yaxis_title="MCDA normalized score")
+    fig = go.Figure(layout_yaxis_range=[scores.iloc[: , 1:].values.min()-0.5, scores.iloc[: , 1:].values.max()+0.5],layout_yaxis_title="MCDA normalized score")
     i = 0
     while i <= no_of_combinations - 1:
         fig.add_trace(go.Bar(
             name=scores.columns[i + 1],
-            x=scores['Alternatives'][:].values.tolist(),
+            x=scores['Alternatives'].values.tolist(),
             y=scores.iloc[:, i + 1],
         ))
         i = i + 1
@@ -129,7 +129,9 @@ def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
                           tickmode="array",
                           tickvals=np.arange(0, len(scores['Alternatives'][:])),
                           ticktext=scores['Alternatives'][:],
-                          tickangle=45)
+                          tickangle=45),
+                      yaxis=dict(
+                          range=[scores.iloc[: , 1:].values.min()-0.5, scores.iloc[: , 1:].values.max()+0.5])
                       )
     fig.show()
     return fig
@@ -142,7 +144,7 @@ def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     while i <= no_of_combinations - 1:
         fig.add_trace(go.Bar(
             name=scores.columns[i+1],
-            x=scores['Alternatives'][:].values.tolist(),
+            x=scores['Alternatives'].values.tolist(),
             y=scores.iloc[:, i + 1],
         ))
         i = i + 1
@@ -166,7 +168,7 @@ def plot_mean_scores(all_weights_means:pd.DataFrame, all_weights_stds:pd.DataFra
     while i <= no_of_combinations - 1:
         fig.add_trace(go.Bar(
             name=all_weights_means.columns[i + 1],
-            x=all_weights_means['Alternatives'][:].values.tolist(),
+            x=all_weights_means['Alternatives'].values.tolist(),
             y=all_weights_means.iloc[:, i + 1],
             error_y=dict(type='data', array=all_weights_stds.iloc[:, i + 1])
         ))

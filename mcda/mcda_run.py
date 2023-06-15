@@ -20,6 +20,12 @@ def main(input_config: dict):
 
     logger.info("Read input matrix at {}".format(config.input_matrix_path))
     input_matrix = read_matrix(config.input_matrix_path)
+    if input_matrix.duplicated().any():
+        logger.error('Error Message', stack_info=True)
+        raise ValueError('There are duplicated rows in the input matrix')
+    elif input_matrix.iloc[:,0].duplicated().any():
+        logger.error('Error Message', stack_info=True)
+        raise ValueError('There are duplicated rows in the alternatives column')
     logger.info("Alternatives are {}".format(input_matrix.iloc[:,0].tolist()))
     input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0],axis=1) # drop first column with alternatives
 
@@ -159,7 +165,7 @@ def main(input_config: dict):
                 plot_norm_scores = plot_norm_scores_without_uncert(normalized_scores)
                 save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores_no_var.png")
                 plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
-                save_figure(plot_no_norm_scores, MCDA_rough_scores_no_var.png)
+                save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores_no_var.png")
             elif not all_weights_means.empty:
                 plot_weight_mean_scores = plot_mean_scores(all_weights_means, all_weights_stds)
                 save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_weights_var.png")

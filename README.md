@@ -9,7 +9,11 @@ The tool can be used also as a simple MCDA ranking tool with no variability (see
 
 ### Input information needed in the configuration file
 The following input information are contained in the `configuration.json` file:
-- input matrix, a table where rows represent the alternatives and the columns represent the indicators
+- input matrix, a table where rows represent the alternatives and the columns represent the indicators. Be sure that there is no index column but the column with the alternatives is set as index by:
+```bash
+input_matrix = input_matrix.set_index('Alternatives'),
+```
+and that there are no duplicates among the rows.
   - input matrix without uncertainties for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`)
   - input matrix with uncertainties for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`)
 - list with names of marginal distributions for each indicator (see an example here: `tests/resources/tobefilled`); the available distributions are 
