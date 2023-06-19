@@ -141,7 +141,7 @@ def main(input_config: dict):
                 ranks.insert(0, 'Alternatives', input_matrix.iloc[:,0])
             elif not all_weights_means.empty:
                 ranks = all_weights_means.rank(pct=True)
-                ranks.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+                #ranks.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
             elif not bool(iterative_random_w_means) == 'False':
                 pass
             # save output files

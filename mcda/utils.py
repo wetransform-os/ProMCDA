@@ -1,4 +1,3 @@
-import plotly.graph_objects as go
 from sklearn import preprocessing
 from os.path import abspath
 import plotly.graph_objects as go
