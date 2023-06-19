@@ -77,24 +77,24 @@ def rescale_minmax(scores: pd.DataFrame) -> pd.DataFrame():
     return normalized_scores
 
 
-def randomly_sample_all_weights(no_weights: int, no_runs: int) -> List[list]:
-    """ The function generates 'no_runs' lists of weights;
-        Each list has 'no_weights' random sampled elements."""
+def randomly_sample_all_weights(num_weights: int, num_runs: int) -> List[list]:
+    """ The function generates 'num_runs' lists of weights;
+        Each list has 'num_weights' random sampled elements."""
     list_of_weights = []
-    for _ in range(no_runs):
-        lst = [random.uniform(0, 1) for _ in range(no_weights)]
+    for _ in range(num_runs):
+        lst = [random.uniform(0, 1) for _ in range(num_weights)]
         list_of_weights.append(lst)
 
     return list_of_weights
 
 
-def randomly_sample_ix_weight(no_weights: int, index: int, no_runs: int) -> List[list]:
-    """ The function generates 'no_runs' lists of weights;
-        Each list has 'no_weights' elements,
+def randomly_sample_ix_weight(num_weights: int, index: int, num_runs: int) -> List[list]:
+    """ The function generates 'num_runs' lists of weights;
+        Each list has 'num_weights' elements,
         only one randomly sampled, at position index."""
     list_of_weights = []
-    for _ in range(no_runs):
-        lst = [1] * no_weights
+    for _ in range(num_runs):
+        lst = [1] * num_weights
         lst[index] = random.uniform(0, 1)
         list_of_weights.append(lst)
 
@@ -110,10 +110,10 @@ def check_norm_sum_weights(weights: list) -> list:
 
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
-    no_of_combinations = scores.shape[1] - 1
+    num_of_combinations = scores.shape[1] - 1
     fig = go.Figure(layout_yaxis_range=[scores.iloc[: , 1:].values.min()-0.5, scores.iloc[: , 1:].values.max()+0.5],layout_yaxis_title="MCDA normalized score")
     i = 0
-    while i <= no_of_combinations - 1:
+    while i <= num_of_combinations - 1:
         fig.add_trace(go.Bar(
             name=scores.columns[i + 1],
             x=scores['Alternatives'].values.tolist(),
@@ -137,10 +137,10 @@ def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
 
 
 def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
-    no_of_combinations = scores.shape[1]-1
+    num_of_combinations = scores.shape[1]-1
     fig = go.Figure(layout_yaxis_title="MCDA rough score")
     i = 0
-    while i <= no_of_combinations - 1:
+    while i <= num_of_combinations - 1:
         fig.add_trace(go.Bar(
             name=scores.columns[i+1],
             x=scores['Alternatives'].values.tolist(),
@@ -161,10 +161,10 @@ def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     return fig
 
 def plot_mean_scores(all_weights_means:pd.DataFrame, all_weights_stds:pd.DataFrame)-> object:
-    no_of_combinations = all_weights_means.shape[1] - 1
+    num_of_combinations = all_weights_means.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA average scores and std")
     i = 0
-    while i <= no_of_combinations - 1:
+    while i <= num_of_combinations - 1:
         fig.add_trace(go.Bar(
             name=all_weights_means.columns[i + 1],
             x=all_weights_means['Alternatives'].values.tolist(),
@@ -187,10 +187,10 @@ def plot_mean_scores(all_weights_means:pd.DataFrame, all_weights_stds:pd.DataFra
 
 
 def plot_mean_scores_iterative(all_weights_means:pd.DataFrame, all_weights_stds:pd.DataFrame, indicators: list, index: int)-> object:
-    no_of_combinations = all_weights_means.shape[1] - 1
+    num_of_combinations = all_weights_means.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA average scores and std")
     i = 0
-    while i <= no_of_combinations - 1:
+    while i <= num_of_combinations - 1:
         fig.add_trace(go.Bar(
             name=all_weights_means.columns[i + 1],
             x=all_weights_means['Alternatives'][:].values.tolist(),

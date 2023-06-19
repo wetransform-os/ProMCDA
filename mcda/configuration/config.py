@@ -11,7 +11,7 @@ class Config(object):
     marginal_distribution_for_each indicator: list of marginal distributions, one for each indicator
     polarity_for_each_indicator: list of polarities, one for each indicator
     monte_carlo_runs: number of MC runs
-    no_cores: number of cores used in the parallelization
+    num_cores: number of cores used in the parallelization
     monte_carlo_runs: list of weights, one for each indicator
     output_path: path to the output file
 
@@ -19,17 +19,17 @@ class Config(object):
 
     _valid_keys = ['input_matrix_path', 'marginal_distribution_for_each_indicator',
                    'polarity_for_each_indicator', 'monte_carlo_runs',
-                   'no_cores', 'weight_for_each_indicator', 'output_path']
+                   'num_cores', 'weight_for_each_indicator', 'output_path']
 
     _list_values: list[str] = ['marginal_distribution_for_each_indicator', 'polarity_for_each_indicator']
 
     _str_values = ['input_matrix_path', 'output_path']
 
-    _int_values = ['monte_carlo_runs', 'no_cores']
+    _int_values = ['monte_carlo_runs', 'num_cores']
 
     _dict_values = ['weight_for_each_indicator']
 
-    _keys_of_dict_values = {'weight_for_each_indicator': ['random_weights', 'iterative', 'no_samples', 'given_weights']}
+    _keys_of_dict_values = {'weight_for_each_indicator': ['random_weights', 'iterative', 'num_samples', 'given_weights']}
 
     def __init__(self, input_config: dict):
         """
@@ -93,8 +93,8 @@ class Config(object):
         return self.get_property('monte_carlo_runs')
 
     @property
-    def no_cores(self):
-        return self.get_property('no_cores')
+    def num_cores(self):
+        return self.get_property('num_cores')
 
     @property
     def weight_for_each_indicator(self):

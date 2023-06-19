@@ -18,11 +18,11 @@ class TestMCDA_without_variability(unittest.TestCase):
             "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact'],
             "polarity_for_each_indicator": ["-","-","+","+","+","+"],
             "monte_carlo_runs": 0,
-            "no_cores": 1,
+            "num_cores": 1,
             "weight_for_each_indicator" : {
                  "random_weights": "no",
                  "iterative": "no",
-                 "no_samples": 10000,
+                 "num_samples": 10000,
                  "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
                                           },
             "output_path": "/path/to/output"
@@ -35,11 +35,11 @@ class TestMCDA_without_variability(unittest.TestCase):
             "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact'],
             "polarity_for_each_indicator": ["-", "-", "+", "+", "+", "+"],
             "monte_carlo_runs": 0,
-            "no_cores": 1,
+            "num_cores": 1,
             "weight_for_each_indicator": {
                 "random_weights": "yes",
                 "iterative": "no",
-                "no_samples": 10,
+                "num_samples": 10,
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
             },
             "output_path": "/path/to/output"

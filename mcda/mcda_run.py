@@ -34,16 +34,16 @@ def main(input_config: dict):
 
     if all(element == 'exact' for element in marginal_pdf):
        # every column of the input matrix represents an indicator
-        no_indicators = input_matrix_no_alternatives.shape[1]
+        num_indicators = input_matrix_no_alternatives.shape[1]
         logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
-        logger.info("Number of indicators: {}".format(no_indicators))
+        logger.info("Number of indicators: {}".format(num_indicators))
     else:
         # non-exact indicators in the input matrix are associated to a column representing its mean
         # and a second column representing its std
-        no_non_exact = len(marginal_pdf) - marginal_pdf.count('exact')
-        no_indicators = input_matrix_no_alternatives.shape[1]-no_non_exact
+        num_non_exact = len(marginal_pdf) - marginal_pdf.count('exact')
+        num_indicators = input_matrix_no_alternatives.shape[1]-num_non_exact
         logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
-        logger.info("Number of indicators: {}".format(no_indicators))
+        logger.info("Number of indicators: {}".format(num_indicators))
 
     logger.info("Number of Monte Carlo runs: {}".format(config.monte_carlo_runs))
     mc_runs = config.monte_carlo_runs
@@ -56,10 +56,10 @@ def main(input_config: dict):
         fixed_weights = config.weight_for_each_indicator["given_weights"]
         norm_fixed_weights = check_norm_sum_weights(fixed_weights)
     else:
-        no_runs = config.weight_for_each_indicator["no_samples"]
+        num_runs = config.weight_for_each_indicator["num_samples"]
         is_random_w_iterative = config.weight_for_each_indicator["iterative"]
         if is_random_w_iterative == "no":
-            random_weights = randomly_sample_all_weights(no_indicators, no_runs)
+            random_weights = randomly_sample_all_weights(num_indicators, num_runs)
             norm_random_weights = []
             for weights in random_weights:
                 weights = check_norm_sum_weights(weights)
@@ -67,8 +67,8 @@ def main(input_config: dict):
         else:
             i=0
             rand_weight_per_indicator = {}
-            while i< no_indicators:
-                random_weights = randomly_sample_ix_weight(no_indicators, i, no_runs)
+            while i< num_indicators:
+                random_weights = randomly_sample_ix_weight(num_indicators, i, num_runs)
                 norm_random_weight = []
                 for weights in random_weights:
                     weights = check_norm_sum_weights(weights)
@@ -76,13 +76,13 @@ def main(input_config: dict):
                 rand_weight_per_indicator["indicator_{}".format(i+1)] = norm_random_weight
                 i=i+1
 
-    cores = config.no_cores
+    cores = config.num_cores
 
     # checks on the number of indicators, weights, and polarities
-    if no_indicators != len(polar):
+    if num_indicators != len(polar):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The no. of polarities does not correspond to the no. of indicators')
-    if no_indicators != len(config.weight_for_each_indicator["given_weights"]):
+    if num_indicators != len(config.weight_for_each_indicator["given_weights"]):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
 
@@ -104,16 +104,16 @@ def main(input_config: dict):
             if config.weight_for_each_indicator["random_weights"] == "no": # FIXED WEIGHTS
                 scores = mcda_no_var.aggregate_indicators(normalized_indicators, norm_fixed_weights)
             elif config.weight_for_each_indicator["random_weights"] == "yes":
-                if is_random_w_iterative == "no": # ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs no_samples times)
+                if is_random_w_iterative == "no": # ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)
                     logger.info("All weights are randomly sampled from a uniform distribution")
                     args_for_parallel_agg = [(lst, normalized_indicators) for lst in norm_random_weights]
                     all_weights = parallelize_aggregation(args_for_parallel_agg)
                     all_weights_means, all_weights_stds = estimate_runs_mean_std(all_weights)
-                elif is_random_w_iterative == "yes": # ONE RANDOMLY SAMPLED WEIGHT A TIME (MCDA runs (no_samples * no_indicators) times)
+                elif is_random_w_iterative == "yes": # ONE RANDOMLY SAMPLED WEIGHT A TIME (MCDA runs (num_samples * num_indicators) times)
                     logger.info("One weight at time is randomly sampled from a uniform distribution")
                     iterative_random_w_means = {}
                     iterative_random_w_stds = {}
-                    for index in range(no_indicators):
+                    for index in range(num_indicators):
                         norm_one_random_weight = rand_weight_per_indicator["indicator_{}".format(index+1)]
                         args_for_parallel_agg = [(lst, normalized_indicators) for lst in norm_one_random_weight]
                         one_random_weight = parallelize_aggregation(args_for_parallel_agg)
@@ -128,7 +128,7 @@ def main(input_config: dict):
                 all_weights_means.insert(0, 'Alternatives', input_matrix.iloc[:,0])
                 all_weights_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
             elif not bool(iterative_random_w_means) == 'False': # one randomly sampled weight at time
-                for index in range(no_indicators):
+                for index in range(num_indicators):
                     one_random_weight_means = iterative_random_w_means["indicator_{}".format(index+1)]
                     one_random_weight_stds = iterative_random_w_stds["indicator_{}".format(index+1)]
                     one_random_weight_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
@@ -171,7 +171,7 @@ def main(input_config: dict):
                 save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_weights_var.png")
             elif not bool(iterative_random_w_means) == 'False':
                 images = []
-                for index in range(no_indicators):
+                for index in range(num_indicators):
                     one_random_weight_means = iterative_random_w_means["indicator_{}".format(index + 1)]
                     one_random_weight_stds = iterative_random_w_stds["indicator_{}".format(index + 1)]
                     plot_weight_mean_scores = plot_mean_scores_iterative(one_random_weight_means, one_random_weight_stds, input_matrix_no_alternatives.columns, index)

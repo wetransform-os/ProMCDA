@@ -74,7 +74,7 @@ class Aggregation(object):
         :gets: pd.DataFrame() of shape (no.alternatives x no.indicators)
         :returns: pd.Series of length = no. of alternatives
         """
-        no_indicators = norm_indicators.shape[1]
+        num_indicators = norm_indicators.shape[1]
 
         if (norm_indicators == 0).any().any():
             logger.error('Error Message', stack_info=True)
