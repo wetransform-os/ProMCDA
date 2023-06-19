@@ -7,6 +7,7 @@ from mcda.mcda_without_variability import MCDAWithoutVar
 from mcda.configuration.config import Config
 from mcda.utils import *
 from mcda.utils_for_parallelization import *
+from mcda.utility_functions.aggregation import Aggregation
 
 class TestMCDA_without_variability(unittest.TestCase):
 
@@ -17,12 +18,30 @@ class TestMCDA_without_variability(unittest.TestCase):
             "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact'],
             "polarity_for_each_indicator": ["-","-","+","+","+","+"],
             "monte_carlo_runs": 0,
-            "no_cores": 1,
+            "num_cores": 1,
             "weight_for_each_indicator" : {
                  "random_weights": "no",
-                 "no_samples": 10000,
+                 "iterative": "no",
+                 "num_samples": 10000,
                  "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
                                           },
+            "output_path": "/path/to/output"
+        }
+
+    @staticmethod
+    def get_test_config_randomness():
+        return {
+            "input_matrix_path": "/path/to/input_matrix.csv",
+            "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact'],
+            "polarity_for_each_indicator": ["-", "-", "+", "+", "+", "+"],
+            "monte_carlo_runs": 0,
+            "num_cores": 1,
+            "weight_for_each_indicator": {
+                "random_weights": "yes",
+                "iterative": "no",
+                "num_samples": 10,
+                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+            },
             "output_path": "/path/to/output"
         }
 
@@ -82,6 +101,30 @@ class TestMCDA_without_variability(unittest.TestCase):
         TestCase.assertListEqual(self, list1=res.columns.tolist(), list2=col_names)
         assert res.shape[0] == input_matrix.shape[0]
         assert res.shape[1] == len(col_names)
+
+    def test_aggregate_indicators_in_parallel(self):
+            # Given
+            config = TestMCDA_without_variability.get_test_config_randomness()
+            config = Config(config)
+            input_matrix = TestMCDA_without_variability.get_input_matrix()
+            weights = config.weight_for_each_indicator["given_weights"]
+            agg =  Aggregation(weights)
+
+            # When
+            MCDA_no_var = MCDAWithoutVar(config, input_matrix)
+            normalized_indicators = MCDA_no_var.normalize_indicators()
+            res = aggregate_indicators_in_parallel(agg, normalized_indicators)
+
+            col_names = ['ws-stand', 'ws-minmax', 'ws-target', 'ws-rank',
+                         'geom-stand', 'geom-minmax', 'geom-target', 'geom-rank',
+                         'harm-stand', 'harm-minmax', 'harm-target', 'harm-rank',
+                         'min-stand']
+
+            # Then
+            assert isinstance(res, pd.DataFrame)
+            TestCase.assertListEqual(self, list1=res.columns.tolist(), list2=col_names)
+            assert res.shape[0] == input_matrix.shape[0]
+            assert res.shape[1] == len(col_names)
 
     def test_estimate_runs_mean_std(self):
         # Given

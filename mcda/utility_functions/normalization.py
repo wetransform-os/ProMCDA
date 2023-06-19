@@ -162,14 +162,11 @@ class Normalization(object):
         for j, index_n in enumerate(ind_minus): indicators_scaled_standardized.iloc[:,
                                                 index_n] = indicators_scaled_stand_minus.iloc[:, j]
 
-        print("stand_any", indicators_scaled_standardized)
-
         if feature_range == ('-inf', '+inf'):
             pass
         else:
             indicators_scaled_standardized = indicators_scaled_standardized + abs(
                 indicators_scaled_standardized.min()) + 0.1
-            print("stand_no0", indicators_scaled_standardized)
 
         return indicators_scaled_standardized
 

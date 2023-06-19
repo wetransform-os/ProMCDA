@@ -1,14 +1,15 @@
 {
-  "input_matrix_path": "/Users/flaminia/Documents/work/MCDA/Examples/exp2_12_alternatives.csv",
-  "marginal_distribution_for_each_indicator": ["exact", "exact", "exact", "exact", "exact", "exact", "exact", "exact"],
-  "polarity_for_each_indicator": ["+","+","+","+","+","-","-","+"],
+  "input_matrix_path": "/Users/flaminia/Desktop/swiggy_icecream_MCDA/icecream_red_input_matrix.csv",
+  "marginal_distribution_for_each_indicator": ["exact", "exact", "exact", "exact"],
+  "polarity_for_each_indicator": ["+","-","+","-"],
   "monte_carlo_runs": 0,
-  "no_cores": 1,
+  "num_cores": 1,
   "weight_for_each_indicator" : {
-      "random_weights": "no",
-      "no_samples": 10000,
-      "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+      "random_weights": "yes",
+      "iterative": "no",
+      "num_samples": 1000,
+      "given_weights": [0.5, 0.5, 0.5, 0.5]
                                 },
-  "output_path": "/Users/flaminia/Desktop/MCDA_test_spada/"
+  "output_path": "/Users/flaminia/Desktop/MCDA_icecream_test4/"
 
 }

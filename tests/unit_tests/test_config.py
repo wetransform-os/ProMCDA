@@ -13,10 +13,11 @@ class TestConfig(unittest.TestCase):
             "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta'],
             "polarity_for_each_indicator": ['+', '+', '-'],
             "monte_carlo_runs": 10,
-            "no_cores": 17,
+            "num_cores": 17,
             "weight_for_each_indicator": {
                 "random_weights": "yes",
-                "no_samples": 3,
+                "iterative": "no",
+                "num_samples": 3,
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
             },
             "output_path": "/path/to/output"
@@ -29,10 +30,11 @@ class TestConfig(unittest.TestCase):
             "error_key": ['norm', 'lnorm', 'beta'],
             "polarity_for_each_indicator": ['+', '+', '-'],
             "monte_carlo_runs": 10,
-            "no_cores": 17,
+            "num_cores": 17,
             "weight_for_each_indicator": {
                 "random_weights": "yes",
-                "no_samples": 3,
+                "iterative": "no",
+                "num_samples": 3,
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
                                          },
             "output_path": "/path/to/output"
@@ -45,10 +47,11 @@ class TestConfig(unittest.TestCase):
             "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta'],
             "polarity_for_each_indicator": ['+', '+', '-'],
             "monte_carlo_runs": 10,
-            "no_cores": 17,
+            "num_cores": 17,
             "weight_for_each_indicator": {
                 "error_key": "yes",
-                "no_samples": 3,
+                "iterative": "yes",
+                "num_samples": 3,
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
             },
             "output_path": "/path/to/output"
@@ -101,7 +104,7 @@ class TestConfig(unittest.TestCase):
             'marginal_distribution_for_each_indicator']
         assert config.polarity_for_each_indicator == input_config['polarity_for_each_indicator']
         assert config.monte_carlo_runs == input_config['monte_carlo_runs']
-        assert config.no_cores == input_config['no_cores']
+        assert config.num_cores == input_config['num_cores']
         assert config.weight_for_each_indicator == input_config['weight_for_each_indicator']
         assert config.output_file_path == input_config['output_path']
 
