@@ -17,9 +17,13 @@ logger = logging.getLogger("MCDTool")
 def main(input_config: dict):
     logger.info("Loading the configuration file")
     config = Config(input_config)
-
     logger.info("Read input matrix at {}".format(config.input_matrix_path))
     input_matrix = read_matrix(config.input_matrix_path)
+    num_unique = input_matrix.nunique()
+    cols_to_drop = num_unique[num_unique == 1].index
+    col_to_drop_indexes = input_matrix.columns.get_indexer(cols_to_drop)
+    if (num_unique.any() == 1): logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
+    input_matrix = input_matrix.drop(cols_to_drop, axis=1)
     if input_matrix.duplicated().any():
         logger.error('Error Message', stack_info=True)
         raise ValueError('There are duplicated rows in the input matrix')
@@ -31,6 +35,7 @@ def main(input_config: dict):
 
     logger.info("Marginal distributions: {}".format(config.marginal_distribution_for_each_indicator))
     marginal_pdf = config.marginal_distribution_for_each_indicator
+    if (num_unique.any() == 1): marginal_pdf = pop_indexed_elements(col_to_drop_indexes, marginal_pdf)
 
     if all(element == 'exact' for element in marginal_pdf):
        # every column of the input matrix represents an indicator
@@ -50,10 +55,12 @@ def main(input_config: dict):
 
     logger.info("Polarities: {}".format(config.polarity_for_each_indicator))
     polar = config.polarity_for_each_indicator
+    if (num_unique.any() == 1): polar = pop_indexed_elements(col_to_drop_indexes, polar)
 
     logger.info("Weights: {}".format(config.weight_for_each_indicator))
     if config.weight_for_each_indicator["random_weights"] == "no":
         fixed_weights = config.weight_for_each_indicator["given_weights"]
+        if (num_unique.any() == 1): fixed_weights = pop_indexed_elements(col_to_drop_indexes,fixed_weights)
         norm_fixed_weights = check_norm_sum_weights(fixed_weights)
     else:
         num_runs = config.weight_for_each_indicator["num_samples"]
