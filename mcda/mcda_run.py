@@ -163,13 +163,15 @@ def main(input_config: dict):
                 save_df(all_weights_means, config.output_file_path, 'score_means.csv')
                 save_df(all_weights_stds, config.output_file_path, 'score_stds.csv')
                 save_df(all_weights_means_normalized, config.output_file_path, 'score_means_normalized.csv')
-                save_df(all_weights_stds_normalized, config.output_file_path, 'score_stds_normalized.csv')
+                #save_df(all_weights_stds_normalized, config.output_file_path, 'score_stds_normalized.csv')
+                # the std on rescaled values is not statistically informative
                 save_df(ranks, config.output_file_path, 'ranks.csv')
             elif not bool(iterative_random_w_means) == 'False':
                 save_dict(iterative_random_w_means,config.output_file_path, 'score_means.pkl')
                 save_dict(iterative_random_w_stds, config.output_file_path, 'score_stds.pkl')
                 save_dict(iterative_random_w_means_normalized, config.output_file_path, 'score_means_normalized.pkl')
-                save_dict(iterative_random_w_stds_normalized, config.output_file_path, 'score_stds_normalized.pkl')
+                #save_dict(iterative_random_w_stds_normalized, config.output_file_path, 'score_stds_normalized.pkl')
+                # the std on rescaled values is not statistically informative
             save_config(input_config, config.output_file_path, 'configuration.json')
             # plots
             if not scores.empty:
@@ -178,8 +180,8 @@ def main(input_config: dict):
                 plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
                 save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores_no_var.png")
             elif not all_weights_means.empty:
-                plot_weight_mean_scores = plot_mean_scores(all_weights_means, all_weights_stds)
-                plot_weight_mean_scores_norm = plot_mean_scores(all_weights_means_normalized, all_weights_stds_normalized)
+                plot_weight_mean_scores = plot_mean_scores(all_weights_means, all_weights_stds, "plot_std")
+                plot_weight_mean_scores_norm = plot_mean_scores(all_weights_means_normalized, all_weights_stds_normalized, "not_plot_std")
                 save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_rand_weights_rough_scores.png")
                 save_figure(plot_weight_mean_scores_norm, config.output_file_path, "MCDA_rand_weights_norm_scores.png")
             elif not bool(iterative_random_w_means) == 'False':
@@ -192,12 +194,10 @@ def main(input_config: dict):
                     one_random_weight_stds_normalized = iterative_random_w_stds_normalized["indicator_{}".format(index + 1)]
                     plot_weight_mean_scores = plot_mean_scores_iterative(one_random_weight_means,
                                                                          one_random_weight_stds,
-                                                                         input_matrix_no_alternatives.columns, index)
+                                                                         input_matrix_no_alternatives.columns, index, "plot_std")
                     plot_weight_mean_scores_norm = plot_mean_scores_iterative(one_random_weight_means_normalized,
                                                                          one_random_weight_stds_normalized,
-                                                                         input_matrix_no_alternatives.columns, index)
-                    int(type(plot_weight_mean_scores))
-                    int(type(plot_weight_mean_scores_norm))
+                                                                         input_matrix_no_alternatives.columns, index, "not_plot_std")
                     images.append(plot_weight_mean_scores)
                     images_norm.append(plot_weight_mean_scores_norm)
                 combine_images(images, config.output_file_path, "MCDA_one_weight_randomness_rough_scores.png")
