@@ -19,23 +19,23 @@ def main(input_config: dict):
     config = Config(input_config)
     logger.info("Read input matrix at {}".format(config.input_matrix_path))
     input_matrix = read_matrix(config.input_matrix_path)
-    num_unique = input_matrix.nunique()
-    cols_to_drop = num_unique[num_unique == 1].index
-    col_to_drop_indexes = input_matrix.columns.get_indexer(cols_to_drop)
-    if (num_unique.any() == 1): logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
-    input_matrix = input_matrix.drop(cols_to_drop, axis=1)
     if input_matrix.duplicated().any():
         logger.error('Error Message', stack_info=True)
         raise ValueError('There are duplicated rows in the input matrix')
     elif input_matrix.iloc[:,0].duplicated().any():
         logger.error('Error Message', stack_info=True)
         raise ValueError('There are duplicated rows in the alternatives column')
-    logger.info("Alternatives are {}".format(input_matrix.iloc[:,0].tolist()))
-    input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0],axis=1) # drop first column with alternatives
+    logger.info("Alternatives are {}".format(input_matrix.iloc[:, 0].tolist()))
+    input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0],axis=1)  # drop first column with alternatives
+    num_unique = input_matrix_no_alternatives.nunique()
+    cols_to_drop = num_unique[num_unique == 1].index
+    col_to_drop_indexes = input_matrix_no_alternatives.columns.get_indexer(cols_to_drop)
+    if (num_unique.any() == 1): logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
+    input_matrix_no_alternatives = input_matrix_no_alternatives.drop(cols_to_drop, axis=1)
 
-    logger.info("Marginal distributions: {}".format(config.marginal_distribution_for_each_indicator))
     marginal_pdf = config.marginal_distribution_for_each_indicator
     if (num_unique.any() == 1): marginal_pdf = pop_indexed_elements(col_to_drop_indexes, marginal_pdf)
+    logger.info("Marginal distributions: {}".format(marginal_pdf))
     if all(element == 'exact' for element in marginal_pdf):
        # every column of the input matrix represents an indicator
         num_indicators = input_matrix_no_alternatives.shape[1]
@@ -52,15 +52,16 @@ def main(input_config: dict):
     logger.info("Number of Monte Carlo runs: {}".format(config.monte_carlo_runs))
     mc_runs = config.monte_carlo_runs
 
-    logger.info("Polarities: {}".format(config.polarity_for_each_indicator))
     polar = config.polarity_for_each_indicator
     if (num_unique.any() == 1): polar = pop_indexed_elements(col_to_drop_indexes, polar)
+    logger.info("Polarities: {}".format(polar))
 
-    logger.info("Weights: {}".format(config.weight_for_each_indicator))
     if config.weight_for_each_indicator["random_weights"] == "no":
         fixed_weights = config.weight_for_each_indicator["given_weights"]
         if (num_unique.any() == 1): fixed_weights = pop_indexed_elements(col_to_drop_indexes,fixed_weights)
         norm_fixed_weights = check_norm_sum_weights(fixed_weights)
+        logger.info("Weights: {}".format(fixed_weights))
+        logger.info("Normalized weights: {}".format(norm_fixed_weights))
     else:
         num_runs = config.weight_for_each_indicator["num_samples"]
         is_random_w_iterative = config.weight_for_each_indicator["iterative"]
