@@ -36,7 +36,6 @@ def main(input_config: dict):
     logger.info("Marginal distributions: {}".format(config.marginal_distribution_for_each_indicator))
     marginal_pdf = config.marginal_distribution_for_each_indicator
     if (num_unique.any() == 1): marginal_pdf = pop_indexed_elements(col_to_drop_indexes, marginal_pdf)
-
     if all(element == 'exact' for element in marginal_pdf):
        # every column of the input matrix represents an indicator
         num_indicators = input_matrix_no_alternatives.shape[1]
@@ -100,55 +99,63 @@ def main(input_config: dict):
             raise ValueError('If the number of Monte-Carlo runs is larger than 0, at least some of the marginal distributions are expected to be non-exact')
         # NO VARIABILITY OF INDICATORS
         else: # MC runs = 0
-            scores = pd.DataFrame()
-            all_weights_means = pd.DataFrame()
             logger.info("Start MCDA without variability for the indicators")
             t = time.time()
+            scores = pd.DataFrame()
+            all_weights_means = pd.DataFrame()
             mcda_no_var = MCDAWithoutVar(config, input_matrix_no_alternatives)
             # normalize the indicators
             normalized_indicators = mcda_no_var.normalize_indicators()
             # estimate the scores through aggregation
             if config.weight_for_each_indicator["random_weights"] == "no": # FIXED WEIGHTS
                 scores = mcda_no_var.aggregate_indicators(normalized_indicators, norm_fixed_weights)
+                normalized_scores = rescale_minmax(scores) # normalized scores
+                normalized_scores.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
             elif config.weight_for_each_indicator["random_weights"] == "yes":
                 if is_random_w_iterative == "no": # ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)
                     logger.info("All weights are randomly sampled from a uniform distribution")
+                    all_weights_normalized = []
                     args_for_parallel_agg = [(lst, normalized_indicators) for lst in norm_random_weights]
-                    all_weights = parallelize_aggregation(args_for_parallel_agg)
-                    all_weights_means, all_weights_stds = estimate_runs_mean_std(all_weights)
+                    all_weights = parallelize_aggregation(args_for_parallel_agg) # rough scores coming from all runs
+                    for matrix in all_weights: # rescale the scores coming from all runs
+                        normalized_matrix = rescale_minmax(matrix) # all score normalization
+                        all_weights_normalized.append(normalized_matrix)
+                    all_weights_means, all_weights_stds = estimate_runs_mean_std(all_weights) # mean and std of rough scores
+                    all_weights_means_normalized, all_weights_stds_normalized = estimate_runs_mean_std(all_weights_normalized) # mean and std of norm. scores
+                    all_weights_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+                    all_weights_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+                    all_weights_means_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+                    all_weights_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
                 elif is_random_w_iterative == "yes": # ONE RANDOMLY SAMPLED WEIGHT A TIME (MCDA runs (num_samples * num_indicators) times)
                     logger.info("One weight at time is randomly sampled from a uniform distribution")
+                    scores_one_random_weight_normalized = []
                     iterative_random_w_means = {}
                     iterative_random_w_stds = {}
+                    iterative_random_w_means_normalized = {}
+                    iterative_random_w_stds_normalized = {}
                     for index in range(num_indicators):
-                        norm_one_random_weight = rand_weight_per_indicator["indicator_{}".format(index+1)]
+                        norm_one_random_weight = rand_weight_per_indicator["indicator_{}".format(index+1)] # 'norm' refers to all weights, which are normalized
                         args_for_parallel_agg = [(lst, normalized_indicators) for lst in norm_one_random_weight]
-                        one_random_weight = parallelize_aggregation(args_for_parallel_agg)
-                        one_random_weight_means, one_random_weight_stds = estimate_runs_mean_std(one_random_weight)
-                        iterative_random_w_means["indicator_{}".format(index+1)] = one_random_weight_means
+                        scores_one_random_weight = parallelize_aggregation(args_for_parallel_agg)
+                        for matrix in scores_one_random_weight:
+                            matrix_normalized = rescale_minmax(matrix) # normalize scores
+                            scores_one_random_weight_normalized.append(matrix_normalized)
+                        one_random_weight_means, one_random_weight_stds = estimate_runs_mean_std(scores_one_random_weight)
+                        one_random_weight_means_normalized, one_random_weight_stds_normalized = estimate_runs_mean_std(scores_one_random_weight_normalized) # normalized mean and std
+                        one_random_weight_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+                        one_random_weight_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+                        one_random_weight_means_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+                        one_random_weight_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+                        iterative_random_w_means["indicator_{}".format(index+1)] = one_random_weight_means # create output dictionaries
                         iterative_random_w_stds["indicator_{}".format(index+1)] = one_random_weight_stds
-            # normalize the output scores (no randomness)
-            if not scores.empty: # no randomly sampled weights
-                normalized_scores = rescale_minmax(scores)
-                normalized_scores.insert(0, 'Alternatives', input_matrix.iloc[:,0])
-            elif not all_weights_means.empty: # all randomly sampled weights
-                all_weights_means.insert(0, 'Alternatives', input_matrix.iloc[:,0])
-                all_weights_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-            elif not bool(iterative_random_w_means) == 'False': # one randomly sampled weight at time
-                for index in range(num_indicators):
-                    one_random_weight_means = iterative_random_w_means["indicator_{}".format(index+1)]
-                    one_random_weight_stds = iterative_random_w_stds["indicator_{}".format(index+1)]
-                    one_random_weight_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-                    one_random_weight_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-                    iterative_random_w_means["indicator_{}".format(index + 1)] = one_random_weight_means
-                    iterative_random_w_stds["indicator_{}".format(index + 1)] = one_random_weight_stds
+                        iterative_random_w_means_normalized["indicator_{}".format(index + 1)] = one_random_weight_means_normalized
+                        iterative_random_w_stds_normalized["indicator_{}".format(index + 1)] = one_random_weight_stds_normalized
             # estimate the ranks
             if not scores.empty:
                 ranks = scores.rank(pct=True)
                 ranks.insert(0, 'Alternatives', input_matrix.iloc[:,0])
             elif not all_weights_means.empty:
                 ranks = all_weights_means.rank(pct=True)
-                #ranks.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
             elif not bool(iterative_random_w_means) == 'False':
                 pass
             # save output files
@@ -162,10 +169,16 @@ def main(input_config: dict):
             elif not all_weights_means.empty:
                 save_df(all_weights_means, config.output_file_path, 'score_means.csv')
                 save_df(all_weights_stds, config.output_file_path, 'score_stds.csv')
+                save_df(all_weights_means_normalized, config.output_file_path, 'score_means_normalized.csv')
+                #save_df(all_weights_stds_normalized, config.output_file_path, 'score_stds_normalized.csv')
+                # the std on rescaled values is not statistically informative
                 save_df(ranks, config.output_file_path, 'ranks.csv')
             elif not bool(iterative_random_w_means) == 'False':
                 save_dict(iterative_random_w_means,config.output_file_path, 'score_means.pkl')
                 save_dict(iterative_random_w_stds, config.output_file_path, 'score_stds.pkl')
+                save_dict(iterative_random_w_means_normalized, config.output_file_path, 'score_means_normalized.pkl')
+                #save_dict(iterative_random_w_stds_normalized, config.output_file_path, 'score_stds_normalized.pkl')
+                # the std on rescaled values is not statistically informative
             save_config(input_config, config.output_file_path, 'configuration.json')
             # plots
             if not scores.empty:
@@ -174,17 +187,28 @@ def main(input_config: dict):
                 plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
                 save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores_no_var.png")
             elif not all_weights_means.empty:
-                plot_weight_mean_scores = plot_mean_scores(all_weights_means, all_weights_stds)
-                save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_weights_var.png")
+                plot_weight_mean_scores = plot_mean_scores(all_weights_means, all_weights_stds, "plot_std")
+                plot_weight_mean_scores_norm = plot_mean_scores(all_weights_means_normalized, all_weights_stds_normalized, "not_plot_std")
+                save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_rand_weights_rough_scores.png")
+                save_figure(plot_weight_mean_scores_norm, config.output_file_path, "MCDA_rand_weights_norm_scores.png")
             elif not bool(iterative_random_w_means) == 'False':
                 images = []
+                images_norm = []
                 for index in range(num_indicators):
                     one_random_weight_means = iterative_random_w_means["indicator_{}".format(index + 1)]
                     one_random_weight_stds = iterative_random_w_stds["indicator_{}".format(index + 1)]
-                    plot_weight_mean_scores = plot_mean_scores_iterative(one_random_weight_means, one_random_weight_stds, input_matrix_no_alternatives.columns, index)
-                    print(type(plot_weight_mean_scores))
+                    one_random_weight_means_normalized = iterative_random_w_means_normalized["indicator_{}".format(index + 1)]
+                    one_random_weight_stds_normalized = iterative_random_w_stds_normalized["indicator_{}".format(index + 1)]
+                    plot_weight_mean_scores = plot_mean_scores_iterative(one_random_weight_means,
+                                                                         one_random_weight_stds,
+                                                                         input_matrix_no_alternatives.columns, index, "plot_std")
+                    plot_weight_mean_scores_norm = plot_mean_scores_iterative(one_random_weight_means_normalized,
+                                                                         one_random_weight_stds_normalized,
+                                                                         input_matrix_no_alternatives.columns, index, "not_plot_std")
                     images.append(plot_weight_mean_scores)
-                combine_images(images, config.output_file_path, "MCDA_one_weight_randomness.png")
+                    images_norm.append(plot_weight_mean_scores_norm)
+                combine_images(images, config.output_file_path, "MCDA_one_weight_randomness_rough_scores.png")
+                combine_images(images_norm, config.output_file_path, "MCDA_one_weight_randomness_norm_scores.png")
             logger.info("Finished MCDA without variability: check the output files")
             elapsed = time.time() - t
             logger.info("All calculations finished in seconds {}".format(elapsed))

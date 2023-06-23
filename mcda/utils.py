@@ -124,7 +124,8 @@ def pop_indexed_elements(indexes: np.ndarray, original_list:list) -> list:
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     num_of_combinations = scores.shape[1] - 1
-    fig = go.Figure(layout_yaxis_range=[scores.iloc[: , 1:].values.min()-0.5, scores.iloc[: , 1:].values.max()+0.5],layout_yaxis_title="MCDA normalized score")
+    fig = go.Figure(layout_yaxis_range=[scores.iloc[:, 1:].values.min() - 0.5, scores.iloc[:, 1:].values.max() + 0.5],
+                    layout_yaxis_title="MCDA normalized score")
     i = 0
     while i <= num_of_combinations - 1:
         fig.add_trace(go.Bar(
@@ -143,19 +144,19 @@ def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
                           ticktext=scores['Alternatives'][:],
                           tickangle=45),
                       yaxis=dict(
-                          range=[scores.iloc[: , 1:].values.min()-0.5, scores.iloc[: , 1:].values.max()+0.5])
+                          range=[scores.iloc[:, 1:].values.min() - 0.5, scores.iloc[:, 1:].values.max() + 0.5])
                       )
     fig.show()
     return fig
 
 
 def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
-    num_of_combinations = scores.shape[1]-1
+    num_of_combinations = scores.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA rough score")
     i = 0
     while i <= num_of_combinations - 1:
         fig.add_trace(go.Bar(
-            name=scores.columns[i+1],
+            name=scores.columns[i + 1],
             x=scores['Alternatives'].values.tolist(),
             y=scores.iloc[:, i + 1],
         ))
@@ -173,17 +174,25 @@ def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     fig.show()
     return fig
 
-def plot_mean_scores(all_weights_means:pd.DataFrame, all_weights_stds:pd.DataFrame)-> object:
+
+def plot_mean_scores(all_weights_means: pd.DataFrame, all_weights_stds: pd.DataFrame, plot_std: str) -> object:
     num_of_combinations = all_weights_means.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA average scores and std")
     i = 0
     while i <= num_of_combinations - 1:
-        fig.add_trace(go.Bar(
-            name=all_weights_means.columns[i + 1],
-            x=all_weights_means['Alternatives'].values.tolist(),
-            y=all_weights_means.iloc[:, i + 1],
-            error_y=dict(type='data', array=all_weights_stds.iloc[:, i + 1])
-        ))
+        if plot_std == "plot_std":
+            fig.add_trace(go.Bar(
+                name=all_weights_means.columns[i + 1],
+                x=all_weights_means['Alternatives'].values.tolist(),
+                y=all_weights_means.iloc[:, i + 1],
+                error_y=dict(type='data', array=all_weights_stds.iloc[:, i + 1])
+            ))
+        else:
+            fig.add_trace(go.Bar(
+                name=all_weights_means.columns[i + 1],
+                x=all_weights_means['Alternatives'].values.tolist(),
+                y=all_weights_means.iloc[:, i + 1]
+            ))
         i = i + 1
     fig.update_layout(barmode='group', height=600, width=1000,
                       title='<b>MCDA analysis with added randomness on the weights<b>',
@@ -199,17 +208,25 @@ def plot_mean_scores(all_weights_means:pd.DataFrame, all_weights_stds:pd.DataFra
     return fig
 
 
-def plot_mean_scores_iterative(all_weights_means:pd.DataFrame, all_weights_stds:pd.DataFrame, indicators: list, index: int)-> object:
+def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, all_weights_stds: pd.DataFrame, indicators: list,
+                               index: int, plot_std: str) -> object:
     num_of_combinations = all_weights_means.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA average scores and std")
     i = 0
     while i <= num_of_combinations - 1:
-        fig.add_trace(go.Bar(
-            name=all_weights_means.columns[i + 1],
-            x=all_weights_means['Alternatives'][:].values.tolist(),
-            y=all_weights_means.iloc[:, i + 1],
-            error_y=dict(type='data', array=all_weights_stds.iloc[:, i + 1])
-        ))
+        if plot_std == "plot_std":
+            fig.add_trace(go.Bar(
+                name=all_weights_means.columns[i + 1],
+                x=all_weights_means['Alternatives'][:].values.tolist(),
+                y=all_weights_means.iloc[:, i + 1],
+                error_y=dict(type='data', array=all_weights_stds.iloc[:, i + 1])
+            ))
+        else:
+            fig.add_trace(go.Bar(
+                name=all_weights_means.columns[i + 1],
+                x=all_weights_means['Alternatives'][:].values.tolist(),
+                y=all_weights_means.iloc[:, i + 1]
+            ))
         i = i + 1
     fig.update_layout(barmode='group', height=600, width=1000,
                       title="MCDA analysis with random sampled weight for the indicator '{}'".format(indicators[index]),
