@@ -18,7 +18,7 @@ def read_matrix(input_matrix_path: str) -> pd.DataFrame():
     try:
         filename = abspath(input_matrix_path)
         with open(filename, 'r') as fp:
-            test = pd.read_csv(fp, sep="[,;:]", decimal='.')
+            test = pd.read_csv(fp, sep="[,;:]", decimal='.',engine='python')
             return test
     except Exception as e:
         print(e)
@@ -107,6 +107,19 @@ def check_norm_sum_weights(weights: list) -> list:
         return norm_weights
     else:
         return weights
+
+
+def pop_indexed_elements(indexes: np.ndarray, original_list:list) -> list:
+    """ The function eliminates the values in a list corresponding to the given indexes"""
+    for i in range(len(indexes)):
+        index = indexes[i]
+        if i == 0:
+            original_list.pop(index)
+        else:
+            original_list.pop(index - i)
+    new_list=original_list
+
+    return new_list
 
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:

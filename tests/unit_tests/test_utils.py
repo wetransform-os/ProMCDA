@@ -1,5 +1,5 @@
 import unittest
-import pytest
+from unittest import TestCase
 
 from mcda.utils import *
 
@@ -56,3 +56,17 @@ class TestUtils(unittest.TestCase):
         # Then
         assert len(out) == len(weights)
         assert sum(out) == 1.0
+
+
+    def test_pop_indexed_elements(self):
+        # Given
+        indexes = [0,2,4]
+        in_list = [1,2,3,4,5,6]
+
+        # When
+        out_list = pop_indexed_elements(indexes, in_list)
+        expected_list = [2,4,6]
+
+        # Then
+        isinstance(out_list, list)
+        TestCase.assertListEqual(self, out_list, expected_list)
