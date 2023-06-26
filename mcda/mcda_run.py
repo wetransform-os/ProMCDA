@@ -89,7 +89,7 @@ def main(input_config: dict):
     if num_indicators != len(polar):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The no. of polarities does not correspond to the no. of indicators')
-    if num_indicators != len(config.weight_for_each_indicator["given_weights"]):
+    if ((config.weight_for_each_indicator["random_weights"] == "no") & (num_indicators != len(config.weight_for_each_indicator["given_weights"]))):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
 
