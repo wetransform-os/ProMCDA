@@ -123,7 +123,6 @@ def main(input_config: dict):
                         all_weights_normalized.append(normalized_matrix)
                     all_weights_means, all_weights_stds = estimate_runs_mean_std(all_weights) # mean and std of rough scores
                     all_weights_means_normalized, all_weights_stds_normalized = estimate_runs_mean_std(all_weights_normalized) # mean and std of norm. scores
-                    all_weights_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
                     all_weights_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
                     all_weights_means_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
                     all_weights_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
@@ -157,6 +156,7 @@ def main(input_config: dict):
                 ranks.insert(0, 'Alternatives', input_matrix.iloc[:,0])
             elif not all_weights_means.empty:
                 ranks = all_weights_means.rank(pct=True)
+                ranks.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
             elif not bool(iterative_random_w_means) == 'False':
                 pass
             # save output files
@@ -168,6 +168,7 @@ def main(input_config: dict):
                 save_df(normalized_scores, config.output_file_path, 'normalized_scores.csv')
                 save_df(ranks, config.output_file_path, 'ranks.csv')
             elif not all_weights_means.empty:
+                all_weights_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
                 save_df(all_weights_means, config.output_file_path, 'score_means.csv')
                 save_df(all_weights_stds, config.output_file_path, 'score_stds.csv')
                 save_df(all_weights_means_normalized, config.output_file_path, 'score_means_normalized.csv')
