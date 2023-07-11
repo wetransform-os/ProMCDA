@@ -17,7 +17,15 @@ logger = logging.getLogger("MCDTool")
 def main(input_config: dict):
     logger.info("Loading the configuration file")
     config = Config(input_config)
-    logger.info("Read input matrix at {}".format(config.input_matrix_path))
+    marginal_pdf = config.marginal_distribution_for_each_indicator
+    if all(element == 'exact' for element in marginal_pdf):
+        logger.info("MCDA will be run without uncertainty on the indicators")
+        is_uncertainty = 0
+    else:
+        logger.info("MCDA will be run without by considering uncertainty on the indicators")
+        is_uncertainty = 1
+    # read input matrix with or without uncertainty, if needed preprocess it
+    logger.info("Read input matrix without uncertainty at {}".format(config.input_matrix_path))
     input_matrix = read_matrix(config.input_matrix_path)
     if input_matrix.duplicated().any():
         logger.error('Error Message', stack_info=True)
@@ -27,20 +35,19 @@ def main(input_config: dict):
         raise ValueError('There are duplicated rows in the alternatives column')
     logger.info("Alternatives are {}".format(input_matrix.iloc[:, 0].tolist()))
     input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0],axis=1)  # drop first column with alternatives
-    num_unique = input_matrix_no_alternatives.nunique()
-    cols_to_drop = num_unique[num_unique == 1].index
-    col_to_drop_indexes = input_matrix_no_alternatives.columns.get_indexer(cols_to_drop)
-    if (num_unique.any() == 1): logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
-    input_matrix_no_alternatives = input_matrix_no_alternatives.drop(cols_to_drop, axis=1)
-
-    marginal_pdf = config.marginal_distribution_for_each_indicator
-    if (num_unique.any() == 1): marginal_pdf = pop_indexed_elements(col_to_drop_indexes, marginal_pdf)
-    logger.info("Marginal distributions: {}".format(marginal_pdf))
-    if all(element == 'exact' for element in marginal_pdf):
-       # every column of the input matrix represents an indicator
+    if is_uncertainty == 0:
+        num_unique = input_matrix_no_alternatives.nunique() # search for column with constant values
+        cols_to_drop = num_unique[num_unique == 1].index
+        col_to_drop_indexes = input_matrix_no_alternatives.columns.get_indexer(cols_to_drop)
+        if (num_unique.any() == 1): logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
+        input_matrix_no_alternatives = input_matrix_no_alternatives.drop(cols_to_drop, axis=1)
+        if (num_unique.any() == 1): marginal_pdf = pop_indexed_elements(col_to_drop_indexes, marginal_pdf)
+        logger.info("Marginal distributions: {}".format(marginal_pdf))
+        # every column of the input matrix represents an indicator
         num_indicators = input_matrix_no_alternatives.shape[1]
         logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
         logger.info("Number of indicators: {}".format(num_indicators))
+    # matrix with uncertainty
     else:
         # non-exact indicators in the input matrix are associated to a column representing its mean
         # and a second column representing its std
@@ -48,6 +55,7 @@ def main(input_config: dict):
         num_indicators = input_matrix_no_alternatives.shape[1]-num_non_exact
         logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
         logger.info("Number of indicators: {}".format(num_indicators))
+        # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional
 
     logger.info("Number of Monte Carlo runs: {}".format(config.monte_carlo_runs))
     mc_runs = config.monte_carlo_runs
@@ -93,12 +101,11 @@ def main(input_config: dict):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
 
-    # non-variability/variability
-    if (len(set(config.marginal_distribution_for_each_indicator))==1):
+    # NO VARIABILITY OF INDICATORS
+    if is_uncertainty == 0:
         if (config.monte_carlo_runs > 0):
             logger.error('Error Message', stack_info=True)
             raise ValueError('If the number of Monte-Carlo runs is larger than 0, at least some of the marginal distributions are expected to be non-exact')
-        # NO VARIABILITY OF INDICATORS
         else: # MC runs = 0
             logger.info("Start MCDA without variability for the indicators")
             t = time.time()
@@ -215,17 +222,14 @@ def main(input_config: dict):
             elapsed = time.time() - t
             logger.info("All calculations finished in seconds {}".format(elapsed))
     # VARIABILITY OF INDICATORS
-    else: # if some marginal distributions are not exact
+    else: # if is_variability == 1
         if (config.monte_carlo_runs > 0):
             if (config.monte_carlo_runs < 1000):
                 logger.info("The number of Monte-Carlo runs is only {}".format(config.monte_carlo_runs))
                 logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
                 time.sleep(5)
-                # variability
-                logger.info("Start MCDA with variability")
-            else:
-                # variability
-                logger.info("Start MCDA with variability")
+            logger.info("Start MCDA with variability on the indicators")
+            mcda_with_var = MCDAWithVar(config, input_matrix_no_alternatives)
         else:
             logger.error('Error Message', stack_info=True)
             raise ValueError('If the number of Monte-Carlo runs is 0, all marginal distributions are expected to be exact')

@@ -18,8 +18,8 @@ def read_matrix(input_matrix_path: str) -> pd.DataFrame():
     try:
         filename = abspath(input_matrix_path)
         with open(filename, 'r') as fp:
-            test = pd.read_csv(fp, sep="[,;:]", decimal='.',engine='python')
-            return test
+            matrix = pd.read_csv(fp, sep="[,;:]", decimal='.',engine='python')
+            return matrix
     except Exception as e:
         print(e)
 
