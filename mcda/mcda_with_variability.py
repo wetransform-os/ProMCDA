@@ -7,8 +7,6 @@ import numpy as np
 
 from mcda.configuration.config import Config
 from mcda.mcda_without_variability import MCDAWithoutVar
-from mcda.utility_functions.normalization import Normalization
-from mcda.utility_functions.aggregation import Aggregation
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
@@ -38,7 +36,7 @@ class MCDAWithVar(MCDAWithoutVar):
         """
 
         data_list = [initial_series[:] for _ in range(num_runs)]
-        out_df = pd.DataFrame(data_list).T
+        out_df = pd.DataFrame(data_list,index=range(num_runs)).T
 
         return out_df
 
@@ -54,7 +52,7 @@ class MCDAWithVar(MCDAWithoutVar):
 
         for i, df in enumerate(data_list):
             for n in range(num_runs):
-                transposed_list[n][i] = df[n]
+                transposed_list[n][i] = df.iloc[:,n]
 
         return transposed_list
 
@@ -94,7 +92,7 @@ class MCDAWithVar(MCDAWithoutVar):
             if distribution_type == 'exact':
                 if any(stds != 0):
                     raise ValueError('There are stds != 0 for *exact* marginal distribution')
-                samples = self.repeat_series_to_create_df(means)
+                samples = self.repeat_series_to_create_df(means, num_runs).T
             elif distribution_type == 'normal':
                 samples = np.random.normal(loc=means, scale=stds, size=(num_runs, len(means)))
             elif distribution_type == 'uniform':

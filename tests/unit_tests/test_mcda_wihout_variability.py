@@ -1,8 +1,6 @@
 import unittest
 from unittest import TestCase
 
-import pandas as pd
-
 from mcda.mcda_without_variability import MCDAWithoutVar
 from mcda.configuration.config import Config
 from mcda.utils import *
