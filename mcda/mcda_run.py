@@ -230,6 +230,8 @@ def main(input_config: dict):
                 time.sleep(5)
             logger.info("Start MCDA with variability on the indicators")
             mcda_with_var = MCDAWithVar(config, input_matrix_no_alternatives)
+            n_random_input_matrices = mcda_with_var.create_n_randomly_sampled_matrices()
+            n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar)
         else:
             logger.error('Error Message', stack_info=True)
             raise ValueError('If the number of Monte-Carlo runs is 0, all marginal distributions are expected to be exact')

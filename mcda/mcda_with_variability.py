@@ -1,6 +1,7 @@
 import sys
 import copy
 import logging
+from typing import List
 import pandas as pd
 import numpy as np
 
@@ -12,9 +13,9 @@ formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("MCDA with variability")
 
-class MCDAWithVar(MCDAWithoutVar):
+class MCDAWithVar():
     """
-    Class MCDA with indicators' variability: inherits from the parent class MCDAWithoutVar
+    Class MCDA with indicators' variability
 
     This class allows one to run MCDA by considering the uncertainties related to the indicators.
     All indicator values are randomly sampled by different distributions.
@@ -31,7 +32,7 @@ class MCDAWithVar(MCDAWithoutVar):
     def repeat_series_to_create_df(initial_series: pd.Series, num_runs:int) -> pd.DataFrame:
         """
         This is a helper function to create a (AxN) df by concatenating
-        a seires of values of length A for N times. This reproduces a fake random
+        a series of values of length A for N times. This reproduces a fake random
         sampling in case an indicator has an exact marginal distribution.
         """
 
@@ -56,9 +57,9 @@ class MCDAWithVar(MCDAWithoutVar):
 
         return transposed_list
 
-    def create_n_randomly_sampled_matrices(self) -> list[pd.DataFrame]:
+    def create_n_randomly_sampled_matrices(self) -> List[pd.DataFrame]:
         """
-        This function receives an input matrix of dimensions (Ax2I), its columns represent means and standard deviations
+        This function receives an input matrix of dimensions (Ax2I) whose columns represent means and standard deviations
         of each indicator. In a first step, it produces a list of length I of matrices of dimension (AxN).
         Every matrix represents the N random samples of every alternative (A), per indicator (I).
         In a second step, a utility function converts this list into a list of length N of matrices of dimension (AxI).

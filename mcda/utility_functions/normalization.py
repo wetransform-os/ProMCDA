@@ -125,7 +125,7 @@ class Normalization(object):
                 indicators_scaled_target_minus = (1 - indicators_minus / indicators_minus.max(axis=0)) * (
                             1 - 0.1) + 0.1  # for - polarity
         else:
-            raise ValueError('Indicators in the input matrix should have all positive values.')
+            raise ValueError('Indicators in the input matrix should have all positive values, larger than 0.')
 
         # merge back scaled values for positive and negative polarities
         indicators_scaled_target = pd.DataFrame(index=range(original_shape[0]), columns=range(original_shape[1]))
