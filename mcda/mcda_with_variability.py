@@ -7,7 +7,6 @@ import numpy as np
 
 
 from mcda.configuration.config import Config
-from mcda.mcda_without_variability import MCDAWithoutVar
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
@@ -24,7 +23,6 @@ class MCDAWithVar():
     """
 
     def __init__(self, config: Config, input_matrix: pd.DataFrame()):
-        super().__init__(config, input_matrix)
         self._config = copy.deepcopy(config)
         self._input_matrix = copy.deepcopy(input_matrix)
 
@@ -78,9 +76,6 @@ class MCDAWithVar():
 
         sampled_matrices = [] # list long I
 
-        if len(input_matrix.columns) % 2 != 0:
-            raise ValueError("Number of columns in the input matrix must be even.")
-
         for i in range(0, len(input_matrix.columns), 2):  # over indicators (every second value)
             mean_col = input_matrix.columns[i]
             std_col = input_matrix.columns[i + 1]
@@ -92,7 +87,7 @@ class MCDAWithVar():
 
             if distribution_type == 'exact':
                 if any(stds != 0):
-                    raise ValueError('There are stds != 0 for *exact* marginal distribution')
+                    raise ValueError('Also for *exact* marginal distributions you need a column representing std=0')
                 samples = self.repeat_series_to_create_df(means, num_runs).T
             elif distribution_type == 'normal':
                 samples = np.random.normal(loc=means, scale=stds, size=(num_runs, len(means)))
