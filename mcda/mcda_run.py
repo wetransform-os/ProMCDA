@@ -203,8 +203,8 @@ def main(input_config: dict):
                 plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
                 save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores_no_var.png")
             elif not all_weights_means.empty:
-                plot_weight_mean_scores = plot_mean_scores(all_weights_means, all_weights_stds, "plot_std")
-                plot_weight_mean_scores_norm = plot_mean_scores(all_weights_means_normalized, all_weights_stds_normalized, "not_plot_std")
+                plot_weight_mean_scores = plot_mean_scores(all_weights_means, all_weights_stds, "plot_std", "weights")
+                plot_weight_mean_scores_norm = plot_mean_scores(all_weights_means_normalized, all_weights_stds_normalized, "not_plot_std", "weights")
                 save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_rand_weights_rough_scores.png")
                 save_figure(plot_weight_mean_scores_norm, config.output_file_path, "MCDA_rand_weights_norm_scores.png")
             elif not bool(iterative_random_w_means) == 'False':
@@ -217,10 +217,10 @@ def main(input_config: dict):
                     one_random_weight_stds_normalized = iterative_random_w_stds_normalized["indicator_{}".format(index + 1)]
                     plot_weight_mean_scores = plot_mean_scores_iterative(one_random_weight_means,
                                                                          one_random_weight_stds,
-                                                                         input_matrix_no_alternatives.columns, index, "plot_std")
+                                                                         input_matrix_no_alternatives.columns, index, "plot_std", "weights")
                     plot_weight_mean_scores_norm = plot_mean_scores_iterative(one_random_weight_means_normalized,
                                                                          one_random_weight_stds_normalized,
-                                                                         input_matrix_no_alternatives.columns, index, "not_plot_std")
+                                                                         input_matrix_no_alternatives.columns, index, "not_plot_std", "weights")
                     images.append(plot_weight_mean_scores)
                     images_norm.append(plot_weight_mean_scores_norm)
                 combine_images(images, config.output_file_path, "MCDA_one_weight_randomness_rough_scores.png")
@@ -239,6 +239,7 @@ def main(input_config: dict):
                 logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
                 time.sleep(5)
             logger.info("Start MCDA with variability on the indicators")
+            t = time.time()
             mcda_with_var = MCDAWithVar(config, input_matrix_no_alternatives)
             n_random_input_matrices = mcda_with_var.create_n_randomly_sampled_matrices() # N random matrices
             n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar) # parallel normalization
@@ -266,11 +267,11 @@ def main(input_config: dict):
             save_df(ranks, config.output_file_path, 'ranks.csv')
             save_config(input_config, config.output_file_path, 'configuration.json')
             # plots
-            plot_indicators_mean_scores = plot_mean_scores(all_indicators_means, all_indicators_stds, "plot_std")
+            plot_indicators_mean_scores = plot_mean_scores(all_indicators_means, all_indicators_stds, "plot_std", "indicators")
             plot_indicators_mean_scores_norm = plot_mean_scores(all_indicators_means_normalized,
-                                                                all_indicators_stds_normalized, "not_plot_std")
-            save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_rand_indicators_rough_scores.png")
-            save_figure(plot_weight_mean_scores_norm, config.output_file_path, "MCDA_rand_indicators_norm_scores.png")
+                                                                all_indicators_stds_normalized, "not_plot_std", "indicators")
+            save_figure(plot_indicators_mean_scores, config.output_file_path, "MCDA_rand_indicators_rough_scores.png")
+            save_figure(plot_indicators_mean_scores_norm, config.output_file_path, "MCDA_rand_indicators_norm_scores.png")
             logger.info("Finished MCDA with variability of the indicators: check the output files")
             elapsed = time.time() - t
             logger.info("All calculations finished in seconds {}".format(elapsed))

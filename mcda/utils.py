@@ -175,33 +175,33 @@ def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     return fig
 
 
-def plot_mean_scores(all_weights_means: pd.DataFrame, all_weights_stds: pd.DataFrame, plot_std: str) -> object:
-    num_of_combinations = all_weights_means.shape[1] - 1
+def plot_mean_scores(all_means: pd.DataFrame, all_stds: pd.DataFrame, plot_std: str, rand_on: str) -> object:
+    num_of_combinations = all_means.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA average scores and std")
     i = 0
     while i <= num_of_combinations - 1:
         if plot_std == "plot_std":
             fig.add_trace(go.Bar(
-                name=all_weights_means.columns[i + 1],
-                x=all_weights_means['Alternatives'].values.tolist(),
-                y=all_weights_means.iloc[:, i + 1],
-                error_y=dict(type='data', array=all_weights_stds.iloc[:, i + 1])
+                name=all_means.columns[i + 1],
+                x=all_means['Alternatives'].values.tolist(),
+                y=all_means.iloc[:, i + 1],
+                error_y=dict(type='data', array=all_stds.iloc[:, i + 1])
             ))
         else:
             fig.add_trace(go.Bar(
-                name=all_weights_means.columns[i + 1],
-                x=all_weights_means['Alternatives'].values.tolist(),
-                y=all_weights_means.iloc[:, i + 1]
+                name=all_means.columns[i + 1],
+                x=all_means['Alternatives'].values.tolist(),
+                y=all_means.iloc[:, i + 1]
             ))
         i = i + 1
     fig.update_layout(barmode='group', height=600, width=1000,
-                      title='<b>MCDA analysis with added randomness on the weights<b>',
+                      title=f'<b>MCDA analysis with added randomness on the {rand_on}<b>',
                       title_font_size=22,
 
                       xaxis=dict(
                           tickmode="array",
-                          tickvals=np.arange(0, len(all_weights_means['Alternatives'][:])),
-                          ticktext=all_weights_means['Alternatives'][:],
+                          tickvals=np.arange(0, len(all_means['Alternatives'][:])),
+                          ticktext=all_means['Alternatives'][:],
                           tickangle=45)
                       )
     fig.show()
