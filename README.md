@@ -56,7 +56,6 @@ if instead the marginal distributions are also other than *exact*, it means that
 - `configuration_w_uncertainty.jon`
     - uncertainty relative to the indicators is considered, together with
     - the variability caused by using different pairs of normalization/aggregation functions
-    - the variability due to added randomness to the weights (optional)
 
 ### Requirements
 ```bash
@@ -91,10 +90,11 @@ Else if N=0 and the input matrix has no uncertainties associated to the indicato
 - the results of all the combinations normalization/aggregation are provided in the form of mean and std over all the runs (if the weights are iteratively sampled, this applies for num_indicators-times)
 
 If else, N>1 and the input matrix has uncertainties associate to some or all the indicators, then:
-- for each indicator, the meand and standard deviation (std) are extracted from the input matrix
+- for each indicator, the mean and standard deviation (std) are extracted from the input matrix
 - for each N, and for each indicator, a value is sampled from the relative assigned marginal distribution: one of N input matrix is created
 - normalizations and aggregations are performed as in points 1,2,3 of the case N=1: a list of all the results is created
 - mean and std of all the results are estimated across (N x pairs of combinations) 
+- in this case, no randomness on the weights is allowed
 
 
 ### General information and references
