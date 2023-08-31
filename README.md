@@ -49,11 +49,11 @@ In case the variability of results is of no interest, then:
 The configuration file can trigger a run with or without uncertainty on the indicators. This is implicitly set in the 
 `marginal_distribution_for_each_indicator` parameter: if the marginal distributions are all *exact*, then the run is without uncertainty;
 if instead the marginal distributions are also other than *exact*, it means that the indicator values can be randomly sampled from those PDFs.
-- `configuration_without_uncertainty.jon`
+- `configuration_without_uncertainty.json`
   - no uncertainty relative to the indicators is considered, however one can
     - see the variability caused by using different pairs of normalization/aggregation functions
     - turn on the variability due to added randomness to the weights (optional)
-- `configuration_w_uncertainty.jon`
+- `configuration_w_uncertainty.json`
     - uncertainty relative to the indicators is considered, together with
     - the variability caused by using different pairs of normalization/aggregation functions
 
