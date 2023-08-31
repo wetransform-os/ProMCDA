@@ -9,6 +9,7 @@ from mcda.configuration.config import Config
 from mcda.utils import *
 from mcda.utils_for_parallelization import *
 from mcda.mcda_without_variability import MCDAWithoutVar
+from mcda.mcda_with_variability import MCDAWithVar
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
@@ -17,8 +18,19 @@ logger = logging.getLogger("MCDTool")
 def main(input_config: dict):
     logger.info("Loading the configuration file")
     config = Config(input_config)
-    logger.info("Read input matrix at {}".format(config.input_matrix_path))
+    marginal_pdf = config.marginal_distribution_for_each_indicator
+    if all(element == 'exact' for element in marginal_pdf):
+        logger.info("MCDA will be run without uncertainty on the indicators")
+        is_uncertainty = 0
+        logger.info("Read input matrix without uncertainty at {}".format(config.input_matrix_path))
+    else:
+        logger.info("MCDA will be run by considering uncertainty on the indicators")
+        is_uncertainty = 1
+        logger.info("Read input matrix with uncertainty at {}".format(config.input_matrix_path))
+    # read input matrix with or without uncertainty, if needed preprocess it
     input_matrix = read_matrix(config.input_matrix_path)
+    if (len(input_matrix.columns) - 1) % 2 != 0: # Alternatives column is still in, therefore -1
+        raise ValueError("Number of columns for non exact indicators in the input matrix must be even.")
     if input_matrix.duplicated().any():
         logger.error('Error Message', stack_info=True)
         raise ValueError('There are duplicated rows in the input matrix')
@@ -27,38 +39,40 @@ def main(input_config: dict):
         raise ValueError('There are duplicated rows in the alternatives column')
     logger.info("Alternatives are {}".format(input_matrix.iloc[:, 0].tolist()))
     input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0],axis=1)  # drop first column with alternatives
-    num_unique = input_matrix_no_alternatives.nunique()
-    cols_to_drop = num_unique[num_unique == 1].index
-    col_to_drop_indexes = input_matrix_no_alternatives.columns.get_indexer(cols_to_drop)
-    if (num_unique.any() == 1): logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
-    input_matrix_no_alternatives = input_matrix_no_alternatives.drop(cols_to_drop, axis=1)
-
-    marginal_pdf = config.marginal_distribution_for_each_indicator
-    if (num_unique.any() == 1): marginal_pdf = pop_indexed_elements(col_to_drop_indexes, marginal_pdf)
-    logger.info("Marginal distributions: {}".format(marginal_pdf))
-    if all(element == 'exact' for element in marginal_pdf):
-       # every column of the input matrix represents an indicator
+    if is_uncertainty == 0:
+        num_unique = input_matrix_no_alternatives.nunique() # search for column with constant values
+        cols_to_drop = num_unique[num_unique == 1].index
+        col_to_drop_indexes = input_matrix_no_alternatives.columns.get_indexer(cols_to_drop)
+        if (num_unique.any() == 1): logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
+        input_matrix_no_alternatives = input_matrix_no_alternatives.drop(cols_to_drop, axis=1)
+        if (num_unique.any() == 1): marginal_pdf = pop_indexed_elements(col_to_drop_indexes, marginal_pdf)
+        logger.info("Marginal distributions: {}".format(marginal_pdf))
+        # every column of the input matrix represents an indicator
         num_indicators = input_matrix_no_alternatives.shape[1]
         logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
         logger.info("Number of indicators: {}".format(num_indicators))
+    # matrix with uncertainty
     else:
         # non-exact indicators in the input matrix are associated to a column representing its mean
         # and a second column representing its std
         num_non_exact = len(marginal_pdf) - marginal_pdf.count('exact')
-        num_indicators = input_matrix_no_alternatives.shape[1]-num_non_exact
+        num_indicators = input_matrix_no_alternatives.shape[1]-input_matrix_no_alternatives.shape[1]/2
         logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
         logger.info("Number of indicators: {}".format(num_indicators))
+        # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional
 
     logger.info("Number of Monte Carlo runs: {}".format(config.monte_carlo_runs))
     mc_runs = config.monte_carlo_runs
 
     polar = config.polarity_for_each_indicator
-    if (num_unique.any() == 1): polar = pop_indexed_elements(col_to_drop_indexes, polar)
+    if (is_uncertainty == 0):
+        if (num_unique.any() == 1): polar = pop_indexed_elements(col_to_drop_indexes, polar)
     logger.info("Polarities: {}".format(polar))
 
     if config.weight_for_each_indicator["random_weights"] == "no":
         fixed_weights = config.weight_for_each_indicator["given_weights"]
-        if (num_unique.any() == 1): fixed_weights = pop_indexed_elements(col_to_drop_indexes,fixed_weights)
+        if (is_uncertainty == 0):
+            if (num_unique.any() == 1): fixed_weights = pop_indexed_elements(col_to_drop_indexes,fixed_weights)
         norm_fixed_weights = check_norm_sum_weights(fixed_weights)
         logger.info("Weights: {}".format(fixed_weights))
         logger.info("Normalized weights: {}".format(norm_fixed_weights))
@@ -88,17 +102,17 @@ def main(input_config: dict):
     # checks on the number of indicators, weights, and polarities
     if num_indicators != len(polar):
         logger.error('Error Message', stack_info=True)
-        raise ValueError('The no. of polarities does not correspond to the no. of indicators')
+        raise ValueError('The number of polarities does not correspond to the no. of indicators')
     if ((config.weight_for_each_indicator["random_weights"] == "no") & (num_indicators != len(config.weight_for_each_indicator["given_weights"]))):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
-
-    # non-variability/variability
-    if (len(set(config.marginal_distribution_for_each_indicator))==1):
+    # ----------------------------
+    # NO VARIABILITY OF INDICATORS
+    # ----------------------------
+    if is_uncertainty == 0:
         if (config.monte_carlo_runs > 0):
             logger.error('Error Message', stack_info=True)
             raise ValueError('If the number of Monte-Carlo runs is larger than 0, at least some of the marginal distributions are expected to be non-exact')
-        # NO VARIABILITY OF INDICATORS
         else: # MC runs = 0
             logger.info("Start MCDA without variability for the indicators")
             t = time.time()
@@ -189,8 +203,8 @@ def main(input_config: dict):
                 plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
                 save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores_no_var.png")
             elif not all_weights_means.empty:
-                plot_weight_mean_scores = plot_mean_scores(all_weights_means, all_weights_stds, "plot_std")
-                plot_weight_mean_scores_norm = plot_mean_scores(all_weights_means_normalized, all_weights_stds_normalized, "not_plot_std")
+                plot_weight_mean_scores = plot_mean_scores(all_weights_means, all_weights_stds, "plot_std", "weights")
+                plot_weight_mean_scores_norm = plot_mean_scores(all_weights_means_normalized, all_weights_stds_normalized, "not_plot_std", "weights")
                 save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_rand_weights_rough_scores.png")
                 save_figure(plot_weight_mean_scores_norm, config.output_file_path, "MCDA_rand_weights_norm_scores.png")
             elif not bool(iterative_random_w_means) == 'False':
@@ -203,10 +217,10 @@ def main(input_config: dict):
                     one_random_weight_stds_normalized = iterative_random_w_stds_normalized["indicator_{}".format(index + 1)]
                     plot_weight_mean_scores = plot_mean_scores_iterative(one_random_weight_means,
                                                                          one_random_weight_stds,
-                                                                         input_matrix_no_alternatives.columns, index, "plot_std")
+                                                                         input_matrix_no_alternatives.columns, index, "plot_std", "weights")
                     plot_weight_mean_scores_norm = plot_mean_scores_iterative(one_random_weight_means_normalized,
                                                                          one_random_weight_stds_normalized,
-                                                                         input_matrix_no_alternatives.columns, index, "not_plot_std")
+                                                                         input_matrix_no_alternatives.columns, index, "not_plot_std", "weights")
                     images.append(plot_weight_mean_scores)
                     images_norm.append(plot_weight_mean_scores_norm)
                 combine_images(images, config.output_file_path, "MCDA_one_weight_randomness_rough_scores.png")
@@ -214,18 +228,53 @@ def main(input_config: dict):
             logger.info("Finished MCDA without variability: check the output files")
             elapsed = time.time() - t
             logger.info("All calculations finished in seconds {}".format(elapsed))
+    # -------------------------
     # VARIABILITY OF INDICATORS
-    else: # if some marginal distributions are not exact
+    # -------------------------
+    else: # if is_variability == 1
+        all_indicators_normalized = []
         if (config.monte_carlo_runs > 0):
             if (config.monte_carlo_runs < 1000):
                 logger.info("The number of Monte-Carlo runs is only {}".format(config.monte_carlo_runs))
                 logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
                 time.sleep(5)
-                # variability
-                logger.info("Start MCDA with variability")
-            else:
-                # variability
-                logger.info("Start MCDA with variability")
+            logger.info("Start MCDA with variability on the indicators")
+            t = time.time()
+            mcda_with_var = MCDAWithVar(config, input_matrix_no_alternatives)
+            n_random_input_matrices = mcda_with_var.create_n_randomly_sampled_matrices() # N random matrices
+            n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar) # parallel normalization
+            args_for_parallel_agg = [(norm_fixed_weights, normalized_indicators) for normalized_indicators in n_normalized_input_matrices] # weights are fixed
+            all_indicators = parallelize_aggregation(args_for_parallel_agg)  # rough scores coming from all runs with random indicator values
+            for matrix in all_indicators:  # rescale the scores coming from all runs
+                normalized_matrix = rescale_minmax(matrix)  # all score normalization
+                all_indicators_normalized.append(normalized_matrix)
+            all_indicators_means, all_indicators_stds = estimate_runs_mean_std(all_indicators)  # mean and std of rough scores
+            all_indicators_means_normalized, all_indicators_stds_normalized = estimate_runs_mean_std(all_indicators_normalized)  # mean and std of norm. scores
+            # estimate the ranks
+            ranks = all_indicators_means.rank(pct=True)
+            # re-insert the Alternatives column
+            all_indicators_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+            all_indicators_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+            all_indicators_means_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+            all_indicators_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+            ranks.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+            # save output files
+            logger.info("Saving results in {}".format(config.output_file_path))
+            check_path_exists(config.output_file_path)
+            save_df(all_indicators_means, config.output_file_path, 'score_means.csv')
+            save_df(all_indicators_stds, config.output_file_path, 'score_stds.csv')
+            save_df(all_indicators_means_normalized, config.output_file_path, 'score_means_normalized.csv')
+            save_df(ranks, config.output_file_path, 'ranks.csv')
+            save_config(input_config, config.output_file_path, 'configuration.json')
+            # plots
+            plot_indicators_mean_scores = plot_mean_scores(all_indicators_means, all_indicators_stds, "plot_std", "indicators")
+            plot_indicators_mean_scores_norm = plot_mean_scores(all_indicators_means_normalized,
+                                                                all_indicators_stds_normalized, "not_plot_std", "indicators")
+            save_figure(plot_indicators_mean_scores, config.output_file_path, "MCDA_rand_indicators_rough_scores.png")
+            save_figure(plot_indicators_mean_scores_norm, config.output_file_path, "MCDA_rand_indicators_norm_scores.png")
+            logger.info("Finished MCDA with variability of the indicators: check the output files")
+            elapsed = time.time() - t
+            logger.info("All calculations finished in seconds {}".format(elapsed))
         else:
             logger.error('Error Message', stack_info=True)
             raise ValueError('If the number of Monte-Carlo runs is 0, all marginal distributions are expected to be exact')

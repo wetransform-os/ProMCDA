@@ -1,14 +1,15 @@
 {
-  "input_matrix_path": "/Users/flaminia/Documents/work/MCDA/tests/resources/input_matrix_with_uncert.csv",
-  "marginal_distribution_for_each_indicator": ["norm", "exact", "beta", "norm", "exact", "beta"],
-  "polarity_for_each_indicator": ["-","-","+", "+","+","+"],
-  "monte_carlo_runs": 10,
-  "num_cores": 1,
+  "input_matrix_path": "/Users/flaminia/Documents/work/MCDA/input_matrix_12_alternatives_w_uncertainties.csv",
+  "marginal_distribution_for_each_indicator": ["normal", "normal", "normal", "normal", "normal", "exact", "exact", "exact"],
+  "polarity_for_each_indicator": ["+","+","+","+","+","+","-","-"],
+  "monte_carlo_runs": 10000,
+  "num_cores": 4,
   "weight_for_each_indicator" : {
-      "random_weights": "yes",
-      "iterative": "yes",
-      "num_samples": 3,
-      "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+      "random_weights": "no",
+      "iterative": "no",
+      "num_samples": 1000,
+      "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
                                 },
-  "output_path": "/path/to/output"
+  "output_path": "/Users/flaminia/Desktop/test_indicators_variability"
+
 }

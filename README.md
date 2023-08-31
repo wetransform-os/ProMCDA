@@ -7,6 +7,7 @@ The variability of the MCDA scores are caused by:
 
 The tool can be used also as a simple MCDA ranking tool with no variability (see also below).
 
+
 ### Input information needed in the configuration file
 The following input information are contained in the `configuration.json` file:
 - input matrix, a table where rows represent the alternatives and the columns represent the indicators. Be sure that there is not an index column but that the column with the alternative names is set as index by:
@@ -16,14 +17,14 @@ input_matrix = input_matrix.set_index('Alternatives').
 Be also sure that there are no duplicates among the rows. If the values of one or more indicators are all the same, the indicators are dropped from the input matrix because they do not carry any information.
   - input matrix without uncertainties for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`)
   - input matrix with uncertainties for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`)
+The input matrix with uncertainties has for each indicator a column with the mean values and a column with the standard deviation; 
+if the marginal distribution relative to the indicator is 'exact', then the standard deviation column contains only 0.
 - list with names of marginal distributions for each indicator (see an example here: `tests/resources/tobefilled`); the available distributions are 
   - exact, "exact",
   - uniform distribution, "uniform"
   - normal distribution, "norm
   - lognormal distribution, "lnorm"
-  - Poisson distribution, "pois"
-  - negative Binomial distribution, "ng"
-  - beta distribution, "beta"
+  - Poisson distribution, "poisson"
 - list of polarities for each indicator, "+" or "-"
 - number of Monte Carlo runs, "N" (default is 0, no variability is considered; N should be a sufficient big number, e.g. larger or equal than 1000)
 - the number of cores used for the parallelization, "numCores"
@@ -44,6 +45,17 @@ In case the variability of results is of no interest, then:
 - the marginal distribution associated to the indicators should all be of the kind "exact"
 - cores=1
 - N=1
+
+The configuration file can trigger a run with or without uncertainty on the indicators. This is implicitly set in the 
+`marginal_distribution_for_each_indicator` parameter: if the marginal distributions are all *exact*, then the run is without uncertainty;
+if instead the marginal distributions are also other than *exact*, it means that the indicator values can be randomly sampled from those PDFs.
+- `configuration_without_uncertainty.json`
+  - no uncertainty relative to the indicators is considered, however one can
+    - see the variability caused by using different pairs of normalization/aggregation functions
+    - turn on the variability due to added randomness to the weights (optional)
+- `configuration_w_uncertainty.json`
+    - uncertainty relative to the indicators is considered, together with
+    - the variability caused by using different pairs of normalization/aggregation functions
 
 ### Requirements
 ```bash
@@ -78,14 +90,15 @@ Else if N=0 and the input matrix has no uncertainties associated to the indicato
 - the results of all the combinations normalization/aggregation are provided in the form of mean and std over all the runs (if the weights are iteratively sampled, this applies for num_indicators-times)
 
 If else, N>1 and the input matrix has uncertainties associate to some or all the indicators, then:
-- for each indicator, the meand and standard deviation (std) are extracted from the input matrix
+- for each indicator, the mean and standard deviation (std) are extracted from the input matrix
 - for each N, and for each indicator, a value is sampled from the relative assigned marginal distribution: one of N input matrix is created
 - normalizations and aggregations are performed as in points 1,2,3 of the case N=1: a list of all the results is created
 - mean and std of all the results are estimated across (N x pairs of combinations) 
+- in this case, no randomness on the weights is allowed
 
 
 ### General information and references
-The normalization functions are implemented by following [*Langhans et al.*, 2014](https://www.sciencedirect.com/science/article/abs/pii/S1470160X14002167)
+The aggregation functions are implemented by following [*Langhans et al.*, 2014](https://www.sciencedirect.com/science/article/abs/pii/S1470160X14002167)
 
 The normalization functions *minmax*, *target* and *standardized* can produce negative or zero values, therefore a shift to positive values
 is implemented so that they can be used also together with the aggregation functions *geometric* and *harmonic* (which require positive values). 

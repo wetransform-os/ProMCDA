@@ -1,5 +1,7 @@
 import unittest
+from unittest import TestCase
 
+from mcda.mcda_without_variability import *
 from mcda.utils_for_parallelization import *
 from pandas.testing import assert_frame_equal
 from statistics import mean, stdev
@@ -7,6 +9,23 @@ from statistics import mean, stdev
 
 
 class TestUtilsForParallelization(unittest.TestCase):
+
+    @staticmethod
+    def get_test_config():
+        return {
+            "input_matrix_path": "/path/to/input_matrix.csv",
+            "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal','exact', 'uniform'],
+            "polarity_for_each_indicator": ["+","+","+","+","+"],
+            "monte_carlo_runs": 10,
+            "num_cores": 1,
+            "weight_for_each_indicator": {
+                "random_weights": "no",
+                "iterative": "no",
+                "num_samples": 10000,
+                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5]
+            },
+            "output_path": "/path/to/output"
+        }
 
     @staticmethod
     def get_list_of_dfs():
@@ -37,6 +56,27 @@ class TestUtilsForParallelization(unittest.TestCase):
 
         return list_of_dfs
 
+    @staticmethod
+    def get_input_list() -> list[pd.DataFrame]:
+        data = {'0': [1, 1, 2, 3], '1': [4, 5, 6, 7], '2': [8, 9, 10, 11], '3': [12, 13, 14, 15], '4': [16, 17, 18, 19]}
+        df = pd.DataFrame(data=data)
+        out_list = [df, df, df]
+
+        return out_list
+
+    @staticmethod
+    def get_output_dict() -> list[dict]:
+        data = {'0': [1, 1, 2, 3], '1': [4, 5, 6, 7], '2': [8, 9, 10, 11], '3': [12, 13, 14, 15], '4': [16, 17, 18, 19]}
+        df = pd.DataFrame(data=data)
+        config = TestUtilsForParallelization.get_test_config()
+        config = Config(config)
+        mcda_no_var = MCDAWithoutVar(config, df)
+        df_norm = mcda_no_var.normalize_indicators()
+
+        out_list = [df_norm, df_norm, df_norm]
+
+        return out_list
+
     def test_estimate_runs_mean_std(self):
         # Given
         input = TestUtilsForParallelization.get_list_of_dfs()
@@ -50,3 +90,23 @@ class TestUtilsForParallelization(unittest.TestCase):
         for i in range(2): isinstance(res[i],pd.DataFrame)
         assert_frame_equal(res[0],output[0])
         assert_frame_equal(res[1],output[1])
+
+
+    def test_parallelize_normalization(self):
+        # Given
+        list_input_matrices = TestUtilsForParallelization.get_input_list()
+        list_output_dictionaries = TestUtilsForParallelization.get_output_dict()
+        polarities = ["+","+","+","+","+"]
+
+        # When
+        res = parallelize_normalization(list_input_matrices, polarities)
+
+        # Then
+        isinstance(res, list)
+        for i in range(3):
+            assert isinstance(res[i], dict)
+            assert set(res[i].keys()) == set(list_output_dictionaries[i].keys())
+            for key in res[i].keys():
+                df1 = res[i][key]
+                df2 = list_output_dictionaries[i][key]
+                assert_frame_equal(df1, df2, check_dtype=False)
