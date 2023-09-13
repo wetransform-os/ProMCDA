@@ -1,50 +1,55 @@
-# MCDTool
-A tool to estimate ranks of alternatives and their uncertainties based on the Multi Criteria Decision Analysis approach.
-The variability of the MCDA scores are caused by:
-- the uncertainty associated with the indicators
-- the sensitivity of the algorithm to the different pairs of norm/agg functions
-- the randomness that can be associated to the weights (also as single source of randomness)
+# ProMCDA - Probabilistic Multi Criteria Decision Analysis
+A tool to estimate scores of alternatives and their uncertainties based on the Multi Criteria Decision Analysis approach.
+In MCDA context an *alternative* is one possible course of action available; an *indicator* is a paramater that describes the alternatives.
 
-The tool can be used also as a simple MCDA ranking tool with no variability (see also below).
+The variability of the MCDA scores are caused by:
+- the uncertainty associated with the indicators;
+- the sensitivity of the algorithm to the different pairs of norm/agg functions;
+- the randomness that can be associated to the weights.
+
+The tool can be used also as a simple MCDA ranking tool with no sensitivity analysis (see below for instructions).
 
 
 ### Input information needed in the configuration file
-The following input information are contained in the `configuration.json` file:
-- input matrix, a table where rows represent the alternatives and the columns represent the indicators. Be sure that there is not an index column but that the column with the alternative names is set as index by:
+The following input information should be all contained in the `configuration.json` file:
+- ***path to the input matrix***, a table where rows represent the alternatives and columns represent the indicators.
+Be sure that the column containing the names of the alternatives is set as index column, e.g. by:
 ```bash
 input_matrix = input_matrix.set_index('Alternatives').
 ```
-Be also sure that there are no duplicates among the rows. If the values of one or more indicators are all the same, the indicators are dropped from the input matrix because they do not carry any information.
-  - input matrix without uncertainties for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`)
-  - input matrix with uncertainties for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`)
+Be also sure that there are no duplicates among the rows. If the values of one or more indicators are all the same, the indicators are dropped from the input matrix.
+Examples of input matrix:
+  - *input matrix without uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`)
+  - *input matrix with uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`)
 The input matrix with uncertainties has for each indicator a column with the mean values and a column with the standard deviation; 
 if the marginal distribution relative to the indicator is 'exact', then the standard deviation column contains only 0.
-- list with names of marginal distributions for each indicator (see an example here: `tests/resources/tobefilled`); the available distributions are 
+- ***list of marginal distributions*** for each indicator; the available distributions are: 
   - exact, "exact",
   - uniform distribution, "uniform"
   - normal distribution, "norm
   - lognormal distribution, "lnorm"
   - Poisson distribution, "poisson"
-- list of polarities for each indicator, "+" or "-"
-- number of Monte Carlo runs, "N" (default is 0, no variability is considered; N should be a sufficient big number, e.g. larger or equal than 1000)
-- the number of cores used for the parallelization, "numCores"
-- list of weights for each indicator 
-    - should the weights be randomly sampled by mean of a Monte Carlo sampling? (*yes* or *no*)
+- ***list of polarities*** for each indicator, "+" (the higher the value of the indicator the better for the evaluation) or "-" (the lower the value of the indicator the better)
+- ***number of Monte Carlo runs***, "N" (default is 0, then no variability is considered; N should be a sufficient big number, e.g. larger or equal than 1000)
+- ***number of cores*** used for the parallelization, "numCores"
+- ***list of weights*** for the indicators
+    - *should the weights be randomly sampled by mean of a Monte Carlo sampling?* (*yes* or *no*) - allowed only in the case no sensitivity analysis is performed -
     - if *no*, a list of weights should be given as input
     - if *yes*
-        - the number of samples should be given as input 
+        - the number of samples should be given as input, "num_samples"
         - should the process be *iterative*?
             - *yes*, i.e. randomness is associated to one weight at time
             - *no*, i.e. randomness is associated to all the weights at the same time
     - the sum of the weights should always be equal to 1 or the values will be normalised 
     - depending on the different options, the other information are disregard
-- output file (e.g. `path/output_file.csv`).
+- ***path to output file*** (e.g. `path/output_file.csv`).
 
-In case the variability of results is of no interest, then:
+*In case the sensitivity analysis is of no interest*, then:
 - the input matrix should be the one without uncertainties associated to the indicators
 - the marginal distribution associated to the indicators should all be of the kind "exact"
 - cores=1
 - N=1
+- scores ar always calculated for all the different pairs of normalization/aggregation functions (see also next paragraph)
 
 The configuration file can trigger a run with or without uncertainty on the indicators. This is implicitly set in the 
 `marginal_distribution_for_each_indicator` parameter: if the marginal distributions are all *exact*, then the run is without uncertainty;
@@ -59,8 +64,8 @@ if instead the marginal distributions are also other than *exact*, it means that
 
 ### Requirements
 ```bash
-conda create --name <choose-a-name-like-mcda> python=3.6
-source activate <choose-a-name-like-mcda>
+conda create --name <choose-a-name-like-Promcda> python=3.6
+source activate <choose-a-name-like-Promcda>
 pip install -r requirements.txt
 ```
 
@@ -76,24 +81,24 @@ where an example of configuration file can be found in `mcda/configuration_w_unc
 python3 -m pytest -s tests/unit_tests/test_mcda_run.py -vv
 ```
 
-### What does the code do: overview
+### What does the code do: summary overview
 If N=0 and the input matrix has no uncertainties associated to the indicators, then:
 - the indicator values are normalized by mean of all the possible normalization methods 
 - the normalized indicators are aggregated by mean of all the possible aggregation methods, by considering their assigned weights
-- the results of all the combinations normalization/aggregation are provided
+- the resulting scores of all the combinations normalization/aggregation are provided in form of a csv table and plots in the output directory
 
-Else if N=0 and the input matrix has no uncertainties associated to the indicators, but the weights are randomly sampled, then:
+If N=0, and the input matrix has no uncertainties associated to the indicators, but the weights are randomly sampled, then:
 - all weights (*iterative="no"*) or one weight at time (*iterative="yes"*) are randomly sampled from a uniform distribution [0,1]
-- the weights are normalized
-- if all weights are sampled together, MCDA receives n-inputs; if the weights are sampled one at time, MCD will receive n-inputs x num_weights times
-- iterations 1,2 of the first condition follow
+- the weights are normalized so that their sum is equal to 1
+- if all weights are sampled together, MCDA receives n-inputs; if the weights are sampled one at time, MCD will receive (n-inputs x num_weights) inputs
+- iterations 1,2,3 of the first condition follow
 - the results of all the combinations normalization/aggregation are provided in the form of mean and std over all the runs (if the weights are iteratively sampled, this applies for num_indicators-times)
 
-If else, N>1 and the input matrix has uncertainties associate to some or all the indicators, then:
-- for each indicator, the mean and standard deviation (std) are extracted from the input matrix
-- for each N, and for each indicator, a value is sampled from the relative assigned marginal distribution: one of N input matrix is created
-- normalizations and aggregations are performed as in points 1,2,3 of the case N=1: a list of all the results is created
-- mean and std of all the results are estimated across (N x pairs of combinations) 
+If N>1 and the input matrix has uncertainties associate to some or all the indicators, then:
+- for each indicator, the mean and std are extracted from the input matrix
+- for each N, and for each indicator, a value is sampled from the relative assigned marginal distribution: therefore, one of N input matrix is created
+- normalizations and aggregations are performed as in points 1,2 of the case N=1: a list of all the results is created in the output directory
+- mean and std of all the results are estimated across N x pairs of combinations  
 - in this case, no randomness on the weights is allowed
 
 

@@ -6,11 +6,12 @@ configuration_w_uncertainty.json
 configuration_without_uncertainty.json
 requirements.txt
 setup.py
-MCDTool.egg-info/PKG-INFO
-MCDTool.egg-info/SOURCES.txt
-MCDTool.egg-info/dependency_links.txt
-MCDTool.egg-info/requires.txt
-MCDTool.egg-info/top_level.txt
+setup_utils.py
+ProMCDA.egg-info/PKG-INFO
+ProMCDA.egg-info/SOURCES.txt
+ProMCDA.egg-info/dependency_links.txt
+ProMCDA.egg-info/requires.txt
+ProMCDA.egg-info/top_level.txt
 mcda/__init__.py
 mcda/main.py
 mcda/mcda_run.py
