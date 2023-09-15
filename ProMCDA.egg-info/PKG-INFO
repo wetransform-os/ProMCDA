@@ -1,9 +1,9 @@
 Metadata-Version: 2.1
 Name: ProMCDA
-Version: 1.0.0
+Version: 1.0.1
 Summary: A probabilistic Multi Criteria Decision Analysis
 Home-page: https://github.com/wetransform-os/ProMCDA
-Author: Flaminia Catalli - wetransform GmbH & Matteo Spada - Zurich University of Applied Sciences
+Author: Flaminia Catalli - wetransform GmbH, Matteo Spada - Zurich University of Applied Sciences
 Author-email: flaminia.catalli@wetransform.to, matteo.spada@zhaw.ch
 License: EPL v 2.0
 Keywords: MCDA,sensitivity analysis,Monte Carlo sampling,probabilistic approach

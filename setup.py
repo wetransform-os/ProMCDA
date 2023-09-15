@@ -20,9 +20,9 @@ classifiers = [
 
 setuptools.setup(
     name="ProMCDA",
-    version="1.0.0",
+    version="1.0.1",
     license='EPL v 2.0',
-    author="Flaminia Catalli - wetransform GmbH & Matteo Spada - Zurich University of Applied Sciences",
+    author="Flaminia Catalli - wetransform GmbH, Matteo Spada - Zurich University of Applied Sciences",
     author_email='flaminia.catalli@wetransform.to, matteo.spada@zhaw.ch',
     description='A probabilistic Multi Criteria Decision Analysis',
     keywords='MCDA, sensitivity analysis, Monte Carlo sampling, probabilistic approach',
