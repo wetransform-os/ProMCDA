@@ -1,7 +1,7 @@
 import unittest
 from unittest import TestCase
 
-from mcda.mcda_without_variability import *
+from mcda.mcda_without_uncertainty import *
 from mcda.utils_for_parallelization import *
 from pandas.testing import assert_frame_equal
 from statistics import mean, stdev
@@ -70,7 +70,7 @@ class TestUtilsForParallelization(unittest.TestCase):
         df = pd.DataFrame(data=data)
         config = TestUtilsForParallelization.get_test_config()
         config = Config(config)
-        mcda_no_var = MCDAWithoutVar(config, df)
+        mcda_no_var = MCDAWithoutUncertainty(config, df)
         df_norm = mcda_no_var.normalize_indicators()
 
         out_list = [df_norm, df_norm, df_norm]

@@ -6,7 +6,7 @@ from scipy import stats
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
-logger = logging.getLogger("MCDTool")
+logger = logging.getLogger("ProMCDA")
 
 class Aggregation(object):
     """

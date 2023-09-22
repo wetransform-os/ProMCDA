@@ -8,52 +8,80 @@ class TestMCDA(unittest.TestCase):
     @staticmethod
     def get_incorrect_config_1():
         return {
-            "input_matrix_path": "tests/resources/input_matrix_without_uncert.csv",
-            "marginal_distribution_for_each_indicator": ['exact','exact','exact','exact','exact','exact'],
-            "polarity_for_each_indicator": ['+','+','-','+','+','-'],
-            "monte_carlo_runs": 10,
-            "num_cores": 17,
-            "weight_for_each_indicator" : {
-                "random_weights": "no",
-                "iterative": "no",
-                "num_samples": 10000,
-                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-                                           },
-            "output_path": "/path/to/output"
-        }
+             "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
+             "polarity_for_each_indicator": ["+","+","+","+","+","-"],
+
+             "variability": {
+                  "variability_on": "yes",
+                  "normalization": "minmax",
+                  "aggregation": "weighted_sum"},
+
+             "sensitivity": {
+                  "sensitivity_on": "yes",
+                  "on_single_weights": "no",
+                  "on_all_weights": "yes",
+                  "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                  "on_indicators": "no"},
+
+             "monte_carlo_sampling": {
+                 "monte_carlo_runs": 10,
+                 "num_cores": 4,
+                 "marginal_distribution_for_each_indicator": ["exact", "exact", "exact", "exact", "exact", "exact"]},
+
+             "output_path": "/path/to/output"
+
+}
 
     @staticmethod
     def get_incorrect_config_2():
         return {
             "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
-            "marginal_distribution_for_each_indicator": ["norm", "exact", "beta", "norm", "exact", "beta"],
-            "polarity_for_each_indicator": ['+','+','-','+','+','-'],
-            "monte_carlo_runs": 0,
-            "num_cores": 17,
-            "weight_for_each_indicator" : {
-                "random_weights": "no",
-                "iterative": "no",
-                "num_samples": 10000,
-                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-                                           },
-            "output_path": "/path/to/output"
+             "polarity_for_each_indicator": ["+","+","+","+","+","-"],
+
+             "variability": {
+                  "variability_on": "yes",
+                  "normalization": "minmax",
+                  "aggregation": "weighted_sum"},
+
+             "sensitivity": {
+                  "sensitivity_on": "yes",
+                  "on_single_weights": "no",
+                  "on_all_weights": "no",
+                  "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                  "on_indicators": "yes"},
+
+             "monte_carlo_sampling": {
+                 "monte_carlo_runs": 0,
+                 "num_cores": 4,
+                 "marginal_distribution_for_each_indicator": ["norm", "exact", "lnorm", "exact", "poisson", "exact"]},
+
+             "output_path": "/path/to/output"
         }
 
     @staticmethod
     def get_incorrect_config_3():
         return {
-            "input_matrix_path": "tests/resources/input_matrix_without_uncert_duplicates.csv",
-            "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact'],
-            "polarity_for_each_indicator": ['+', '+', '-', '+', '+', '-'],
-            "monte_carlo_runs": 0,
-            "num_cores": 1,
-            "weight_for_each_indicator": {
-                "random_weights": "no",
-                "iterative": "no",
-                "num_samples": 10000,
-                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-            },
-            "output_path": "/path/to/output"
+            "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
+             "polarity_for_each_indicator": ["+","+","+","+","+","-"],
+
+             "variability": {
+                  "variability_on": "yes",
+                  "normalization": "minmax",
+                  "aggregation": "weighted_sum"},
+
+             "sensitivity": {
+                  "sensitivity_on": "no",
+                  "on_single_weights": "no",
+                  "on_all_weights": "no",
+                  "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                  "on_indicators": "yes"},
+
+             "monte_carlo_sampling": {
+                 "monte_carlo_runs": 10000,
+                 "num_cores": 4,
+                 "marginal_distribution_for_each_indicator": ["exact", "exact", "exact", "exact", "exact", "exact"]},
+
+             "output_path": "/path/to/output"
         }
 
     def test_main(self):
@@ -68,7 +96,7 @@ class TestMCDA(unittest.TestCase):
         with pytest.raises(ValueError):
             main(input_config_2)
         with pytest.raises(ValueError):
-            main(input_config_3)
+             main(input_config_3)
 
 if __name__ == '__main__':
     unittest.main()

@@ -17,7 +17,7 @@ class TestNormalization(unittest.TestCase):
 
     @staticmethod
     def get_input_polarities():
-        polarities = ("-","-","+","+","+","+") # same as in MCDTool/configuration_without_uncertainty.json
+        polarities = ("-","-","+","+","+","+") # same as in ProMCDA/configuration_without_uncertainty.json
 
         return polarities
 

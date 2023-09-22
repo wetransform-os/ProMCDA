@@ -12,9 +12,10 @@ formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("MCDA with variability")
 
-class MCDAWithVar():
+class MCDAWithUncertainty():
     """
-    Class MCDA with indicators' variability
+
+    Class MCDA with indicators' uncertainty
 
     This class allows one to run MCDA by considering the uncertainties related to the indicators.
     All indicator values are randomly sampled by different distributions.

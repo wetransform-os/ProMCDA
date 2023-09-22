@@ -10,16 +10,21 @@ class TestConfig(unittest.TestCase):
     def get_correct_config():
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
-            "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta'],
             "polarity_for_each_indicator": ['+', '+', '-'],
-            "monte_carlo_runs": 10,
-            "num_cores": 17,
-            "weight_for_each_indicator": {
-                "random_weights": "yes",
-                "iterative": "no",
-                "num_samples": 3,
-                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-            },
+            "variability": {
+                "variability_on": "yes",
+                "normalization": "minmax",
+                "aggregation": "weighted_sum"},
+            "sensitivity": {
+                "sensitivity_on": "yes",
+                "on_single_weights": "no",
+                "on_all_weights": "yes",
+                "given_weights": [0.5, 0.5, 0.5],
+                "on_indicators": "no"},
+            "monte_carlo_sampling": {
+                "monte_carlo_runs": 10,
+                "num_cores": 4,
+                "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta']},
             "output_path": "/path/to/output"
         }
 
@@ -27,16 +32,21 @@ class TestConfig(unittest.TestCase):
     def get_uncorrect_config_1():
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
-            "error_key": ['norm', 'lnorm', 'beta'],
             "polarity_for_each_indicator": ['+', '+', '-'],
-            "monte_carlo_runs": 10,
-            "num_cores": 17,
-            "weight_for_each_indicator": {
-                "random_weights": "yes",
-                "iterative": "no",
-                "num_samples": 3,
-                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-                                         },
+            "error_key": {
+                "variability_on": "yes",
+                "normalization": "minmax",
+                "aggregation": "weighted_sum"},
+            "sensitivity": {
+                "sensitivity_on": "yes",
+                "on_single_weights": "no",
+                "on_all_weights": "yes",
+                "given_weights": [0.5, 0.5, 0.5],
+                "on_indicators": "no"},
+            "monte_carlo_sampling": {
+                "monte_carlo_runs": 10,
+                "num_cores": 4,
+                "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta']},
             "output_path": "/path/to/output"
         }
 
@@ -44,16 +54,21 @@ class TestConfig(unittest.TestCase):
     def get_uncorrect_config_2():
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
-            "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta'],
             "polarity_for_each_indicator": ['+', '+', '-'],
-            "monte_carlo_runs": 10,
-            "num_cores": 17,
-            "weight_for_each_indicator": {
+            "variability": {
+                "variability_on": "yes",
+                "normalization": "minmax",
+                "aggregation": "weighted_sum"},
+            "sensitivity": {
+                "sensitivity_on": "yes",
+                "on_single_weights": "no",
                 "error_key": "yes",
-                "iterative": "yes",
-                "num_samples": 3,
-                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-            },
+                "given_weights": [0.5, 0.5, 0.5],
+                "on_indicators": "no"},
+            "monte_carlo_sampling": {
+                "monte_carlo_runs": 10,
+                "num_cores": 4,
+                "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta']},
             "output_path": "/path/to/output"
         }
 
@@ -100,13 +115,10 @@ class TestConfig(unittest.TestCase):
 
         # Then
         assert config.input_matrix_path == input_config['input_matrix_path']
-        assert config.marginal_distribution_for_each_indicator == input_config[
-            'marginal_distribution_for_each_indicator']
         assert config.polarity_for_each_indicator == input_config['polarity_for_each_indicator']
-        assert config.monte_carlo_runs == input_config['monte_carlo_runs']
-        assert config.num_cores == input_config['num_cores']
-        assert config.weight_for_each_indicator == input_config['weight_for_each_indicator']
-        assert config.output_file_path == input_config['output_path']
+        assert config.variability == input_config['variability']
+        assert config.sensitivity == input_config['sensitivity']
+        assert config.monte_carlo_sampling == input_config['monte_carlo_sampling']
 
 
 if __name__ == '__main__':

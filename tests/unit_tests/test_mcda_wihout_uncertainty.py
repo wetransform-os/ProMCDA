@@ -1,13 +1,13 @@
 import unittest
 from unittest import TestCase
 
-from mcda.mcda_without_variability import MCDAWithoutVar
+from mcda.mcda_without_uncertainty import MCDAWithoutUncertainty
 from mcda.configuration.config import Config
 from mcda.utils import *
 from mcda.utils_for_parallelization import *
 from mcda.utility_functions.aggregation import Aggregation
 
-class TestMCDA_without_variability(unittest.TestCase):
+class TestMCDA_without_uncertainty(unittest.TestCase):
 
     @staticmethod
     def get_test_config():
@@ -52,19 +52,19 @@ class TestMCDA_without_variability(unittest.TestCase):
 
     @staticmethod
     def get_list_of_df():
-        list_df = [TestMCDA_without_variability.get_input_matrix(),TestMCDA_without_variability.get_input_matrix()]
+        list_df = [TestMCDA_without_uncertainty.get_input_matrix(), TestMCDA_without_uncertainty.get_input_matrix()]
 
         return list_df
 
     def test_normalize_indicators(self):
         # Given
-        config = TestMCDA_without_variability.get_test_config()
+        config = TestMCDA_without_uncertainty.get_test_config()
         config = Config(config)
-        input_matrix = TestMCDA_without_variability.get_input_matrix()
+        input_matrix = TestMCDA_without_uncertainty.get_input_matrix()
 
         # When
-        MCDA_no_var = MCDAWithoutVar(config, input_matrix)
-        res = MCDA_no_var.normalize_indicators()
+        MCDA_no_uncert = MCDAWithoutUncertainty(config, input_matrix)
+        res = MCDA_no_uncert.normalize_indicators()
 
         # Then
         assert isinstance(res, dict)
@@ -79,15 +79,15 @@ class TestMCDA_without_variability(unittest.TestCase):
 
     def test_aggregate_indicators(self):
         # Given
-        config = TestMCDA_without_variability.get_test_config()
+        config = TestMCDA_without_uncertainty.get_test_config()
         config = Config(config)
-        input_matrix = TestMCDA_without_variability.get_input_matrix()
+        input_matrix = TestMCDA_without_uncertainty.get_input_matrix()
 
         # When
         weights = config.weight_for_each_indicator["given_weights"]
-        MCDA_no_var = MCDAWithoutVar(config, input_matrix)
-        normalized_indicators = MCDA_no_var.normalize_indicators()
-        res = MCDA_no_var.aggregate_indicators(normalized_indicators, weights)
+        MCDA_no_uncert = MCDAWithoutUncertainty(config, input_matrix)
+        normalized_indicators = MCDA_no_uncert.normalize_indicators()
+        res = MCDA_no_uncert.aggregate_indicators(normalized_indicators, weights)
 
         col_names = ['ws-stand', 'ws-minmax', 'ws-target', 'ws-rank',
                      'geom-stand', 'geom-minmax', 'geom-target', 'geom-rank',
@@ -102,15 +102,15 @@ class TestMCDA_without_variability(unittest.TestCase):
 
     def test_aggregate_indicators_in_parallel(self):
             # Given
-            config = TestMCDA_without_variability.get_test_config_randomness()
+            config = TestMCDA_without_uncertainty.get_test_config_randomness()
             config = Config(config)
-            input_matrix = TestMCDA_without_variability.get_input_matrix()
+            input_matrix = TestMCDA_without_uncertainty.get_input_matrix()
             weights = config.weight_for_each_indicator["given_weights"]
             agg =  Aggregation(weights)
 
             # When
-            MCDA_no_var = MCDAWithoutVar(config, input_matrix)
-            normalized_indicators = MCDA_no_var.normalize_indicators()
+            MCDA_no_uncert = MCDAWithoutUncertainty(config, input_matrix)
+            normalized_indicators = MCDA_no_uncert.normalize_indicators()
             res = aggregate_indicators_in_parallel(agg, normalized_indicators)
 
             col_names = ['ws-stand', 'ws-minmax', 'ws-target', 'ws-rank',
@@ -126,7 +126,7 @@ class TestMCDA_without_variability(unittest.TestCase):
 
     def test_estimate_runs_mean_std(self):
         # Given
-        list_of_df = TestMCDA_without_variability.get_list_of_df()
+        list_of_df = TestMCDA_without_uncertainty.get_list_of_df()
 
         # When
         res = estimate_runs_mean_std(list_of_df)
@@ -137,7 +137,7 @@ class TestMCDA_without_variability(unittest.TestCase):
         assert len(res) ==2
         assert isinstance(res, list)
         assert isinstance(res[0], pd.DataFrame)
-        assert res[0].to_numpy().all() == TestMCDA_without_variability.get_input_matrix().to_numpy().all()
+        assert res[0].to_numpy().all() == TestMCDA_without_uncertainty.get_input_matrix().to_numpy().all()
         assert res[1].to_numpy().all() == df_std.to_numpy().all()
 
 
