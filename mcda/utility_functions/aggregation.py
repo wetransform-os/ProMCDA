@@ -55,11 +55,12 @@ class Aggregation(object):
         :returns: pd.Series of length = no. of alternatives
         """
 
-        if (norm_indicators == 0).any().any():
+        if (norm_indicators <= 0).any().any():
             logger.error('Error Message', stack_info=True)
-            raise ValueError('Weighted geometric mean cannot work with 0 values normalized indicators')
+            raise ValueError('Weighted geometric mean cannot work with non-positive values in normalized indicators')
         else:
-            scores = stats.mstats.gmean(norm_indicators, axis=1, weights=self.weights)
+            axis = 1
+            scores = stats.mstats.gmean(norm_indicators, axis=axis, weights=self.weights)
 
         return scores
 
