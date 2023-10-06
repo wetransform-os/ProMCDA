@@ -59,8 +59,7 @@ class Aggregation(object):
             logger.error('Error Message', stack_info=True)
             raise ValueError('Weighted geometric mean cannot work with non-positive values in normalized indicators')
         else:
-            axis = 1
-            scores = stats.mstats.gmean(norm_indicators, axis=axis, weights=self.weights)
+            scores = stats.mstats.gmean(norm_indicators.astype(float), axis=1, weights=self.weights)
 
         return scores
 

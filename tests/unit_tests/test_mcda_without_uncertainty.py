@@ -57,16 +57,43 @@ class TestMCDA_without_uncertainty(unittest.TestCase):
     def get_test_config_randomness():
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
-            "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact'],
-            "polarity_for_each_indicator": ["-", "-", "+", "+", "+", "+"],
-            "monte_carlo_runs": 0,
-            "num_cores": 1,
-            "weight_for_each_indicator": {
-                "random_weights": "yes",
-                "iterative": "no",
-                "num_samples": 10,
-                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-            },
+            "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
+            "variability": {
+                "variability_on": "yes",
+                "normalization": "minmax",
+                "aggregation": "weighted_sum"},
+            "sensitivity": {
+                "sensitivity_on": "yes",
+                "on_single_weights": "no",
+                "on_all_weights": "yes",
+                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                "on_indicators": "no"},
+            "monte_carlo_sampling": {
+                "monte_carlo_runs": 10,
+                "num_cores": 4,
+                "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
+            "output_path": "/path/to/output"
+        }
+
+    @staticmethod
+    def get_test_config_randomness_simple_mcda():
+        return {
+            "input_matrix_path": "/path/to/input_matrix.csv",
+            "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
+            "variability": {
+                "variability_on": "no",
+                "normalization": "minmax",
+                "aggregation": "weighted_sum"},
+            "sensitivity": {
+                "sensitivity_on": "yes",
+                "on_single_weights": "no",
+                "on_all_weights": "yes",
+                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                "on_indicators": "no"},
+            "monte_carlo_sampling": {
+                "monte_carlo_runs": 10,
+                "num_cores": 4,
+                "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
             "output_path": "/path/to/output"
         }
 
@@ -126,46 +153,75 @@ class TestMCDA_without_uncertainty(unittest.TestCase):
         config = Config(config)
         input_matrix = TestMCDA_without_uncertainty.get_input_matrix()
 
+        config_simple_mcda = TestMCDA_without_uncertainty.get_test_config_simple_mcda()
+        config_simple_mcda = Config(config_simple_mcda)
+
         # When
         weights = config.sensitivity["given_weights"]
+
         MCDA_no_uncert = MCDAWithoutUncertainty(config, input_matrix)
         normalized_indicators = MCDA_no_uncert.normalize_indicators()
-        res = MCDA_no_uncert.aggregate_indicators(normalized_indicators, weights)
+        MCDA_no_uncert_simple_mcda = MCDAWithoutUncertainty(config_simple_mcda, input_matrix)
+        normalized_indicators_simple_mcda = MCDA_no_uncert_simple_mcda.normalize_indicators(config_simple_mcda.variability['normalization'])
 
-        col_names = ['ws-stand', 'ws-minmax', 'ws-target', 'ws-rank',
-                     'geom-stand', 'geom-minmax', 'geom-target', 'geom-rank',
-                     'harm-stand', 'harm-minmax', 'harm-target', 'harm-rank',
-                     'min-stand']
+        res = MCDA_no_uncert.aggregate_indicators(normalized_indicators, weights)
+        res_simple_mcda = MCDA_no_uncert_simple_mcda.aggregate_indicators(normalized_indicators_simple_mcda, weights, config_simple_mcda.variability['aggregation'])
+
+        col_names = ['geom-minmax_no0', 'harm-minmax_no0', 'ws-minmax_01', 'geom-target_no0',
+                     'harm-target_no0', 'ws-target_01', 'ws-standardized_any',
+                     'min-standardized_any', 'geom-standardized_no0',
+                     'harm-standardized_no0', 'ws-rank', 'geom-rank', 'harm-rank']
+
+        simple_mcda_col_names = ['ws-minmax_01']
 
         # Then
         assert isinstance(res, pd.DataFrame)
-        #TestCase.assertListEqual(self, list1=res.columns.tolist(), list2=col_names)
+        TestCase.assertListEqual(self, list1=res.columns.tolist(), list2=col_names)
         assert res.shape[0] == input_matrix.shape[0]
-        assert res.shape[1] == len(col_names)-4
+        assert res.shape[1] == len(col_names)
+
+        assert isinstance(res_simple_mcda, pd.DataFrame)
+        TestCase.assertListEqual(self, list1=res_simple_mcda.columns.tolist(), list2=simple_mcda_col_names)
+        assert res_simple_mcda.shape[0] == input_matrix.shape[0]
+        assert res_simple_mcda.shape[1] == len(simple_mcda_col_names)
 
     def test_aggregate_indicators_in_parallel(self):
             # Given
             config = TestMCDA_without_uncertainty.get_test_config_randomness()
             config = Config(config)
             input_matrix = TestMCDA_without_uncertainty.get_input_matrix()
-            weights = config.weight_for_each_indicator["given_weights"]
+            weights = config.sensitivity["given_weights"]
             agg =  Aggregation(weights)
+
+            config_randomness_simple_mcda = TestMCDA_without_uncertainty.get_test_config_randomness_simple_mcda()
+            config_randomness_simple_mcda = Config(config_randomness_simple_mcda)
 
             # When
             MCDA_no_uncert = MCDAWithoutUncertainty(config, input_matrix)
             normalized_indicators = MCDA_no_uncert.normalize_indicators()
             res = aggregate_indicators_in_parallel(agg, normalized_indicators)
 
-            col_names = ['ws-stand', 'ws-minmax', 'ws-target', 'ws-rank',
-                         'geom-stand', 'geom-minmax', 'geom-target', 'geom-rank',
-                         'harm-stand', 'harm-minmax', 'harm-target', 'harm-rank',
-                         'min-stand']
+            MCDA_no_uncert_simple_mcda = MCDAWithoutUncertainty(config_randomness_simple_mcda, input_matrix)
+            normalized_indicators = MCDA_no_uncert_simple_mcda.normalize_indicators(config_randomness_simple_mcda.variability['normalization'])
+            res_simple_mcda = aggregate_indicators_in_parallel(agg, normalized_indicators, config_randomness_simple_mcda.variability['aggregation'])
+
+            col_names = ['geom-minmax_no0', 'harm-minmax_no0', 'ws-minmax_01', 'geom-target_no0',
+                         'harm-target_no0', 'ws-target_01', 'ws-standardized_any',
+                         'min-standardized_any', 'geom-standardized_no0',
+                         'harm-standardized_no0', 'ws-rank', 'geom-rank', 'harm-rank']
+
+            simple_mcda_col_names = ['ws-minmax_01']
 
             # Then
             assert isinstance(res, pd.DataFrame)
             TestCase.assertListEqual(self, list1=res.columns.tolist(), list2=col_names)
             assert res.shape[0] == input_matrix.shape[0]
             assert res.shape[1] == len(col_names)
+
+            assert isinstance(res_simple_mcda, pd.DataFrame)
+            TestCase.assertListEqual(self, list1=res_simple_mcda.columns.tolist(), list2=simple_mcda_col_names)
+            assert res_simple_mcda.shape[0] == input_matrix.shape[0]
+            assert res_simple_mcda.shape[1] == len(simple_mcda_col_names)
 
     def test_estimate_runs_mean_std(self):
         # Given

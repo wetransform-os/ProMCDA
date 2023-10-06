@@ -102,7 +102,7 @@ class MCDAWithoutUncertainty():
                     scores_minimum[key] = pd.Series(agg.minimum(self.normalized_indicators["standardized_any"]))
                     col_names.append("min-" + key)
                 else:
-                    logger.info('The aggregation function minimum cannot be paired with standardized normalization', stack_info=True)
+                    logger.info('The aggregation function minimum can be paired with standardized normalization only (here missing)', stack_info=True)
 
         dict_list = [scores_weighted_sum, scores_geometric, scores_harmonic, scores_minimum]
 

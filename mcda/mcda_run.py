@@ -254,9 +254,15 @@ def main(input_config: dict):
             t = time.time()
             mcda_with_uncert = MCDAWithVar(config, input_matrix_no_alternatives)
             n_random_input_matrices = mcda_with_uncert.create_n_randomly_sampled_matrices() # N random matrices
-            n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar) # parallel normalization
+            if is_variability == "yes":
+                n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar) # parallel normalization
+            else:
+                n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar, f_norm)
             args_for_parallel_agg = [(norm_fixed_weights, normalized_indicators) for normalized_indicators in n_normalized_input_matrices] # weights are fixed
-            all_indicators = parallelize_aggregation(args_for_parallel_agg)  # rough scores coming from all runs with random indicator values
+            if is_variability == "yes":
+                all_indicators = parallelize_aggregation(args_for_parallel_agg)  # rough scores coming from all runs with random indicator values
+            else:
+                all_indicators = parallelize_aggregation(args_for_parallel_agg, f_agg)
             for matrix in all_indicators:  # rescale the scores coming from all runs
                 normalized_matrix = rescale_minmax(matrix)  # all score normalization
                 all_indicators_normalized.append(normalized_matrix)

@@ -1,36 +1,49 @@
 from mcda.utility_functions.aggregation import Aggregation
 from mcda.utility_functions.normalization import Normalization
+import sys
+import logging
 import pandas as pd
 import multiprocessing
 from typing import List, Tuple
 
+formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
+logger = logging.getLogger("ProMCDA utils for parallelization")
 
-def initialize_and_call_aggregation(args: Tuple[list, dict]) -> pd.DataFrame:
+
+def initialize_and_call_aggregation(args: Tuple[list, dict], method) -> pd.DataFrame:
     weights, data = args
     agg = Aggregation(weights)
 
-    scores_one_run = aggregate_indicators_in_parallel(agg, data)
+    scores_one_run = aggregate_indicators_in_parallel(agg, data, method)
 
     return scores_one_run
 
 
-def initialize_and_call_normalization(args: Tuple[pd.DataFrame, list]) -> List[dict]:
+def initialize_and_call_normalization(args: Tuple[pd.DataFrame, list], method) -> List[dict]:
     matrix, polarities = args
     norm = Normalization(matrix, polarities)
 
-    dict_normalized_matrix = normalize_indicators_in_parallel(norm, matrix)
+    dict_normalized_matrix = normalize_indicators_in_parallel(norm, method)
 
     return dict_normalized_matrix
 
 
-def normalize_indicators_in_parallel(norm: object, input_matrix: pd.DataFrame) -> dict:
-    indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
-    indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
-    indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
-    indicators_scaled_target_no0 = norm.target(feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
-    indicators_scaled_standardized_any = norm.standardized(feature_range=('-inf', '+inf'))
-    indicators_scaled_standardized_no0 = norm.standardized(feature_range=(0.1, '+inf'))
-    indicators_scaled_rank = norm.rank()
+def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
+    if method is None or method == 'minmax':
+        indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
+        indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
+    elif method is None or method == 'target':
+        indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
+        indicators_scaled_target_no0 = norm.target(feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
+    elif method is None or method == 'standardized':
+        indicators_scaled_standardized_any = norm.standardized(feature_range=('-inf', '+inf'))
+        indicators_scaled_standardized_no0 = norm.standardized(feature_range=(0.1, '+inf'))
+    elif method is None or method == 'rank':
+        indicators_scaled_rank = norm.rank()
+    else:
+        logger.error('Error Message', stack_info=True)
+        raise ValueError('The selected normalization method is not supported')
 
     normalized_indicators = {"standardized_any": indicators_scaled_standardized_any,
                              "standardized_no0": indicators_scaled_standardized_no0,
@@ -44,55 +57,62 @@ def normalize_indicators_in_parallel(norm: object, input_matrix: pd.DataFrame) -
     return normalized_indicators
 
 
-def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict) -> pd.DataFrame():
-    scores_weighted_sum_standardized = agg.weighted_sum(normalized_indicators["standardized_any"])
-    scores_weighted_sum_minmax = agg.weighted_sum(normalized_indicators["minmax_01"])
-    scores_weighted_sum_target = agg.weighted_sum(normalized_indicators["target_01"])
-    scores_weighted_sum_rank = agg.weighted_sum(normalized_indicators["rank"])
+def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, method=None) -> pd.DataFrame():
+    scores_weighted_sum = {}
+    scores_geometric = {}
+    scores_harmonic = {}
+    scores_minimum = {}
 
-    scores_geometric_standardized = pd.Series(agg.geometric(normalized_indicators["standardized_no0"]))
-    scores_geometric_minmax = pd.Series(agg.geometric(normalized_indicators["minmax_no0"]))
-    scores_geometric_target = pd.Series(agg.geometric(normalized_indicators["target_no0"]))
-    scores_geometric_rank = pd.Series(agg.geometric(normalized_indicators["rank"]))
+    scores = pd.DataFrame()
+    col_names = []
 
-    scores_harmonic_standardized = pd.Series(agg.harmonic(normalized_indicators["standardized_no0"]))
-    scores_harmonic_minmax = pd.Series(agg.harmonic(normalized_indicators["minmax_no0"]))
-    scores_harmonic_target = pd.Series(agg.harmonic(normalized_indicators["target_no0"]))
-    scores_harmonic_rank = pd.Series(agg.harmonic(normalized_indicators["rank"]))
-    scores_minimum_standardized = pd.Series(agg.minimum(normalized_indicators["standardized_any"]))
+    for key, values in normalized_indicators.items():
+        if method is None or method == 'weighted_sum':
+            if key in ["standardized_any", "minmax_01", "target_01", "rank"]:  # ws goes only with some specific normalizations
+                scores_weighted_sum[key] = agg.weighted_sum(values)
+                col_names.append("ws-" + key)
+        if method is None or method == 'geometric':
+            if key in ["standardized_no0", "minmax_no0", "target_no0", "rank"]:  # geom goes only with some specific normalizations
+                scores_geometric[key] = pd.Series(agg.geometric(values))
+                col_names.append("geom-" + key)
+        if method is None or method == 'harmonic':
+            if key in ["standardized_no0", "minmax_no0", "target_no0", "rank"]:  # harm goes only with some specific normalizations
+                scores_harmonic[key] = pd.Series(agg.harmonic(values))
+                col_names.append("harm-" + key)
+        if method is None or method == 'minimum':
+            if key == "standardized_any":
+                scores_minimum[key] = pd.Series(agg.minimum(normalized_indicators["standardized_any"]))
+                col_names.append("min-" + key)
+        else:
+            logger.info('The aggregation function minimum can be paired with standardized normalization only (here missing)',
+                        stack_info=True)
+    col_names
+    dict_list = [scores_weighted_sum, scores_geometric, scores_harmonic, scores_minimum]
 
-    scores = pd.concat([scores_weighted_sum_standardized, scores_weighted_sum_minmax, scores_weighted_sum_target,
-                        scores_weighted_sum_rank,
-                        scores_geometric_standardized, scores_geometric_minmax, scores_geometric_target,
-                        scores_geometric_rank,
-                        scores_harmonic_standardized, scores_harmonic_minmax, scores_harmonic_target,
-                        scores_harmonic_rank,
-                        scores_minimum_standardized], axis=1)
-    col_names = ['ws-stand', 'ws-minmax', 'ws-target', 'ws-rank',
-                 'geom-stand', 'geom-minmax', 'geom-target', 'geom-rank',
-                 'harm-stand', 'harm-minmax', 'harm-target', 'harm-rank',
-                 'min-stand']
+    for d in dict_list:
+        if d:
+            scores = pd.concat([scores, pd.DataFrame.from_dict(d)], axis=1)
 
     scores.columns = col_names
 
     return scores
 
 
-def parallelize_aggregation(args: List[tuple]) -> List[pd.DataFrame]:
+def parallelize_aggregation(args: List[tuple], method=None) -> List[pd.DataFrame]:
     # create a synchronous multiprocessing pool with the desired number of processes
     pool = multiprocessing.Pool()
-    res = pool.map(initialize_and_call_aggregation, args)
+    res = pool.map(initialize_and_call_aggregation, args, method)
     pool.close()
     pool.join()
 
     return res
 
 
-def parallelize_normalization(input_matrices: List[pd.DataFrame], polar: list) -> List[dict]:
+def parallelize_normalization(input_matrices: List[pd.DataFrame], polar: list, method=None) -> List[dict]:
     # create a synchronous multiprocessing pool with the desired number of processes
     pool = multiprocessing.Pool()
     args_for_parallel_norm = [(df, polar) for df in input_matrices]
-    res = pool.map(initialize_and_call_normalization, args_for_parallel_norm)
+    res = pool.map(initialize_and_call_normalization, args_for_parallel_norm, method)
     pool.close()
     pool.join()
 
