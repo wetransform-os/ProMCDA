@@ -18,7 +18,9 @@ def read_matrix(input_matrix_path: str) -> pd.DataFrame():
     try:
         filename = abspath(input_matrix_path)
         with open(filename, 'r') as fp:
-            matrix = pd.read_csv(fp, sep="[,;:]", decimal='.',engine='python')
+            matrix = pd.read_csv(fp, sep="[,;:]", decimal='.', engine='python')
+            data_types = {col: 'float64' for col in matrix.columns[1:]}
+            matrix = matrix.astype(data_types)
             return matrix
     except Exception as e:
         print(e)

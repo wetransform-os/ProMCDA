@@ -17,8 +17,8 @@ dist/ProMCDA-1.0.1.tar.gz
 mcda/__init__.py
 mcda/main.py
 mcda/mcda_run.py
-mcda/mcda_with_variability.py
-mcda/mcda_without_variability.py
+mcda/mcda_with_uncertainty.py
+mcda/mcda_without_uncertainty.py
 mcda/utils.py
 mcda/utils_for_parallelization.py
 mcda/configuration/__init__.py
@@ -42,8 +42,6 @@ tests/unit_tests/__init__.py
 tests/unit_tests/test_aggregation.py
 tests/unit_tests/test_config.py
 tests/unit_tests/test_mcda_run.py
-tests/unit_tests/test_mcda_wihout_variability.py
-tests/unit_tests/test_mcda_with_variability.py
 tests/unit_tests/test_normalization.py
 tests/unit_tests/test_utils.py
 tests/unit_tests/test_utils_for_parallelization.py

@@ -69,8 +69,8 @@ class MCDAWithUncertainty():
         I: all indicators
         N: number of random samples
         """
-        marginal_pdf = self._config.marginal_distribution_for_each_indicator
-        num_runs = self._config.monte_carlo_runs # N
+        marginal_pdf = self._config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
+        num_runs = self._config.monte_carlo_sampling["monte_carlo_runs"] # N
         input_matrix = self._input_matrix # (AxI)
 
         np.random.seed(42)

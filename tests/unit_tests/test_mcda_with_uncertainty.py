@@ -12,16 +12,21 @@ class TestMCDA_with_uncertainty(unittest.TestCase):
     def get_test_config():
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
-            "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal'],
             "polarity_for_each_indicator": ["-", "-", "+"],
-            "monte_carlo_runs": 10,
-            "num_cores": 1,
-            "weight_for_each_indicator": {
-                "random_weights": "no",
-                "iterative": "no",
-                "num_samples": 10000,
-                "given_weights": [0.5, 0.5, 0.5]
-            },
+            "variability": {
+                "variability_on": "yes",
+                "normalization": "minmax",
+                "aggregation": "weighted_sum"},
+            "sensitivity": {
+                "sensitivity_on": "yes",
+                "on_single_weights": "no",
+                "on_all_weights": "no",
+                "given_weights": [0.5, 0.5, 0.5],
+                "on_indicators": "yes"},
+            "monte_carlo_sampling": {
+                "monte_carlo_runs": 10000,
+                "num_cores": 1,
+                "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal']},
             "output_path": "/path/to/output"
         }
 
@@ -129,7 +134,7 @@ class TestMCDA_with_uncertainty(unittest.TestCase):
 
         # Then
         assert isinstance(n_random_matrices, list)
-        assert len(n_random_matrices) == config.monte_carlo_runs
+        assert len(n_random_matrices) == config.monte_carlo_sampling["monte_carlo_runs"]
         for df1, df2 in zip(n_random_matrices, exp_n_random_matrices):
             assert df1.shape == (4, 3)
             assert df1.values.all() == df2.values.all()

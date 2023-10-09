@@ -7,7 +7,6 @@ Author: Flaminia Catalli - wetransform GmbH, Matteo Spada - Zurich University of
 Author-email: flaminia.catalli@wetransform.to, matteo.spada@zhaw.ch
 License: EPL v 2.0
 Keywords: MCDA,sensitivity analysis,Monte Carlo sampling,probabilistic approach
-Platform: UNKNOWN
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: Science/Research
@@ -15,9 +14,15 @@ Classifier: License :: OSI Approved :: Eclipse Public License 2.0 (EPL-2.0)
 Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python :: 3
 Classifier: Topic :: Scientific/Engineering :: Mathematics
-Requires-Python: >=3.9
+Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 License-File: LICENSE
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: plotly
+Requires-Dist: pytest
+Requires-Dist: scikit-learn
+Requires-Dist: scipy
 
 # ProMCDA - Probabilistic Multi Criteria Decision Analysis
 A tool to estimate scores of alternatives and their uncertainties based on the Multi Criteria Decision Analysis approach.
@@ -138,7 +143,5 @@ In fact, when one calculates the standard deviation after rescaling between (0,1
 This results in a higher relative standard deviation compared to the mean.
 However, the higher relative standard deviation is not indicating a greater spread in the data but rather a consequence of the rescaling operation and 
 the chosen denominator in the standard deviation calculation.
-
-
 
 

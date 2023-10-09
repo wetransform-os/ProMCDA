@@ -11,7 +11,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("ProMCDA utils for parallelization")
 
 
-def initialize_and_call_aggregation(args: Tuple[list, dict], method) -> pd.DataFrame:
+def initialize_and_call_aggregation(args: Tuple[list, dict], method=None) -> pd.DataFrame:
     weights, data = args
     agg = Aggregation(weights)
 
@@ -20,8 +20,8 @@ def initialize_and_call_aggregation(args: Tuple[list, dict], method) -> pd.DataF
     return scores_one_run
 
 
-def initialize_and_call_normalization(args: Tuple[pd.DataFrame, list], method) -> List[dict]:
-    matrix, polarities = args
+def initialize_and_call_normalization(args: Tuple[pd.DataFrame, list, str]) -> List[dict]:
+    matrix, polarities, method = args
     norm = Normalization(matrix, polarities)
 
     dict_normalized_matrix = normalize_indicators_in_parallel(norm, method)
@@ -30,16 +30,24 @@ def initialize_and_call_normalization(args: Tuple[pd.DataFrame, list], method) -
 
 
 def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
+    indicators_scaled_standardized_any = None
+    indicators_scaled_standardized_no0 = None
+    indicators_scaled_minmax_01 = None
+    indicators_scaled_minmax_no0 = None
+    indicators_scaled_target_01 = None
+    indicators_scaled_target_no0 = None
+    indicators_scaled_rank = None
+
     if method is None or method == 'minmax':
         indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
         indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
-    elif method is None or method == 'target':
+    if method is None or method == 'target':
         indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
         indicators_scaled_target_no0 = norm.target(feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
-    elif method is None or method == 'standardized':
+    if method is None or method == 'standardized':
         indicators_scaled_standardized_any = norm.standardized(feature_range=('-inf', '+inf'))
         indicators_scaled_standardized_no0 = norm.standardized(feature_range=(0.1, '+inf'))
-    elif method is None or method == 'rank':
+    if method is None or method == 'rank':
         indicators_scaled_rank = norm.rank()
     else:
         logger.error('Error Message', stack_info=True)
@@ -53,6 +61,8 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
                              "target_no0": indicators_scaled_target_no0,
                              "rank":  indicators_scaled_rank
                             }
+
+    normalized_indicators = {k: v for k, v in normalized_indicators.items() if v is not None}
 
     return normalized_indicators
 
@@ -111,8 +121,8 @@ def parallelize_aggregation(args: List[tuple], method=None) -> List[pd.DataFrame
 def parallelize_normalization(input_matrices: List[pd.DataFrame], polar: list, method=None) -> List[dict]:
     # create a synchronous multiprocessing pool with the desired number of processes
     pool = multiprocessing.Pool()
-    args_for_parallel_norm = [(df, polar) for df in input_matrices]
-    res = pool.map(initialize_and_call_normalization, args_for_parallel_norm, method)
+    args_for_parallel_norm = [(df, polar, method) for df in input_matrices]
+    res = pool.map(initialize_and_call_normalization, args_for_parallel_norm)
     pool.close()
     pool.join()
 

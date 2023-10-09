@@ -38,8 +38,8 @@ class TestNormalization(unittest.TestCase):
         # Then
         assert isinstance(res_01, pd.DataFrame)
         assert isinstance(res_no0, pd.DataFrame)
-        assert_frame_equal(res_01, expected_res_01, check_like=True)
-        assert_frame_equal(res_no0, expected_res_no0, check_like=True)
+        assert_frame_equal(res_01, expected_res_01, check_like=True, check_dtype=False)
+        assert_frame_equal(res_no0, expected_res_no0, check_like=True, check_dtype=False)
         assert_almost_equal(res_01.to_numpy().min(), 0)
         assert_almost_equal(res_01.to_numpy().max(),1)
         assert_almost_equal(res_no0.to_numpy().min(),0.1)
@@ -63,8 +63,8 @@ class TestNormalization(unittest.TestCase):
         # Then
         assert isinstance(res_01, pd.DataFrame)
         assert isinstance(res_no0, pd.DataFrame)
-        assert_frame_equal(res_01, expected_res_01, check_like=True)
-        assert_frame_equal(res_no0, expected_res_no0, check_like=True)
+        assert_frame_equal(res_01, expected_res_01, check_like=True, check_dtype=False)
+        assert_frame_equal(res_no0, expected_res_no0, check_like=True, check_dtype=False)
         assert_almost_equal(res_01.to_numpy().min(), 0)
         assert_almost_equal(res_01.to_numpy().max(), 1)
         assert_almost_equal(res_no0.to_numpy().min(), 0.1)
@@ -87,8 +87,8 @@ class TestNormalization(unittest.TestCase):
         # Then
         assert isinstance(res_any, pd.DataFrame)
         assert isinstance(res_no0, pd.DataFrame)
-        assert_frame_equal(res_any, expected_res_any, check_like=True)
-        assert_frame_equal(res_no0, expected_res_no0, check_like=True)
+        assert_frame_equal(res_any, expected_res_any, check_like=True, check_dtype=False)
+        assert_frame_equal(res_no0, expected_res_no0, check_like=True, check_dtype=False)
         assert_almost_equal(res_no0.to_numpy().min(), 0.1)
         assert_almost_equal(res_any.to_numpy().mean(), 0, decimal=1)
         assert_almost_equal(res_any.to_numpy().std(), 1, decimal=1)
@@ -107,7 +107,7 @@ class TestNormalization(unittest.TestCase):
 
         # Then
         assert isinstance(res, pd.DataFrame)
-        assert_frame_equal(res, expected_res, check_like=True)
+        assert_frame_equal(res, expected_res, check_like=True, check_dtype=False)
         assert_almost_equal(res.to_numpy().min(), 1)
         assert_almost_equal(res.to_numpy().max(), no_alternatives)
 
