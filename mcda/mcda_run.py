@@ -32,6 +32,9 @@ def main(input_config: dict):
         is_uncertainty = 0
         logger.info("Read input matrix without uncertainty at {}".format(config.input_matrix_path))
     else:
+        if ("on_single_weights" == "no" and "on_all_weights" == "no" and "on_indicators" == "no"):
+            logger.error('Error Message', stack_info=True)
+            raise ValueError('Sensitivity analysis is requested but where is not defined:weights or indicators?')
         logger.info("MCDA will be run by considering uncertainty on the indicators")
         is_uncertainty = 1
         marginal_pdf = config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
@@ -56,8 +59,6 @@ def main(input_config: dict):
         col_to_drop_indexes = input_matrix_no_alternatives.columns.get_indexer(cols_to_drop)
         if (num_unique.any() == 1): logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
         input_matrix_no_alternatives = input_matrix_no_alternatives.drop(cols_to_drop, axis=1)
-        #if (num_unique.any() == 1): marginal_pdf = pop_indexed_elements(col_to_drop_indexes, marginal_pdf) # if uncert == 0 no pdfs are used
-        #logger.info("Marginal distributions: {}".format(marginal_pdf))
         # every column of the input matrix represents an indicator
         num_indicators = input_matrix_no_alternatives.shape[1]
         logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
@@ -109,14 +110,14 @@ def main(input_config: dict):
     if num_indicators != len(polar):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The number of polarities does not correspond to the no. of indicators')
-    if ((config.weight_for_each_indicator["random_weights"] == "no") and (num_indicators != len(config.weight_for_each_indicator["given_weights"]))):
+    if ((config.sensitivity["on_all_weights"] == "no") and (num_indicators != len(config.sensitivity["given_weights"]))):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
     # ----------------------------
     # NO UNCERTAINTY OF INDICATORS
     # ----------------------------
     if is_uncertainty == 0:
-        if (config.monte_carlo_runs > 0):
+        if (config.monte_carlo_sampling["monte_carlo_runs"] > 0):
             logger.error('Error Message', stack_info=True)
             raise ValueError('If the number of Monte-Carlo runs is larger than 0, at least some of the marginal distributions are expected to be non-exact')
         else: # MC runs = 0
@@ -135,7 +136,7 @@ def main(input_config: dict):
                 if is_variability == "yes":
                     scores = mcda_no_uncert.aggregate_indicators(normalized_indicators, norm_fixed_weights)
                 else:
-                    scores = mcda_no_uncert.aggregate_indicators(normalized_indicators, norm_fixed_weights)
+                    scores = mcda_no_uncert.aggregate_indicators(normalized_indicators, norm_fixed_weights, f_agg)
                 normalized_scores = rescale_minmax(scores) # normalized scores
                 normalized_scores.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
             elif config.sensitivity["on_all_weights"]  == "yes": # ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)

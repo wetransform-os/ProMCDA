@@ -167,10 +167,10 @@ class TestMCDA_without_uncertainty(unittest.TestCase):
         res = MCDA_no_uncert.aggregate_indicators(normalized_indicators, weights)
         res_simple_mcda = MCDA_no_uncert_simple_mcda.aggregate_indicators(normalized_indicators_simple_mcda, weights, config_simple_mcda.variability['aggregation'])
 
-        col_names = ['geom-minmax_no0', 'harm-minmax_no0', 'ws-minmax_01', 'geom-target_no0',
-                     'harm-target_no0', 'ws-target_01', 'ws-standardized_any',
-                     'min-standardized_any', 'geom-standardized_no0',
-                     'harm-standardized_no0', 'ws-rank', 'geom-rank', 'harm-rank']
+        col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
+                    'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
+                    'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
+                    'min-standardized_any']
 
         simple_mcda_col_names = ['ws-minmax_01']
 
@@ -205,10 +205,10 @@ class TestMCDA_without_uncertainty(unittest.TestCase):
             normalized_indicators = MCDA_no_uncert_simple_mcda.normalize_indicators(config_randomness_simple_mcda.variability['normalization'])
             res_simple_mcda = aggregate_indicators_in_parallel(agg, normalized_indicators, config_randomness_simple_mcda.variability['aggregation'])
 
-            col_names = ['geom-minmax_no0', 'harm-minmax_no0', 'ws-minmax_01', 'geom-target_no0',
-                         'harm-target_no0', 'ws-target_01', 'ws-standardized_any',
-                         'min-standardized_any', 'geom-standardized_no0',
-                         'harm-standardized_no0', 'ws-rank', 'geom-rank', 'harm-rank']
+            col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
+                         'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
+                         'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
+                         'min-standardized_any']
 
             simple_mcda_col_names = ['ws-minmax_01']
 

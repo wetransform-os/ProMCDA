@@ -11,6 +11,7 @@ formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("ProMCDA aggregation")
 
+
 class MCDAWithoutUncertainty():
     """
     Class MCDA without indicators' uncertainty
@@ -82,33 +83,45 @@ class MCDAWithoutUncertainty():
         scores_minimum = {}
 
         scores = pd.DataFrame()
-        col_names = []
+        col_names_method_none = []
+        col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
+                     'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
+                     'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank'
+                     'min-standardized_any'] # same order as in the following loop
 
         for key, values in self.normalized_indicators.items():
             if method is None or method == 'weighted_sum':
-                if key in ["standardized_any", "minmax_01", "target_01", "rank"]:  # ws goes only with some specific normalizations
+                if key in ["standardized_any", "minmax_01", "target_01",
+                           "rank"]:  # ws goes only with some specific normalizations
                     scores_weighted_sum[key] = agg.weighted_sum(values)
-                    col_names.append("ws-" + key)
+                    col_names_method_none.append("ws-" + key)
             if method is None or method == 'geometric':
-                if key in ["standardized_no0", "minmax_no0", "target_no0", "rank"]:  # geom goes only with some specific normalizations
+                if key in ["standardized_no0", "minmax_no0", "target_no0",
+                           "rank"]:  # geom goes only with some specific normalizations
                     scores_geometric[key] = pd.Series(agg.geometric(values))
-                    col_names.append("geom-" + key)
+                    col_names_method_none.append("geom-" + key)
             if method is None or method == 'harmonic':
-                if key in ["standardized_no0", "minmax_no0", "target_no0", "rank"]:  # harm goes only with some specific normalizations
+                if key in ["standardized_no0", "minmax_no0", "target_no0",
+                           "rank"]:  # harm goes only with some specific normalizations
                     scores_harmonic[key] = pd.Series(agg.harmonic(values))
-                    col_names.append("harm-" + key)
+                    col_names_method_none.append("harm-" + key)
             if method is None or method == 'minimum':
                 if key == "standardized_any":
                     scores_minimum[key] = pd.Series(agg.minimum(self.normalized_indicators["standardized_any"]))
-                    col_names.append("min-" + key)
+                    col_names_method_none.append("min-" + key)
                 else:
-                    logger.info('The aggregation function minimum can be paired with standardized normalization only (here missing)', stack_info=True)
+                    logger.info('The aggregation function minimum can be paired with standardized normalization only '
+                                '(here missing)', stack_info=True)
 
         dict_list = [scores_weighted_sum, scores_geometric, scores_harmonic, scores_minimum]
 
         for d in dict_list:
-            scores = pd.concat([scores, pd.DataFrame.from_dict(d)], axis=1)
+            if d:
+                scores = pd.concat([scores, pd.DataFrame.from_dict(d)], axis=1)
 
-        scores.columns = col_names
+        if method is None:
+            scores.columns = col_names
+        else:
+            scores.columns = col_names_method_none
 
         return scores

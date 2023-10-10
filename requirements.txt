@@ -8,4 +8,5 @@ pytest
 scikit-learn
 scipy
 Pillow
+kaleido
 
