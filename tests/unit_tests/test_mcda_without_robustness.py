@@ -1,25 +1,25 @@
 import unittest
 from unittest import TestCase
 
-from mcda.mcda_without_uncertainty import MCDAWithoutUncertainty
+from mcda.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.configuration.config import Config
 from mcda.utils import *
 from mcda.utils_for_parallelization import *
 from mcda.utility_functions.aggregation import Aggregation
 
-class TestMCDA_without_uncertainty(unittest.TestCase):
+class TestMCDA_without_robustness(unittest.TestCase):
 
     @staticmethod
     def get_test_config():
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['-','-','+','+','+','+'],
-            "variability": {
+            "sensitivity": {
                 "variability_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
-            "sensitivity": {
-                "sensitivity_on": "no",
+            "robustness": {
+                "robustness_on": "no",
                 "on_single_weights": "no",
                 "on_all_weights": "yes",
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
@@ -36,12 +36,12 @@ class TestMCDA_without_uncertainty(unittest.TestCase):
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
-            "variability": {
+            "sensitivity": {
                 "variability_on": "no",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
-            "sensitivity": {
-                "sensitivity_on": "no",
+            "robustness": {
+                "robustness_on": "no",
                 "on_single_weights": "no",
                 "on_all_weights": "yes",
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
@@ -58,12 +58,12 @@ class TestMCDA_without_uncertainty(unittest.TestCase):
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
-            "variability": {
+            "sensitivity": {
                 "variability_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
-            "sensitivity": {
-                "sensitivity_on": "yes",
+            "robustness": {
+                "robustness_on": "yes",
                 "on_single_weights": "no",
                 "on_all_weights": "yes",
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
@@ -80,12 +80,12 @@ class TestMCDA_without_uncertainty(unittest.TestCase):
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
-            "variability": {
+            "sensitivity": {
                 "variability_on": "no",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
-            "sensitivity": {
-                "sensitivity_on": "yes",
+            "robustness": {
+                "robustness_on": "yes",
                 "on_single_weights": "no",
                 "on_all_weights": "yes",
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
@@ -106,24 +106,24 @@ class TestMCDA_without_uncertainty(unittest.TestCase):
 
     @staticmethod
     def get_list_of_df():
-        list_df = [TestMCDA_without_uncertainty.get_input_matrix(), TestMCDA_without_uncertainty.get_input_matrix()]
+        list_df = [TestMCDA_without_robustness.get_input_matrix(), TestMCDA_without_robustness.get_input_matrix()]
 
         return list_df
 
     def test_normalize_indicators(self):
         # Given
-        config_general = TestMCDA_without_uncertainty.get_test_config()
+        config_general = TestMCDA_without_robustness.get_test_config()
         config_general = Config(config_general)
-        input_matrix = TestMCDA_without_uncertainty.get_input_matrix()
+        input_matrix = TestMCDA_without_robustness.get_input_matrix()
 
-        config_simple_mcda = TestMCDA_without_uncertainty.get_test_config_simple_mcda()
+        config_simple_mcda = TestMCDA_without_robustness.get_test_config_simple_mcda()
         config_simple_mcda = Config(config_simple_mcda)
 
         # When
-        MCDA_no_uncert_general = MCDAWithoutUncertainty(config_general, input_matrix)
+        MCDA_no_uncert_general = MCDAWithoutRobustness(config_general, input_matrix)
         res_general = MCDA_no_uncert_general.normalize_indicators()
 
-        MCDA_no_uncert_simple_mcda = MCDAWithoutUncertainty(config_simple_mcda, input_matrix)
+        MCDA_no_uncert_simple_mcda = MCDAWithoutRobustness(config_simple_mcda, input_matrix)
         res_simple_mcda = MCDA_no_uncert_simple_mcda.normalize_indicators('minmax')
 
         # Then
@@ -149,19 +149,19 @@ class TestMCDA_without_uncertainty(unittest.TestCase):
 
     def test_aggregate_indicators(self):
         # Given
-        config = TestMCDA_without_uncertainty.get_test_config()
+        config = TestMCDA_without_robustness.get_test_config()
         config = Config(config)
-        input_matrix = TestMCDA_without_uncertainty.get_input_matrix()
+        input_matrix = TestMCDA_without_robustness.get_input_matrix()
 
-        config_simple_mcda = TestMCDA_without_uncertainty.get_test_config_simple_mcda()
+        config_simple_mcda = TestMCDA_without_robustness.get_test_config_simple_mcda()
         config_simple_mcda = Config(config_simple_mcda)
 
         # When
         weights = config.sensitivity["given_weights"]
 
-        MCDA_no_uncert = MCDAWithoutUncertainty(config, input_matrix)
+        MCDA_no_uncert = MCDAWithoutRobustness(config, input_matrix)
         normalized_indicators = MCDA_no_uncert.normalize_indicators()
-        MCDA_no_uncert_simple_mcda = MCDAWithoutUncertainty(config_simple_mcda, input_matrix)
+        MCDA_no_uncert_simple_mcda = MCDAWithoutRobustness(config_simple_mcda, input_matrix)
         normalized_indicators_simple_mcda = MCDA_no_uncert_simple_mcda.normalize_indicators(config_simple_mcda.variability['normalization'])
 
         res = MCDA_no_uncert.aggregate_indicators(normalized_indicators, weights)
@@ -187,21 +187,21 @@ class TestMCDA_without_uncertainty(unittest.TestCase):
 
     def test_aggregate_indicators_in_parallel(self):
             # Given
-            config = TestMCDA_without_uncertainty.get_test_config_randomness()
+            config = TestMCDA_without_robustness.get_test_config_randomness()
             config = Config(config)
-            input_matrix = TestMCDA_without_uncertainty.get_input_matrix()
+            input_matrix = TestMCDA_without_robustness.get_input_matrix()
             weights = config.sensitivity["given_weights"]
             agg =  Aggregation(weights)
 
-            config_randomness_simple_mcda = TestMCDA_without_uncertainty.get_test_config_randomness_simple_mcda()
+            config_randomness_simple_mcda = TestMCDA_without_robustness.get_test_config_randomness_simple_mcda()
             config_randomness_simple_mcda = Config(config_randomness_simple_mcda)
 
             # When
-            MCDA_no_uncert = MCDAWithoutUncertainty(config, input_matrix)
+            MCDA_no_uncert = MCDAWithoutRobustness(config, input_matrix)
             normalized_indicators = MCDA_no_uncert.normalize_indicators()
             res = aggregate_indicators_in_parallel(agg, normalized_indicators)
 
-            MCDA_no_uncert_simple_mcda = MCDAWithoutUncertainty(config_randomness_simple_mcda, input_matrix)
+            MCDA_no_uncert_simple_mcda = MCDAWithoutRobustness(config_randomness_simple_mcda, input_matrix)
             normalized_indicators = MCDA_no_uncert_simple_mcda.normalize_indicators(config_randomness_simple_mcda.variability['normalization'])
             res_simple_mcda = aggregate_indicators_in_parallel(agg, normalized_indicators, config_randomness_simple_mcda.variability['aggregation'])
 
@@ -225,7 +225,7 @@ class TestMCDA_without_uncertainty(unittest.TestCase):
 
     def test_estimate_runs_mean_std(self):
         # Given
-        list_of_df = TestMCDA_without_uncertainty.get_list_of_df()
+        list_of_df = TestMCDA_without_robustness.get_list_of_df()
 
         # When
         res = estimate_runs_mean_std(list_of_df)
@@ -236,7 +236,7 @@ class TestMCDA_without_uncertainty(unittest.TestCase):
         assert len(res) ==2
         assert isinstance(res, list)
         assert isinstance(res[0], pd.DataFrame)
-        assert res[0].to_numpy().all() == TestMCDA_without_uncertainty.get_input_matrix().to_numpy().all()
+        assert res[0].to_numpy().all() == TestMCDA_without_robustness.get_input_matrix().to_numpy().all()
         assert res[1].to_numpy().all() == df_std.to_numpy().all()
 
 

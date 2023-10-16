@@ -11,13 +11,13 @@ class TestMCDA(unittest.TestCase):
              "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
              "polarity_for_each_indicator": ["+","+","+","+","+","-"],
 
-             "variability": {
+             "sensitivity": {
                   "variability_on": "yes",
                   "normalization": "minmax",
                   "aggregation": "weighted_sum"},
 
-             "sensitivity": {
-                  "sensitivity_on": "yes",
+             "robustness": {
+                  "robustness_on": "yes",
                   "on_single_weights": "no",
                   "on_all_weights": "yes",
                   "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
@@ -38,13 +38,13 @@ class TestMCDA(unittest.TestCase):
             "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
              "polarity_for_each_indicator": ["+","+","+","+","+","-"],
 
-             "variability": {
+             "sensitivity": {
                   "variability_on": "yes",
                   "normalization": "minmax",
                   "aggregation": "weighted_sum"},
 
-             "sensitivity": {
-                  "sensitivity_on": "yes",
+             "robustness": {
+                  "robustness_on": "yes",
                   "on_single_weights": "no",
                   "on_all_weights": "no",
                   "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
@@ -64,13 +64,13 @@ class TestMCDA(unittest.TestCase):
             "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
              "polarity_for_each_indicator": ["+","+","+","+","+","-"],
 
-             "variability": {
+             "sensitivity": {
                   "variability_on": "yes",
                   "normalization": "minmax",
                   "aggregation": "weighted_sum"},
 
-             "sensitivity": {
-                  "sensitivity_on": "no",
+             "robustness": {
+                  "robustness_on": "no",
                   "on_single_weights": "no",
                   "on_all_weights": "no",
                   "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],

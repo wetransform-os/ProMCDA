@@ -1,24 +1,23 @@
 {
- "input_matrix_path": "/Users/flaminia/Documents/work/MCDA/Examples/exp2_12_alternatives.csv",
+ "input_matrix_path": "/Users/flaminia/Documents/work/MCDA/Examples/input_matrix_12_alternatives.csv",
   "polarity_for_each_indicator": ["+","+","+","+","+","-","-","+"],
 
-  "variability": {
-    "variability_on": "yes",
+  "sensitivity": {
+    "sensitivity_on": "yes",
     "normalization": "minmax",
     "aggregation": "geometric"},
 
-  "sensitivity": {
-    "sensitivity_on": "no",
-    "on_single_weights": "no",
+  "robustness": {
+    "robustness_on": "yes",
+    "on_single_weights": "yes",
     "on_all_weights": "no",
     "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
     "on_indicators": "no"},
 
   "monte_carlo_sampling": {
-      "monte_carlo_runs": 0,
+      "monte_carlo_runs": 10000,
       "num_cores": 1,
-      "marginal_distribution_for_each_indicator": ["exact", "exact", "exact", "exact", "exact", "exact", "exact", "exact"]},
+      "marginal_distribution_for_each_indicator": ["normal", "normal", "normal", "normal", "normal", "exact", "exact", "exact"]},
 
-  "output_path": "/Users/flaminia/Desktop/var_off_sens_off_test/"
-
+  "output_path": "/Users/flaminia/Desktop/var_yes_sens_yes_1_w_test/"
 }

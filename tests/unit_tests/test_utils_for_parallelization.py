@@ -1,7 +1,7 @@
 import unittest
 from unittest import TestCase
 
-from mcda.mcda_without_uncertainty import *
+from mcda.mcda_without_robustness import *
 from mcda.utils_for_parallelization import *
 from pandas.testing import assert_frame_equal
 from statistics import mean, stdev
@@ -15,12 +15,12 @@ class TestUtilsForParallelization(unittest.TestCase):
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ["+","+","+","+","+"],
-            "variability": {
+            "sensitivity": {
                 "variability_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
-            "sensitivity": {
-                "sensitivity_on": "yes",
+            "robustness": {
+                "robustness_on": "yes",
                 "on_single_weights": "no",
                 "on_all_weights": "no",
                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5],
@@ -75,7 +75,7 @@ class TestUtilsForParallelization(unittest.TestCase):
         df = pd.DataFrame(data=data)
         config = TestUtilsForParallelization.get_test_config()
         config = Config(config)
-        mcda_no_var = MCDAWithoutUncertainty(config, df)
+        mcda_no_var = MCDAWithoutRobustness(config, df)
         df_norm = mcda_no_var.normalize_indicators()
 
         out_list = [df_norm, df_norm, df_norm]

@@ -25,7 +25,7 @@ setuptools.setup(
     author="Flaminia Catalli - wetransform GmbH, Matteo Spada - Zurich University of Applied Sciences",
     author_email='flaminia.catalli@wetransform.to, matteo.spada@zhaw.ch',
     description='A probabilistic Multi Criteria Decision Analysis',
-    keywords='MCDA, sensitivity analysis, Monte Carlo sampling, probabilistic approach',
+    keywords='MCDA, robustness analysis, Monte Carlo sampling, probabilistic approach',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/wetransform-os/ProMCDA',

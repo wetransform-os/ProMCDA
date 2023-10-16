@@ -6,6 +6,7 @@ import plotly.io as pio
 from PIL import Image
 import pandas as pd
 import numpy as np
+import logging
 import argparse
 import pickle
 import random
@@ -13,6 +14,8 @@ import json
 import os
 import io
 
+#logging.basicConfig(level=logging.WARNING)
+logging.getLogger('PIL').setLevel(logging.WARNING) # suppress the debug messages produced by PIL internal logging
 
 def read_matrix(input_matrix_path: str) -> pd.DataFrame():
     try:
@@ -134,8 +137,10 @@ def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
             name=scores.columns[i + 1],
             x=scores['Alternatives'].values.tolist(),
             y=scores.iloc[:, i + 1],
+            showlegend=True
         ))
         i = i + 1
+    fig.update_traces(showlegend=True)
     fig.update_layout(barmode='group', height=600, width=1000,
                       title='<b>MCDA analysis<b>',
                       title_font_size=22,
@@ -161,8 +166,10 @@ def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
             name=scores.columns[i + 1],
             x=scores['Alternatives'].values.tolist(),
             y=scores.iloc[:, i + 1],
+            showlegend=True
         ))
         i = i + 1
+    fig.update_traces(showlegend=True)
     fig.update_layout(barmode='group', height=600, width=1000,
                       title='<b>MCDA analysis<b>',
                       title_font_size=22,
@@ -189,16 +196,22 @@ def plot_mean_scores(all_means: pd.DataFrame, all_stds: pd.DataFrame, plot_std: 
                 y=all_means.iloc[:, i + 1],
                 error_y=dict(type='data', array=all_stds.iloc[:, i + 1])
             ))
+            fig.update_layout(title=f'<b>MCDA analysis with added randomness on the {rand_on}<b> (rough scores)',
+                              title_font_size=22)
         else:
             fig.add_trace(go.Bar(
                 name=all_means.columns[i + 1],
                 x=all_means['Alternatives'].values.tolist(),
-                y=all_means.iloc[:, i + 1]
+                y=all_means.iloc[:, i + 1],
+                showlegend=True
             ))
+            fig.update_layout(title=f'<b>MCDA analysis with added randomness on the {rand_on}<b> (normalized scores)',
+                              title_font_size=22)
         i = i + 1
+    fig.update_traces(showlegend=True)
     fig.update_layout(barmode='group', height=600, width=1000,
-                      title=f'<b>MCDA analysis with added randomness on the {rand_on}<b>',
-                      title_font_size=22,
+                      #title=f'<b>MCDA analysis with added randomness on the {rand_on}<b>',
+                      #title_font_size=22,
 
                       xaxis=dict(
                           tickmode="array",
@@ -227,9 +240,11 @@ def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, all_weights_stds
             fig.add_trace(go.Bar(
                 name=all_weights_means.columns[i + 1],
                 x=all_weights_means['Alternatives'][:].values.tolist(),
-                y=all_weights_means.iloc[:, i + 1]
+                y=all_weights_means.iloc[:, i + 1],
+                showlegend=True
             ))
         i = i + 1
+    fig.update_traces(showlegend=True)
     fig.update_layout(barmode='group', height=600, width=1000,
                       title="MCDA analysis with random sampled weight for the indicator '{}'".format(indicators[index]),
                       title_font_size=22,

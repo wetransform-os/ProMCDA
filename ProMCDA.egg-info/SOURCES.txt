@@ -2,8 +2,8 @@
 LICENSE
 README.md
 __init__.py
-configuration_w_uncertainty.json
-configuration_without_uncertainty.json
+configuration_w_robustness.json
+configuration_without_robustness.json
 requirements.txt
 setup.py
 setup_utils.py
@@ -17,8 +17,8 @@ dist/ProMCDA-1.0.1.tar.gz
 mcda/__init__.py
 mcda/main.py
 mcda/mcda_run.py
-mcda/mcda_with_uncertainty.py
-mcda/mcda_without_uncertainty.py
+mcda/mcda_with_robustness.py
+mcda/mcda_without_robustness.py
 mcda/utils.py
 mcda/utils_for_parallelization.py
 mcda/configuration/__init__.py

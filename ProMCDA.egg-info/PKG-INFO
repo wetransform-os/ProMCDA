@@ -29,7 +29,7 @@ A tool to estimate scores of alternatives and their uncertainties based on the M
 In MCDA context an *alternative* is one possible course of action available; an *indicator* is a paramater that describes the alternatives.
 
 The variability of the MCDA scores are caused by:
-- the uncertainty associated with the indicators;
+- the robustness associated with the indicators;
 - the sensitivity of the algorithm to the different pairs of norm/agg functions;
 - the randomness that can be associated to the weights.
 
@@ -77,15 +77,15 @@ if the marginal distribution relative to the indicator is 'exact', then the stan
 - N=1
 - scores ar always calculated for all the different pairs of normalization/aggregation functions (see also next paragraph)
 
-The configuration file can trigger a run with or without uncertainty on the indicators. This is implicitly set in the 
-`marginal_distribution_for_each_indicator` parameter: if the marginal distributions are all *exact*, then the run is without uncertainty;
+The configuration file can trigger a run with or without robustness on the indicators. This is implicitly set in the
+`marginal_distribution_for_each_indicator` parameter: if the marginal distributions are all *exact*, then the run is without robustness;
 if instead the marginal distributions are also other than *exact*, it means that the indicator values can be randomly sampled from those PDFs.
-- `configuration_without_uncertainty.json`
-  - no uncertainty relative to the indicators is considered, however one can
+- `configuration_without_robustness.json`
+  - no robustness relative to the indicators is considered, however one can
     - see the variability caused by using different pairs of normalization/aggregation functions
     - turn on the variability due to added randomness to the weights (optional)
-- `configuration_w_uncertainty.json`
-    - uncertainty relative to the indicators is considered, together with
+- `configuration_w_robustness.json`
+    - robustness relative to the indicators is considered, together with
     - the variability caused by using different pairs of normalization/aggregation functions
 
 ### Requirements
@@ -98,9 +98,9 @@ pip install -r requirements.txt
 ### Running the code (from root dir)
 ```bash
 source activate <your-env>
-python3 -m mcda.mcda_run -c configuration_w_uncertainty.json
+python3 -m mcda.mcda_run -c configuration_w_robustness.json
 ```
-where an example of configuration file can be found in `mcda/configuration_w_uncertainty.json` or `mcda/configuration_without_uncertainty.json`.
+where an example of configuration file can be found in `mcda/configuration_w_robustness.json` or `mcda/configuration_without_robustness.json`.
 
 ### Running the tests
 ```bash

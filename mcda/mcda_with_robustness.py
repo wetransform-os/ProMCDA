@@ -10,9 +10,9 @@ from mcda.configuration.config import Config
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
-logger = logging.getLogger("MCDA with variability")
+logger = logging.getLogger("MCDA with sensitivity")
 
-class MCDAWithUncertainty():
+class MCDAWithRobustness():
     """
 
     Class MCDA with indicators' uncertainty

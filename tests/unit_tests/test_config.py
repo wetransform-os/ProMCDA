@@ -11,12 +11,12 @@ class TestConfig(unittest.TestCase):
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['+', '+', '-'],
-            "variability": {
+            "sensitivity": {
                 "variability_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
-            "sensitivity": {
-                "sensitivity_on": "yes",
+            "robustness": {
+                "robustness_on": "yes",
                 "on_single_weights": "no",
                 "on_all_weights": "yes",
                 "given_weights": [0.5, 0.5, 0.5],
@@ -37,8 +37,8 @@ class TestConfig(unittest.TestCase):
                 "variability_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
-            "sensitivity": {
-                "sensitivity_on": "yes",
+            "robustness": {
+                "robustness_on": "yes",
                 "on_single_weights": "no",
                 "on_all_weights": "yes",
                 "given_weights": [0.5, 0.5, 0.5],
@@ -55,12 +55,12 @@ class TestConfig(unittest.TestCase):
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['+', '+', '-'],
-            "variability": {
+            "sensitivity": {
                 "variability_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
-            "sensitivity": {
-                "sensitivity_on": "yes",
+            "robustness": {
+                "robustness_on": "yes",
                 "on_single_weights": "no",
                 "error_key": "yes",
                 "given_weights": [0.5, 0.5, 0.5],
@@ -116,8 +116,8 @@ class TestConfig(unittest.TestCase):
         # Then
         assert config.input_matrix_path == input_config['input_matrix_path']
         assert config.polarity_for_each_indicator == input_config['polarity_for_each_indicator']
-        assert config.variability == input_config['variability']
-        assert config.sensitivity == input_config['sensitivity']
+        assert config.variability == input_config['sensitivity']
+        assert config.sensitivity == input_config['robustness']
         assert config.monte_carlo_sampling == input_config['monte_carlo_sampling']
 
 

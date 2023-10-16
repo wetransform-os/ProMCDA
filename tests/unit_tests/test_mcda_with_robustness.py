@@ -2,23 +2,23 @@ import pandas as pd
 import numpy as np
 import unittest
 
-from mcda.mcda_with_uncertainty import MCDAWithUncertainty
+from mcda.mcda_with_robustness import MCDAWithRobustness
 from mcda.configuration.config import Config
 
 
-class TestMCDA_with_uncertainty(unittest.TestCase):
+class TestMCDA_with_robustness(unittest.TestCase):
 
     @staticmethod
     def get_test_config():
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ["-", "-", "+"],
-            "variability": {
+            "sensitivity": {
                 "variability_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
-            "sensitivity": {
-                "sensitivity_on": "yes",
+            "robustness": {
+                "robustness_on": "yes",
                 "on_single_weights": "no",
                 "on_all_weights": "no",
                 "given_weights": [0.5, 0.5, 0.5],
@@ -72,12 +72,11 @@ class TestMCDA_with_uncertainty(unittest.TestCase):
         data3 = np.random.normal(loc=9.5, scale=0.1, size=(4, 10))
         data3 = pd.DataFrame(data3)
         out_list = [data1, data2, data3]
-        print('out_list', out_list)
 
-        input_matrix = TestMCDA_with_uncertainty.get_input_matrix()
-        config = TestMCDA_with_uncertainty.get_test_config()
+        input_matrix = TestMCDA_with_robustness.get_input_matrix()
+        config = TestMCDA_with_robustness.get_test_config()
         config = Config(config)
-        MCDA_w_uncert = MCDAWithUncertainty(config, input_matrix)
+        MCDA_w_uncert = MCDAWithRobustness(config, input_matrix)
         output_list = MCDA_w_uncert.convert_list(out_list)
 
         return output_list
@@ -86,7 +85,7 @@ class TestMCDA_with_uncertainty(unittest.TestCase):
         # Given
         input_matrix = self.get_input_matrix()
         input_series = input_matrix.iloc[:, 0]
-        config = TestMCDA_with_uncertainty.get_test_config()
+        config = TestMCDA_with_robustness.get_test_config()
         config = Config(config)
         num_runs = 10
         exp_matrix = pd.DataFrame(
@@ -94,7 +93,7 @@ class TestMCDA_with_uncertainty(unittest.TestCase):
                   '5': [0, 1, 2, 3], '6': [0, 1, 2, 3], '7': [0, 1, 2, 3], '8': [0, 1, 2, 3], '9': [0, 1, 2, 3]})
 
         # When
-        MCDA_w_uncert = MCDAWithUncertainty(config, input_matrix)
+        MCDA_w_uncert = MCDAWithRobustness(config, input_matrix)
         output_matrix = MCDA_w_uncert.repeat_series_to_create_df(input_series, num_runs)
 
         # Then
@@ -105,13 +104,13 @@ class TestMCDA_with_uncertainty(unittest.TestCase):
     def test_convert_list(self):
         # Given
         input_matrix = self.get_input_matrix()
-        config = TestMCDA_with_uncertainty.get_test_config()
-        input_list = TestMCDA_with_uncertainty.get_input_list()
-        expected_output_list = TestMCDA_with_uncertainty.get_expected_out_list()
+        config = TestMCDA_with_robustness.get_test_config()
+        input_list = TestMCDA_with_robustness.get_input_list()
+        expected_output_list = TestMCDA_with_robustness.get_expected_out_list()
 
         # When
         config = Config(config)
-        MCDA_w_uncert = MCDAWithUncertainty(config, input_matrix)
+        MCDA_w_uncert = MCDAWithRobustness(config, input_matrix)
         output_list = MCDA_w_uncert.convert_list(input_list)
 
         # Then
@@ -124,13 +123,13 @@ class TestMCDA_with_uncertainty(unittest.TestCase):
     def test_create_n_randomly_sampled_matrices(self):
         # Given
         input_matrix = self.get_input_matrix()
-        config = TestMCDA_with_uncertainty.get_test_config()
+        config = TestMCDA_with_robustness.get_test_config()
 
         # When
         config = Config(config)
-        MCDA_w_uncert = MCDAWithUncertainty(config, input_matrix)
+        MCDA_w_uncert = MCDAWithRobustness(config, input_matrix)
         n_random_matrices = MCDA_w_uncert.create_n_randomly_sampled_matrices()
-        exp_n_random_matrices = TestMCDA_with_uncertainty.get_list_random_input_matrices()
+        exp_n_random_matrices = TestMCDA_with_robustness.get_list_random_input_matrices()
 
         # Then
         assert isinstance(n_random_matrices, list)

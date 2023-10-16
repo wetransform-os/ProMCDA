@@ -3,11 +3,15 @@ A tool to estimate scores of alternatives and their uncertainties based on the M
 In MCDA context an *alternative* is one possible course of action available; an *indicator* is a paramater that describes the alternatives.
 
 The variability of the MCDA scores are caused by:
-- the uncertainty associated with the indicators;
-- the sensitivity of the algorithm to the different pairs of norm/agg functions;
+- the uncertainty associated with the indicators (--> robustness analysis);
+- the sensitivity of the algorithm to the different pairs of norm/agg functions (--> sensitivity analysis);
 - the randomness that can be associated to the weights.
 
-The tool can be used also as a simple MCDA ranking tool with no sensitivity analysis (see below for instructions).
+Here we define:
+- the sensitivity analysis as the one aimed at capturing the output score stability to the different initial modes;
+- the robustness analysis as the one aimed at capturing the effect of any changes in the inputs (their uncertainties) on the output scores.
+
+The tool can be used also as a simple MCDA ranking tool with no robustness/sensitivity analysis (see below for instructions).
 
 
 ### Input information needed in the configuration file
@@ -30,7 +34,7 @@ if the marginal distribution relative to the indicator is 'exact', then the stan
   - lognormal distribution, "lnorm"
   - Poisson distribution, "poisson"
 - ***list of polarities*** for each indicator, "+" (the higher the value of the indicator the better for the evaluation) or "-" (the lower the value of the indicator the better)
-- ***number of Monte Carlo runs***, "N" (default is 0, then no variability is considered; N should be a sufficient big number, e.g. larger or equal than 1000)
+- ***number of Monte Carlo runs***, "N" (default is 0, then no robustness is considered; N should be a sufficient big number, e.g. larger or equal than 1000)
 - ***number of cores*** used for the parallelization, "numCores"
 - ***list of weights*** for the indicators
     - *should the weights be randomly sampled by mean of a Monte Carlo sampling?* (*yes* or *no*) - allowed only in the case no sensitivity analysis is performed -
@@ -44,7 +48,7 @@ if the marginal distribution relative to the indicator is 'exact', then the stan
     - depending on the different options, the other information are disregard
 - ***path to output file*** (e.g. `path/output_file.csv`).
 
-*In case the sensitivity analysis is of no interest*, then:
+*In case the robustness analysis is of no interest*, then:
 - the input matrix should be the one without uncertainties associated to the indicators
 - the marginal distribution associated to the indicators should all be of the kind "exact"
 - cores=1
@@ -52,15 +56,15 @@ if the marginal distribution relative to the indicator is 'exact', then the stan
 - scores ar always calculated for all the different pairs of normalization/aggregation functions (see also next paragraph)
 
 The configuration file can trigger a run with or without uncertainty on the indicators. This is implicitly set in the 
-`marginal_distribution_for_each_indicator` parameter: if the marginal distributions are all *exact*, then the run is without uncertainty;
+`marginal_distribution_for_each_indicator` parameter: if the marginal distributions are all *exact*, then the run is without robustness;
 if instead the marginal distributions are also other than *exact*, it means that the indicator values can be randomly sampled from those PDFs.
-- `configuration_without_uncertainty.json`
+- `configuration_without_robustness.json`
   - no uncertainty relative to the indicators is considered, however one can
-    - see the variability caused by using different pairs of normalization/aggregation functions
-    - turn on the variability due to added randomness to the weights (optional)
-- `configuration_w_uncertainty.json`
-    - uncertainty relative to the indicators is considered, together with
-    - the variability caused by using different pairs of normalization/aggregation functions
+    - see the sensitivity caused by using different pairs of normalization/aggregation functions
+    - turn on the robustness analysis associated with the added randomness to the weights (optional)
+- `configuration_w_robustness.json`
+    - the uncertainty relative to the indicators is considered, together with
+    - the sensitivity caused by using different pairs of normalization/aggregation functions
 
 ### Requirements
 ```bash
@@ -72,9 +76,9 @@ pip install -r requirements.txt
 ### Running the code (from root dir)
 ```bash
 source activate <your-env>
-python3 -m mcda.mcda_run -c configuration_w_uncertainty.json
+python3 -m mcda.mcda_run -c configuration_w_robustness.json
 ```
-where an example of configuration file can be found in `mcda/configuration_w_uncertainty.json` or `mcda/configuration_without_uncertainty.json`.
+where an example of configuration file can be found in `mcda/configuration_w_robustness.json` or `mcda/configuration_without_robustness.json`.
 
 ### Running the tests
 ```bash
