@@ -26,14 +26,14 @@ class Config(object):
 
     _list_values: list[str] = ['marginal_distribution_for_each_indicator', 'polarity_for_each_indicator']
 
-    _str_values = ['input_matrix_path', 'output_path', 'variability_on', 'normalization', 'aggregation',
+    _str_values = ['input_matrix_path', 'output_path', 'sensitivity_on', 'normalization', 'aggregation',
                    'robustness_on', 'on_single_weights', 'on_all_weights','given_weights', 'on_indicators']
 
     _int_values = ['monte_carlo_runs', 'num_cores']
 
     _dict_values = ['sensitivity', 'robustness', 'monte_carlo_sampling']
 
-    _keys_of_dict_values = {'sensitivity': ['variability_on', 'normalization', 'aggregation'],
+    _keys_of_dict_values = {'sensitivity': ['sensitivity_on', 'normalization', 'aggregation'],
                             'robustness': ['robustness_on', 'on_single_weights', 'on_all_weights',
                                             'given_weights', 'on_indicators'],
                             'monte_carlo_sampling': ['monte_carlo_runs', 'num_cores',
@@ -93,11 +93,11 @@ class Config(object):
         return self.get_property('polarity_for_each_indicator')
 
     @property
-    def variability(self):
+    def sensitivity(self):
         return self.get_property('sensitivity')
 
     @property
-    def sensitivity(self):
+    def robustness(self):
         return self.get_property('robustness')
 
     @property

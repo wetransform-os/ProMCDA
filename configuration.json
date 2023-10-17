@@ -1,15 +1,15 @@
 {
- "input_matrix_path": "/Users/flaminia/Documents/work/MCDA/Examples/input_matrix_12_alternatives.csv",
-  "polarity_for_each_indicator": ["+","+","+","+","+","-","-","+"],
+ "input_matrix_path": "/Users/flaminia/Documents/work/futureforest_landshut/input_matrix_80_BAU_rcp26.csv",
+  "polarity_for_each_indicator": ["+","+","+","+","+","+","+","+"],
 
   "sensitivity": {
-    "sensitivity_on": "yes",
+    "sensitivity_on": "no",
     "normalization": "minmax",
-    "aggregation": "geometric"},
+    "aggregation": "weighted-sum"},
 
   "robustness": {
-    "robustness_on": "yes",
-    "on_single_weights": "yes",
+    "robustness_on": "no",
+    "on_single_weights": "no",
     "on_all_weights": "no",
     "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
     "on_indicators": "no"},
@@ -19,5 +19,5 @@
       "num_cores": 1,
       "marginal_distribution_for_each_indicator": ["normal", "normal", "normal", "normal", "normal", "exact", "exact", "exact"]},
 
-  "output_path": "/Users/flaminia/Desktop/var_yes_sens_yes_1_w_test/"
+  "output_path": "/Users/flaminia/Documents/work/futureforest_landshut/80_BAU_rcp26_sensitivity_no"
 }
