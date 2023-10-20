@@ -1,15 +1,15 @@
 {
- "input_matrix_path": "/Users/flaminia/Documents/work/futureforest_landshut/input_matrix_80_BAU_rcp26.csv",
+ "input_matrix_path": "/Users/flaminia/Documents/work/futureforest_landshut/input_matrices_exp1/input_matrix_ru_id_1.csv",
   "polarity_for_each_indicator": ["+","+","+","+","+","+","+","+"],
 
   "sensitivity": {
     "sensitivity_on": "no",
     "normalization": "minmax",
-    "aggregation": "weighted-sum"},
+    "aggregation": "weighted_sum"},
 
   "robustness": {
-    "robustness_on": "no",
-    "on_single_weights": "no",
+    "robustness_on": "yes",
+    "on_single_weights": "yes",
     "on_all_weights": "no",
     "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
     "on_indicators": "no"},
@@ -19,5 +19,5 @@
       "num_cores": 1,
       "marginal_distribution_for_each_indicator": ["normal", "normal", "normal", "normal", "normal", "exact", "exact", "exact"]},
 
-  "output_path": "/Users/flaminia/Documents/work/futureforest_landshut/80_BAU_rcp26_sensitivity_no"
+  "output_path": "/Users/flaminia/Documents/work/futureforest_landshut/ProMCDA_output/test_ru_id_1/"
 }

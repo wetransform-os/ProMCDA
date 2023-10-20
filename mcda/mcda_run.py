@@ -32,7 +32,6 @@ def main(input_config: dict):
 
     config = Config(input_config)
     input_matrix = read_matrix(config.input_matrix_path)
-    print(input_matrix)
     polar = config.polarity_for_each_indicator
     is_sensitivity = config.sensitivity['sensitivity_on']
     is_robustness = config.robustness['robustness_on']
@@ -40,6 +39,13 @@ def main(input_config: dict):
     if is_sensitivity == "no":
         f_norm = config.sensitivity['normalization']
         f_agg = config.sensitivity['aggregation']
+        if f_norm not in ['minmax', 'target', 'standardized', 'rank']:
+            logger.error('Error Message', stack_info=True)
+            raise ValueError('The available normalization functions are: minmax, target, standardized, rank.')
+        if f_agg not in ['weighted_sum', 'geometric', 'harmonic', 'minimum']:
+            logger.error('Error Message', stack_info=True)
+            raise ValueError('The available aggregation functions are: weighted_sum, geometric, harmonic, minimum.'
+                             '\nWatch the correct spelling int the configuration file.')
         logger.info("ProMCDA will only use one pair of norm/agg functions: " + f_norm + '/' + f_agg)
     else:
         logger.info("ProMCDA will use a set of different pairs of norm/agg functions")
@@ -176,7 +182,7 @@ def main(input_config: dict):
         else:
             normalized_indicators = mcda_no_uncert.normalize_indicators(f_norm)
         # estimate the scores through aggregation
-        if (config.robustness["on_single_weights"] == "no" and config.robustness["on_all_weights"] == "no"): # FIXED WEIGHTS
+        if (config.robustness["robustness_on"] == "no"): # FIXED INDICATORS & WEIGHTS
             if is_sensitivity == "yes":
                 scores = mcda_no_uncert.aggregate_indicators(normalized_indicators, norm_fixed_weights)
             else:
@@ -205,7 +211,7 @@ def main(input_config: dict):
             for index in range(num_indicators):
                 norm_one_random_weight = rand_weight_per_indicator["indicator_{}".format(index+1)] # 'norm' refers to all weights, which are normalized
                 args_for_parallel_agg = [(lst, normalized_indicators) for lst in norm_one_random_weight]
-                if is_robustness == "yes":
+                if is_sensitivity == "yes":
                     scores_one_random_weight = parallelize_aggregation(args_for_parallel_agg)
                 else:
                     scores_one_random_weight = parallelize_aggregation(args_for_parallel_agg, f_agg)
@@ -229,7 +235,7 @@ def main(input_config: dict):
         elif not all_weights_means.empty:
             ranks = all_weights_means.rank(pct=True)
             ranks.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-        elif not bool(iterative_random_w_means) == 'False':
+        elif not bool(iterative_random_w_means) == False:
             pass
         # save output files
         logger.info("Saving results in {}".format(config.output_file_path))
@@ -247,7 +253,7 @@ def main(input_config: dict):
             #save_df(all_weights_stds_normalized, config.output_file_path, 'score_stds_normalized.csv')
             # the std on rescaled values is not statistically informative
             save_df(ranks, config.output_file_path, 'ranks.csv')
-        elif not bool(iterative_random_w_means) == 'False':
+        elif not bool(iterative_random_w_means) == False:
             save_dict(iterative_random_w_means,config.output_file_path, 'score_means.pkl')
             save_dict(iterative_random_w_stds, config.output_file_path, 'score_stds.pkl')
             save_dict(iterative_random_w_means_normalized, config.output_file_path, 'score_means_normalized.pkl')
@@ -265,7 +271,7 @@ def main(input_config: dict):
             plot_weight_mean_scores_norm = plot_mean_scores(all_weights_means_normalized, all_weights_stds_normalized, "not_plot_std", "weights")
             save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_rand_weights_rough_scores.png")
             save_figure(plot_weight_mean_scores_norm, config.output_file_path, "MCDA_rand_weights_norm_scores.png")
-        elif not bool(iterative_random_w_means) == 'False':
+        elif not bool(iterative_random_w_means) == False:
             images = []
             images_norm = []
             for index in range(num_indicators):

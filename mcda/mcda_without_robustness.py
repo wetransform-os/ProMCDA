@@ -44,8 +44,7 @@ class MCDAWithoutRobustness():
 
         if method is None or method == 'minmax':
             indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
-            indicators_scaled_minmax_no0 = norm.minmax(
-                feature_range=(0.1, 1))  # for aggregation "geometric" and "harmonic" that accept no 0
+            indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1))  # for aggregation "geometric" and "harmonic" that accept no 0
             normalized_indicators["minmax_no0"] = indicators_scaled_minmax_no0
             normalized_indicators["minmax_01"] = indicators_scaled_minmax_01
         if method is None or method == 'target':
