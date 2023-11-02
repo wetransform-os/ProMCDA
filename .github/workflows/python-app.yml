@@ -26,6 +26,8 @@ jobs:
         python3 -m pip install pytest
         python3 -m pip install -e .
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Install Pillow
+      run: pip install Pillow
     - name: Run pytest
       run: |
         pytest
