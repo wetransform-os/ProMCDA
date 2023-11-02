@@ -12,7 +12,7 @@ class TestConfig(unittest.TestCase):
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['+', '+', '-'],
             "sensitivity": {
-                "variability_on": "yes",
+                "sensitivity_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
             "robustness": {
@@ -34,7 +34,7 @@ class TestConfig(unittest.TestCase):
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['+', '+', '-'],
             "error_key": {
-                "variability_on": "yes",
+                "sensitivity_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
             "robustness": {
@@ -56,7 +56,7 @@ class TestConfig(unittest.TestCase):
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['+', '+', '-'],
             "sensitivity": {
-                "variability_on": "yes",
+                "sensitivity_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
             "robustness": {
@@ -116,8 +116,8 @@ class TestConfig(unittest.TestCase):
         # Then
         assert config.input_matrix_path == input_config['input_matrix_path']
         assert config.polarity_for_each_indicator == input_config['polarity_for_each_indicator']
-        assert config.variability == input_config['sensitivity']
-        assert config.sensitivity == input_config['robustness']
+        assert config.sensitivity == input_config['sensitivity']
+        assert config.robustness == input_config['robustness']
         assert config.monte_carlo_sampling == input_config['monte_carlo_sampling']
 
 

@@ -4,7 +4,7 @@
 
 <!-- [![status](https://joss.theoj.org/papers/4214c6e588774490458e34630e8052c1/status.svg)](https://joss.theoj.org/papers/4214c6e588774490458e34630e8052c1) -->
 <!-- [![PyPi version](https://img.shields.io/pypi/v/promcda?color=blue)](https://pypi.org/project/promcda) -->
-![tests](https://github.com/pysersic/pysersic/actions/workflows/pytest.yml/badge.svg)
+![tests](https://github.com/wetransform-os/ProMCDA/actions/workflows/pytest.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-EPL%202.0-blue)
 
 # Probabilistic Multi Criteria Decision Analysis

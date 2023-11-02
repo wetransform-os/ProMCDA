@@ -19,7 +19,7 @@ logging.getLogger('PIL').setLevel(logging.WARNING) # suppress the debug messages
 
 def read_matrix(input_matrix_path: str) -> pd.DataFrame():
     try:
-        filename = abspath(input_matrix_path)
+        filename = input_matrix_path
         with open(filename, 'r') as fp:
             matrix = pd.read_csv(fp, sep="[,;:]", decimal='.', engine='python')
             data_types = {col: 'float64' for col in matrix.columns[1:]}

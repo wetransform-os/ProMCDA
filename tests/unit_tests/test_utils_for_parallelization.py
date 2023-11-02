@@ -16,7 +16,7 @@ class TestUtilsForParallelization(unittest.TestCase):
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ["+","+","+","+","+"],
             "sensitivity": {
-                "variability_on": "yes",
+                "sensitivity_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
             "robustness": {

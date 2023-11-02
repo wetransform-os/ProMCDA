@@ -12,7 +12,7 @@ class TestMCDA(unittest.TestCase):
              "polarity_for_each_indicator": ["+","+","+","+","+","-"],
 
              "sensitivity": {
-                  "variability_on": "yes",
+                  "sensitivity_on": "yes",
                   "normalization": "minmax",
                   "aggregation": "weighted_sum"},
 
@@ -39,7 +39,7 @@ class TestMCDA(unittest.TestCase):
              "polarity_for_each_indicator": ["+","+","+","+","+","-"],
 
              "sensitivity": {
-                  "variability_on": "yes",
+                  "sensitivity_on": "yes",
                   "normalization": "minmax",
                   "aggregation": "weighted_sum"},
 
@@ -65,7 +65,7 @@ class TestMCDA(unittest.TestCase):
              "polarity_for_each_indicator": ["+","+","+","+","+","-"],
 
              "sensitivity": {
-                  "variability_on": "yes",
+                  "sensitivity_on": "yes",
                   "normalization": "minmax",
                   "aggregation": "weighted_sum"},
 

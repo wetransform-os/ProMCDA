@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 from unittest import TestCase
 
 from mcda.mcda_without_robustness import MCDAWithoutRobustness
@@ -15,7 +16,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['-','-','+','+','+','+'],
             "sensitivity": {
-                "variability_on": "yes",
+                "sensitivity_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
             "robustness": {
@@ -37,7 +38,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
             "sensitivity": {
-                "variability_on": "no",
+                "sensitivity_on": "no",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
             "robustness": {
@@ -59,7 +60,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
             "sensitivity": {
-                "variability_on": "yes",
+                "sensitivity_on": "yes",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
             "robustness": {
@@ -81,7 +82,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
             "input_matrix_path": "/path/to/input_matrix.csv",
             "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
             "sensitivity": {
-                "variability_on": "no",
+                "sensitivity_on": "no",
                 "normalization": "minmax",
                 "aggregation": "weighted_sum"},
             "robustness": {
@@ -99,7 +100,10 @@ class TestMCDA_without_robustness(unittest.TestCase):
 
     @staticmethod
     def get_input_matrix():
-        input_matrix = read_matrix("tests/resources/input_matrix_without_uncert.csv")
+        test_data_directory = Path(__file__).resolve().parent.parent / "resources"
+        file_path = test_data_directory / "input_matrix_without_uncert.csv"
+
+        input_matrix = read_matrix(file_path)
         input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0], axis=1)
 
         return input_matrix_no_alternatives
@@ -157,15 +161,15 @@ class TestMCDA_without_robustness(unittest.TestCase):
         config_simple_mcda = Config(config_simple_mcda)
 
         # When
-        weights = config.sensitivity["given_weights"]
+        weights = config.robustness["given_weights"]
 
         MCDA_no_uncert = MCDAWithoutRobustness(config, input_matrix)
         normalized_indicators = MCDA_no_uncert.normalize_indicators()
         MCDA_no_uncert_simple_mcda = MCDAWithoutRobustness(config_simple_mcda, input_matrix)
-        normalized_indicators_simple_mcda = MCDA_no_uncert_simple_mcda.normalize_indicators(config_simple_mcda.variability['normalization'])
+        normalized_indicators_simple_mcda = MCDA_no_uncert_simple_mcda.normalize_indicators(config_simple_mcda.sensitivity['normalization'])
 
         res = MCDA_no_uncert.aggregate_indicators(normalized_indicators, weights)
-        res_simple_mcda = MCDA_no_uncert_simple_mcda.aggregate_indicators(normalized_indicators_simple_mcda, weights, config_simple_mcda.variability['aggregation'])
+        res_simple_mcda = MCDA_no_uncert_simple_mcda.aggregate_indicators(normalized_indicators_simple_mcda, weights, config_simple_mcda.sensitivity['aggregation'])
 
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
                     'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
@@ -190,7 +194,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
             config = TestMCDA_without_robustness.get_test_config_randomness()
             config = Config(config)
             input_matrix = TestMCDA_without_robustness.get_input_matrix()
-            weights = config.sensitivity["given_weights"]
+            weights = config.robustness["given_weights"]
             agg =  Aggregation(weights)
 
             config_randomness_simple_mcda = TestMCDA_without_robustness.get_test_config_randomness_simple_mcda()
@@ -202,8 +206,8 @@ class TestMCDA_without_robustness(unittest.TestCase):
             res = aggregate_indicators_in_parallel(agg, normalized_indicators)
 
             MCDA_no_uncert_simple_mcda = MCDAWithoutRobustness(config_randomness_simple_mcda, input_matrix)
-            normalized_indicators = MCDA_no_uncert_simple_mcda.normalize_indicators(config_randomness_simple_mcda.variability['normalization'])
-            res_simple_mcda = aggregate_indicators_in_parallel(agg, normalized_indicators, config_randomness_simple_mcda.variability['aggregation'])
+            normalized_indicators = MCDA_no_uncert_simple_mcda.normalize_indicators(config_randomness_simple_mcda.sensitivity['normalization'])
+            res_simple_mcda = aggregate_indicators_in_parallel(agg, normalized_indicators, config_randomness_simple_mcda.sensitivity['aggregation'])
 
             col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
                          'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
