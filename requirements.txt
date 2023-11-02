@@ -7,4 +7,5 @@ plotly
 pytest
 scikit-learn
 scipy
+PIL
 
