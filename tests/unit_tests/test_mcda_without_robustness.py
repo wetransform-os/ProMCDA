@@ -124,11 +124,11 @@ class TestMCDA_without_robustness(unittest.TestCase):
         config_simple_mcda = Config(config_simple_mcda)
 
         # When
-        MCDA_no_uncert_general = MCDAWithoutRobustness(config_general, input_matrix)
-        res_general = MCDA_no_uncert_general.normalize_indicators()
+        mcda_no_uncert_general = MCDAWithoutRobustness(config_general, input_matrix)
+        res_general = mcda_no_uncert_general.normalize_indicators()
 
-        MCDA_no_uncert_simple_mcda = MCDAWithoutRobustness(config_simple_mcda, input_matrix)
-        res_simple_mcda = MCDA_no_uncert_simple_mcda.normalize_indicators('minmax')
+        mcda_no_uncert_simple_mcda = MCDAWithoutRobustness(config_simple_mcda, input_matrix)
+        res_simple_mcda = mcda_no_uncert_simple_mcda.normalize_indicators('minmax')
 
         # Then
         assert isinstance(res_general, dict)
@@ -163,13 +163,13 @@ class TestMCDA_without_robustness(unittest.TestCase):
         # When
         weights = config.robustness["given_weights"]
 
-        MCDA_no_uncert = MCDAWithoutRobustness(config, input_matrix)
-        normalized_indicators = MCDA_no_uncert.normalize_indicators()
-        MCDA_no_uncert_simple_mcda = MCDAWithoutRobustness(config_simple_mcda, input_matrix)
-        normalized_indicators_simple_mcda = MCDA_no_uncert_simple_mcda.normalize_indicators(config_simple_mcda.sensitivity['normalization'])
+        mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
+        normalized_indicators = mcda_no_uncert.normalize_indicators()
+        mcda_no_uncert_simple_mcdaa = MCDAWithoutRobustness(config_simple_mcda, input_matrix)
+        normalized_indicators_simple_mcda = mcda_no_uncert_simple_mcdaa.normalize_indicators(config_simple_mcda.sensitivity['normalization'])
 
-        res = MCDA_no_uncert.aggregate_indicators(normalized_indicators, weights)
-        res_simple_mcda = MCDA_no_uncert_simple_mcda.aggregate_indicators(normalized_indicators_simple_mcda, weights, config_simple_mcda.sensitivity['aggregation'])
+        res = mcda_no_uncert.aggregate_indicators(normalized_indicators, weights)
+        res_simple_mcda = mcda_no_uncert_simple_mcdaa.aggregate_indicators(normalized_indicators_simple_mcda, weights, config_simple_mcda.sensitivity['aggregation'])
 
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
                     'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
@@ -201,12 +201,12 @@ class TestMCDA_without_robustness(unittest.TestCase):
             config_randomness_simple_mcda = Config(config_randomness_simple_mcda)
 
             # When
-            MCDA_no_uncert = MCDAWithoutRobustness(config, input_matrix)
-            normalized_indicators = MCDA_no_uncert.normalize_indicators()
+            mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
+            normalized_indicators = mcda_no_uncert.normalize_indicators()
             res = aggregate_indicators_in_parallel(agg, normalized_indicators)
 
-            MCDA_no_uncert_simple_mcda = MCDAWithoutRobustness(config_randomness_simple_mcda, input_matrix)
-            normalized_indicators = MCDA_no_uncert_simple_mcda.normalize_indicators(config_randomness_simple_mcda.sensitivity['normalization'])
+            mcda_no_uncert_simple_mcda = MCDAWithoutRobustness(config_randomness_simple_mcda, input_matrix)
+            normalized_indicators = mcda_no_uncert_simple_mcda.normalize_indicators(config_randomness_simple_mcda.sensitivity['normalization'])
             res_simple_mcda = aggregate_indicators_in_parallel(agg, normalized_indicators, config_randomness_simple_mcda.sensitivity['aggregation'])
 
             col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',

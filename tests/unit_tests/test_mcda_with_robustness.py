@@ -76,8 +76,8 @@ class TestMCDA_with_robustness(unittest.TestCase):
         input_matrix = TestMCDA_with_robustness.get_input_matrix()
         config = TestMCDA_with_robustness.get_test_config()
         config = Config(config)
-        MCDA_w_uncert = MCDAWithRobustness(config, input_matrix)
-        output_list = MCDA_w_uncert.convert_list(out_list)
+        mcda_with_robustness = MCDAWithRobustness(config, input_matrix)
+        output_list = mcda_with_robustness.convert_list(out_list)
 
         return output_list
 
@@ -93,8 +93,8 @@ class TestMCDA_with_robustness(unittest.TestCase):
                   '5': [0, 1, 2, 3], '6': [0, 1, 2, 3], '7': [0, 1, 2, 3], '8': [0, 1, 2, 3], '9': [0, 1, 2, 3]})
 
         # When
-        MCDA_w_uncert = MCDAWithRobustness(config, input_matrix)
-        output_matrix = MCDA_w_uncert.repeat_series_to_create_df(input_series, num_runs)
+        mcda_with_robustness = MCDAWithRobustness(config, input_matrix)
+        output_matrix = mcda_with_robustness.repeat_series_to_create_df(input_series, num_runs)
 
         # Then
         assert isinstance(output_matrix, pd.DataFrame)
@@ -110,8 +110,8 @@ class TestMCDA_with_robustness(unittest.TestCase):
 
         # When
         config = Config(config)
-        MCDA_w_uncert = MCDAWithRobustness(config, input_matrix)
-        output_list = MCDA_w_uncert.convert_list(input_list)
+        mcda_with_robustness = MCDAWithRobustness(config, input_matrix)
+        output_list = mcda_with_robustness.convert_list(input_list)
 
         # Then
         assert isinstance(output_list, list)
@@ -127,8 +127,8 @@ class TestMCDA_with_robustness(unittest.TestCase):
 
         # When
         config = Config(config)
-        MCDA_w_uncert = MCDAWithRobustness(config, input_matrix)
-        n_random_matrices = MCDA_w_uncert.create_n_randomly_sampled_matrices()
+        mcda_with_robustness = MCDAWithRobustness(config, input_matrix)
+        n_random_matrices = mcda_with_robustness.create_n_randomly_sampled_matrices()
         exp_n_random_matrices = TestMCDA_with_robustness.get_list_random_input_matrices()
 
         # Then
