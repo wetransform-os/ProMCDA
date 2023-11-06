@@ -90,7 +90,7 @@ def main(input_config: dict):
             is_robustness_indicators = 1
             marginal_pdf = config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
             logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
-            logger.info("Read input matrix with robustness at {}".format(config.input_matrix_path))
+            logger.info("Read input matrix with uncertainty of the indicators at {}".format(config.input_matrix_path))
     num_exact = marginal_pdf.count('exact')
     if (is_robustness_indicators==1 and (len(input_matrix.columns) - 1) % 2 != 0): # Alternatives column is still in, therefore -1
         raise ValueError("Number of columns for non exact indicators in the input matrix must be even.")
@@ -120,7 +120,7 @@ def main(input_config: dict):
         num_indicators = input_matrix_no_alternatives.shape[1]
         logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
         logger.info("Number of indicators: {}".format(num_indicators))
-    else: # matrix with robustness on indicators
+    else: # matrix with uncertainty on indicators
         # non-exact indicators in the input matrix are associated to a column representing its mean
         # and a second column representing its std
         num_non_exact = len(marginal_pdf) - marginal_pdf.count('exact')
@@ -168,7 +168,7 @@ def main(input_config: dict):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
     # ----------------------------
-    # NO robustness OF INDICATORS
+    # NO UNCERTAINTY OF INDICATORS
     # ----------------------------
     if is_robustness_indicators == 0:
         logger.info("Start ProMCDA without robustness of the indicators")
@@ -293,7 +293,7 @@ def main(input_config: dict):
         elapsed = time.time() - t
         logger.info("All calculations finished in seconds {}".format(elapsed))
     # -------------------------
-    # robustness OF INDICATORS
+    # UNCERTAINTY OF INDICATORS
     # -------------------------
     else: # if is_robustness_indicators == 1
         all_indicators_normalized = []
@@ -310,7 +310,20 @@ def main(input_config: dict):
                         raise SystemExit
                     else:
                         print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
-            logger.info("Start ProMCDA with robustness on the indicators")
+            logger.info("Start ProMCDA with uncertainty on the indicators")
+            is_average_larger_than_std = check_averages_larger_std(input_matrix_no_alternatives)
+            if is_average_larger_than_std is False:
+                logger.info('Some std values of some indicators are larger than their averages.')
+                logger.info('Maybe you need to investigate the nature of your data.')
+                logger.info('If you continue, the negative values will be rescaled internally to a positive range.')
+                while True:
+                    user_input = input("Do you want to continue (C) or stop (S)? ").strip().lower()
+                    if user_input == 'c':
+                        break
+                    elif user_input == 's':
+                        raise SystemExit
+                    else:
+                        print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
             t = time.time()
             mcda_with_uncert = MCDAWithRobustness(config, input_matrix_no_alternatives)
             n_random_input_matrices = mcda_with_uncert.create_n_randomly_sampled_matrices() # N random matrices

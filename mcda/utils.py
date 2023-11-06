@@ -126,6 +126,23 @@ def pop_indexed_elements(indexes: np.ndarray, original_list:list) -> list:
 
     return new_list
 
+def check_averages_larger_std(input_matrix: pd.DataFrame) -> bool:
+    """ The function checks if the values of list means are larger or equal than the ones of list stds"""
+    mean_cols = []
+    std_cols = []
+    for i in range(0, len(input_matrix.columns), 2):  # over indicators (every second value)
+        mean_cols.append(input_matrix.columns[i])
+        std_cols.append(input_matrix.columns[i + 1])
+
+    means = input_matrix[mean_cols].values.tolist()
+    unique_list_means = [item for sublist in means for item in sublist]
+    stds = input_matrix[std_cols].values.tolist()
+    unique_list_stds = [item for sublist in stds for item in sublist]
+
+    satisfies_condition = all(x >= y for x, y in zip(unique_list_means, unique_list_stds))
+
+    return satisfies_condition
+
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     num_of_combinations = scores.shape[1] - 1

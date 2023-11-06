@@ -6,6 +6,22 @@ from mcda.utils import *
 
 class TestUtils(unittest.TestCase):
 
+    @staticmethod
+    def get_input_matrix_1() -> pd.DataFrame:
+        data = {'ind1': [1, 2, 3], 'std1': [0.1, 0.2, 0.3], 'ind2': [5, 6, 7], 'std2': [0.1, 0.1, 0.1],
+                'ind3': [9, 10, 11], 'std3': [0.1, 0.1, 12]}
+        df = pd.DataFrame(data=data)
+
+        return df
+
+    @staticmethod
+    def get_input_matrix_2() -> pd.DataFrame:
+        data = {'ind1': [1, 2, 3], 'std1': [0.1, 0.2, 0.3], 'ind2': [5, 6, 7], 'std2': [0.1, 0.1, 0.1],
+                'ind3': [9, 10, 11], 'std3': [0.1, 0.1, 11]}
+        df = pd.DataFrame(data=data)
+
+        return df
+
     def test_randomly_sample_ix_weight(self):
         # Given
         num_weights = 4
@@ -70,3 +86,20 @@ class TestUtils(unittest.TestCase):
         # Then
         isinstance(out_list, list)
         TestCase.assertListEqual(self, out_list, expected_list)
+
+    def test_check_averages_larger_std(self):
+        # Given
+        input_matrix_1 = TestUtils.get_input_matrix_1()
+        input_matrix_2 = TestUtils.get_input_matrix_2()
+
+        # When
+        is_average_larger_than_std_1 = check_averages_larger_std(input_matrix_1)
+        is_average_larger_than_std_2 = check_averages_larger_std(input_matrix_2)
+
+        # Then
+        isinstance(is_average_larger_than_std_1, bool)
+        self.assertFalse(is_average_larger_than_std_1)
+        isinstance(is_average_larger_than_std_2, bool)
+        assert(is_average_larger_than_std_2)
+
+

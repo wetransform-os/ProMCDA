@@ -39,6 +39,14 @@ class TestMCDA_with_robustness(unittest.TestCase):
         return df
 
     @staticmethod
+    def get_input_matrix_rescale() -> pd.DataFrame:
+        data = {'ind1': [0, 1, 2, 3], 'std1': [0, 0, 0, 0], 'ind2': [4, 5, 6, 7], 'std2': [5, 0.1, 7, 0.1],
+                'ind3': [8, 9, 10, 11], 'std3': [10, 0.1, 0.1, 0.1]}
+        df = pd.DataFrame(data=data)
+
+        return df
+
+    @staticmethod
     def get_input_list() -> list[pd.DataFrame]:
         data = {'0': [0, 1, 2, 3], '1': [4, 5, 6, 7], '2': [8, 9, 10, 11], '3': [12, 13, 14, 15], '4': [16, 17, 18, 19]}
         df = pd.DataFrame(data=data)
@@ -123,12 +131,16 @@ class TestMCDA_with_robustness(unittest.TestCase):
     def test_create_n_randomly_sampled_matrices(self):
         # Given
         input_matrix = self.get_input_matrix()
+        input_matrix_rescale = self.get_input_matrix_rescale()
         config = TestMCDA_with_robustness.get_test_config()
 
         # When
         config = Config(config)
         mcda_with_robustness = MCDAWithRobustness(config, input_matrix)
         n_random_matrices = mcda_with_robustness.create_n_randomly_sampled_matrices()
+        mcda_with_robustness_rescale = MCDAWithRobustness(config, input_matrix_rescale)
+        n_random_matrices_rescale = mcda_with_robustness_rescale.create_n_randomly_sampled_matrices()
+
         exp_n_random_matrices = TestMCDA_with_robustness.get_list_random_input_matrices()
 
         # Then
@@ -137,3 +149,5 @@ class TestMCDA_with_robustness(unittest.TestCase):
         for df1, df2 in zip(n_random_matrices, exp_n_random_matrices):
             assert df1.shape == (4, 3)
             assert df1.values.all() == df2.values.all()
+        for df in n_random_matrices_rescale:
+            assert (df >= 0).all().all()

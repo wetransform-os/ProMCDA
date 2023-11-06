@@ -77,6 +77,11 @@ Examples of input matrix:
 
 The input matrix with uncertainties has for each indicator a column with the mean values and a column with the standard deviation; 
 if the marginal distribution relative to the indicator is 'exact', then the standard deviation column contains only 0.
+If any mean value of any indicator is equal of smaller of the relative value of the standard deviation, ```ProMCDA``` breaks 
+to ask you if you need to investigate your data further before applying MCDA. Your data seems to have a high variability 
+regarding some indicators. If you want to continue anyway, negative randomly sampled data will be rescaled into [0,1] because some 
+normalization functions (for example *target*) cannot process negative values.
+
 
 ***List of polarities*** for each indicator, "+" (the higher the value of the indicator the better for the evaluation) 
 or "-" (the lower the value of the indicator the better).
@@ -156,7 +161,7 @@ If the robustness analysis regards the indicators, then:
 The aggregation functions are implemented by following [*Langhans et al.*, 2014](https://www.sciencedirect.com/science/article/abs/pii/S1470160X14002167)
 
 The normalization functions *minmax*, *target* and *standardized* can produce negative or zero values, therefore a shift to positive values
-is implemented so that they can be used also together with the aggregation functions *geometric* and *harmonic* (which require positive values). 
+is implemented so that they can be used also together with the aggregation functions *geometric* and *harmonic* (which require positive values).
 
 The code implements 4 normalization and 4 aggregation functions. However, not all combinations are 
 meaningful or mathematically acceptable. For more details refer to Table 6 in 

@@ -61,6 +61,7 @@ class MCDAWithRobustness():
         This function receives an input matrix of dimensions (Ax2I) whose columns represent means and standard deviations
         of each indicator. In a first step, it produces a list of length I of matrices of dimension (AxN).
         Every matrix represents the N random samples of every alternative (A), per indicator (I).
+        If there are negative random samples, they are rescaled into [0-1].
         In a second step, a utility function converts this list into a list of length N of matrices of dimension (AxI).
         The output is therefore a list containing N randomly sampled input matrices. The PDFs from where random values
         are sampled depends on the indicator marginal distributions.
@@ -100,6 +101,11 @@ class MCDAWithRobustness():
                 samples = np.random.poisson(lam=means, size=(num_runs, len(means)))
             else:
                 raise ValueError(f"Invalid marginal distribution type: {distribution_type}")
+
+            # check if any sample is negative and rescale btw 0 and 1
+            if np.any(samples < 0):
+                samples -= samples.min()
+                samples /= samples.max()
 
             sampled_df = pd.DataFrame(samples.transpose()) # (AxN)
             sampled_matrices.append(sampled_df)

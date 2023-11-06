@@ -1,23 +1,23 @@
 {
- "input_matrix_path": "/Users/flaminia/Desktop/ProMCDA_on_one_cell_landshut/input/input_matrix_ru_id_14.csv",
-  "polarity_for_each_indicator": ["+","+","+","+","+","+","+","+"],
+ "input_matrix_path": "/Users/flaminia/Documents/work/MCDA/Examples/input_matrix_12_alternatives_w_uncertainties_modified.csv",
+  "polarity_for_each_indicator": ["+","+","+","+","+","-","-","+"],
 
   "sensitivity": {
-    "sensitivity_on": "yes",
+    "sensitivity_on": "no",
     "normalization": "minmax",
     "aggregation": "weighted_sum"},
 
   "robustness": {
-    "robustness_on": "no",
+    "robustness_on": "yes",
     "on_single_weights": "no",
     "on_all_weights": "no",
     "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-    "on_indicators": "no"},
+    "on_indicators": "yes"},
 
   "monte_carlo_sampling": {
       "monte_carlo_runs": 10000,
       "num_cores": 1,
-      "marginal_distribution_for_each_indicator": ["normal", "normal", "normal", "normal", "normal", "normal", "normal", "normal"]},
+      "marginal_distribution_for_each_indicator": ["normal", "normal", "normal", "normal", "normal", "exact", "exact", "exact"]},
 
   "output_path": "/Users/flaminia/Desktop/ProMCDA_on_one_cell_landshut/output/ProMCDA_output_one_one_cell"
 }
