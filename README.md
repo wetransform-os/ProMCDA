@@ -11,6 +11,8 @@
 
 A tool to estimate scores of alternatives and their uncertainties based on the Multi Criteria Decision Analysis (MCDA) approach.
 
+### MCDA quick overview and applications
+
 A MCDA approach is a systematic framework for making decisions in situations where multiple criteria or objectives need to be 
 considered. It can be applied in various domains and contexts. Here are some possible usages of an MCDA approach:
 
@@ -65,7 +67,7 @@ The following input information should be all contained in the `configuration.js
 
 ***Path to the input matrix***, a table where rows represent the alternatives and columns represent the indicators.
 Be sure that the column containing the names of the alternatives is set as index column, e.g. by:
-```bash
+```python
 input_matrix = input_matrix.set_index('Alternatives').
 ```
 Be also sure that there are no duplicates among the rows. If the values of one or more indicators are all the same, 
@@ -113,9 +115,26 @@ e.g., larger or equal than 1000). The ***number of cores*** used for the paralle
   - lognormal distribution, **"lnorm"**
   - Poisson distribution, **"poisson"**
 
-Finally, the ***Path to output file*** (e.g. `path/output_file.csv`) is given. In the output file the scores (normalised or rough) 
+### Output
+
+The user gives the ***Path to output file*** (e.g. `path/output_file.csv`). In the output file the scores (normalised or rough) 
 and the ranks relative to the alternatives can be found in form of CSV tables. If the weights are iteratively sampled, 
 multiple tables are saved in PICKLE files. Plots of the scores are saved in PNG images.
+
+To load a PICKLE file in Python one can:
+
+```python
+import pickle
+
+# Replace 'your_file.pickle' with the path to your PICKLE file
+file_path = 'your_file.pickle'
+
+# Load the PICKLE file
+with open(file_path, 'rb') as file:
+    data = pickle.load(file)
+
+# Now, 'data' contains the object or data stored in the PICKLE file
+```
 
 ### Requirements
 ```bash
@@ -136,7 +155,7 @@ where an example of configuration file can be found in `mcda/configuration_w_rob
 python3 -m pytest -s tests/unit_tests/test_mcda_run.py -vv
 ```
 
-### What does the code do: summary overview
+### Code overview: a high-level summary
 If no robustness analysis is selected, then:
 - the indicator values are normalized by mean of all the possible normalization methods (or by the selected one);
 - the normalized indicators are aggregated by mean of all the possible aggregation methods (or by the selected one), 
