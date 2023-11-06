@@ -109,6 +109,7 @@ def main(input_config: dict):
                 print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
     logger.info("Alternatives are {}".format(input_matrix.iloc[:, 0].tolist()))
     input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0],axis=1)  # drop first column with alternatives
+    input_matrix_no_alternatives = check_and_rescale_negative_indicators(input_matrix_no_alternatives)
     if is_robustness_indicators == 0:
         num_unique = input_matrix_no_alternatives.nunique() # search for column with constant values
         cols_to_drop = num_unique[num_unique == 1].index

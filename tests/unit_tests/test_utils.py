@@ -14,10 +14,17 @@ class TestUtils(unittest.TestCase):
 
         return df
 
+
     @staticmethod
     def get_input_matrix_2() -> pd.DataFrame:
         data = {'ind1': [1, 2, 3], 'std1': [0.1, 0.2, 0.3], 'ind2': [5, 6, 7], 'std2': [0.1, 0.1, 0.1],
                 'ind3': [9, 10, 11], 'std3': [0.1, 0.1, 11]}
+        df = pd.DataFrame(data=data)
+
+        return df
+
+    def get_input_matrix_negative() -> pd.DataFrame:
+        data = {'ind1': [1, -2, 3], 'ind2': [-5, -6, -7], 'ind3': [9, 10, -11]}
         df = pd.DataFrame(data=data)
 
         return df
@@ -101,5 +108,22 @@ class TestUtils(unittest.TestCase):
         self.assertFalse(is_average_larger_than_std_1)
         isinstance(is_average_larger_than_std_2, bool)
         assert(is_average_larger_than_std_2)
+
+
+    def test_check_and_rescale_negative_indicators(self):
+        # Given
+        input_matrix_negative = TestUtils.get_input_matrix_negative()
+        input_matrix_positive = TestUtils.get_input_matrix_1()
+
+        # When
+        rescaled_matrix = check_and_rescale_negative_indicators(input_matrix_negative)
+        non_rescaled_matrix = check_and_rescale_negative_indicators(input_matrix_positive)
+
+        # Then
+        isinstance(rescaled_matrix, pd.DataFrame)
+        assert (rescaled_matrix >= 0).all().all()
+        isinstance(non_rescaled_matrix, pd.DataFrame)
+        assert non_rescaled_matrix.equals(input_matrix_positive)
+
 
 

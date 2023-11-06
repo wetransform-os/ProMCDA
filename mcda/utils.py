@@ -1,5 +1,5 @@
+from sklearn.preprocessing import MinMaxScaler
 from sklearn import preprocessing
-from os.path import abspath
 import plotly.graph_objects as go
 from typing import List
 import plotly.io as pio
@@ -27,6 +27,17 @@ def read_matrix(input_matrix_path: str) -> pd.DataFrame():
             return matrix
     except Exception as e:
         print(e)
+
+def check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame():
+    """If some indicators in the input matrix are negative, they are rescaled into [0-1]"""
+
+    if (input_matrix < 0).any().any():
+        scaler = MinMaxScaler()
+        scaled_data = scaler.fit_transform(input_matrix)
+        scaled_matrix = pd.DataFrame(scaled_data, columns=input_matrix.columns, index=input_matrix.index)
+        return scaled_matrix
+    else:
+        return input_matrix
 
 
 def parse_args():

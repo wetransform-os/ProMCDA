@@ -75,12 +75,16 @@ Examples of input matrix:
 - *input matrix without uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`)
 - *input matrix with uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`)
 
+If the input matrix without uncertainties has some values of some indicators that are negative, those values are rescaled
+between [0,1]. This is needed because some nromalization functions (as for example *target*) cannot handle negative values 
+properly.
+
 The input matrix with uncertainties has for each indicator a column with the mean values and a column with the standard deviation; 
 if the marginal distribution relative to the indicator is 'exact', then the standard deviation column contains only 0.
 If any mean value of any indicator is equal of smaller of the relative value of the standard deviation, ```ProMCDA``` breaks 
 to ask you if you need to investigate your data further before applying MCDA. Your data seems to have a high variability 
-regarding some indicators. If you want to continue anyway, negative randomly sampled data will be rescaled into [0,1] because some 
-normalization functions (for example *target*) cannot process negative values.
+regarding some indicators. If you want to continue anyway, negative randomly sampled data will be rescaled into [0,1] as 
+in the case without uncertainty.
 
 
 ***List of polarities*** for each indicator, "+" (the higher the value of the indicator the better for the evaluation) 
