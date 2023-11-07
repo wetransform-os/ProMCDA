@@ -1,6 +1,7 @@
 from sklearn.preprocessing import MinMaxScaler
 from sklearn import preprocessing
 import plotly.graph_objects as go
+from datetime import datetime
 from typing import List
 import plotly.io as pio
 from PIL import Image
@@ -59,18 +60,27 @@ def get_config(config_path: str) -> dict:
 
 
 def save_df(df: pd.DataFrame, folder_path: str, filename: str):
-    result_path = os.path.join(folder_path, filename)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    new_filename = f"{timestamp}_{filename}"
+
+    result_path = os.path.join(folder_path, new_filename)
     df.to_csv(path_or_buf=result_path, index=False)
 
 
 def save_dict(dict: dict, folder_path: str, filename: str):
-    result_path = os.path.join(folder_path, filename)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    new_filename = f"{timestamp}_{filename}"
+    result_path = os.path.join(folder_path, new_filename)
+
     with open(result_path, 'wb') as fp:
         pickle.dump(dict, fp)
 
 
 def save_config(config: dict, folder_path: str, filename: str):
-    result_path = os.path.join(folder_path, filename)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    new_filename = f"{timestamp}_{filename}"
+
+    result_path = os.path.join(folder_path, new_filename)
     with open(result_path, 'w') as fp:
         json.dump(config, fp)
 
@@ -287,7 +297,10 @@ def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, all_weights_stds
 
 
 def save_figure(figure: object, folder_path: str, filename: str):
-    result_path = os.path.join(folder_path, filename)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    new_filename = f"{timestamp}_{filename}"
+
+    result_path = os.path.join(folder_path, new_filename)
     figure.write_image(result_path)
 
 

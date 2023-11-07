@@ -264,14 +264,14 @@ def main(input_config: dict):
         # plots
         if not scores.empty:
             plot_norm_scores = plot_norm_scores_without_uncert(normalized_scores)
-            save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores_no_var.png")
+            save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores.png")
             plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
-            save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores_no_var.png")
+            save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores.png")
         elif not all_weights_means.empty:
             plot_weight_mean_scores = plot_mean_scores(all_weights_means, all_weights_stds, "plot_std", "weights")
             plot_weight_mean_scores_norm = plot_mean_scores(all_weights_means_normalized, all_weights_stds_normalized, "not_plot_std", "weights")
-            save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_rand_weights_rough_scores.png")
-            save_figure(plot_weight_mean_scores_norm, config.output_file_path, "MCDA_rand_weights_norm_scores.png")
+            save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_rough_scores.png")
+            save_figure(plot_weight_mean_scores_norm, config.output_file_path, "MCDA_norm_scores.png")
         elif not bool(iterative_random_w_means) == False:
             images = []
             images_norm = []
@@ -362,8 +362,8 @@ def main(input_config: dict):
             plot_indicators_mean_scores = plot_mean_scores(all_indicators_means, all_indicators_stds, "plot_std", "indicators")
             plot_indicators_mean_scores_norm = plot_mean_scores(all_indicators_means_normalized,
                                                                 all_indicators_stds_normalized, "not_plot_std", "indicators")
-            save_figure(plot_indicators_mean_scores, config.output_file_path, "MCDA_rand_indicators_rough_scores.png")
-            save_figure(plot_indicators_mean_scores_norm, config.output_file_path, "MCDA_rand_indicators_norm_scores.png")
+            save_figure(plot_indicators_mean_scores, config.output_file_path, "MCDA_rough_scores.png")
+            save_figure(plot_indicators_mean_scores_norm, config.output_file_path, "MCDA_norm_scores.png")
             logger.info("ProMCDA finished calculations: check the output files")
             elapsed = time.time() - t
             logger.info("All calculations finished in seconds {}".format(elapsed))

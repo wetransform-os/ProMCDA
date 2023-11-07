@@ -117,13 +117,17 @@ e.g., larger or equal than 1000). The ***number of cores*** used for the paralle
 
 ### Output
 
-The user gives the ***Path to output file*** (e.g. `path/output_file.csv`). In the output file the scores (normalised or rough) 
-and the ranks relative to the alternatives can be found in form of CSV tables. If the weights are iteratively sampled, 
-multiple tables are saved in PICKLE files. Plots of the scores are saved in PNG images.
+The user gives the ***path to output file*** (e.g. `path/output_file.csv`). In the output file the scores (normalised or rough) 
+and the ranks relative to the alternatives can be found in the form of CSV tables. If the weights are iteratively sampled, 
+multiple tables are saved in a PICKLE file as an object ```dictionary```. Plots of the scores are saved in PNG images. The configuration.json file
+is saved in the output directory too; the information stored in the configuration settings are useful in case 
+multiple tests are stored and need to be reviewed.
 
-To load a PICKLE file in Python one can:
+All file names of the output objects are followed by a time stamp that group them with the specific test setting.
 
-```python
+To retrieve a PICKLE file in Python one can:
+
+```pythongroup them 
 import pickle
 
 # Replace 'your_file.pickle' with the path to your PICKLE file
@@ -135,6 +139,11 @@ with open(file_path, 'rb') as file:
 
 # Now, 'data' contains the object or data stored in the PICKLE file
 ```
+Note that in case of a robustness analysis, the error bars in the plots are only shown for non-normalized scores. This is
+because when one calculates the standard deviation after rescaling, the denominator used in the standard deviation formula 
+becomes smaller. This results in a higher relative standard deviation compared to the mean that is solely an artificial 
+effect.
+  
 
 ### Requirements
 ```bash
