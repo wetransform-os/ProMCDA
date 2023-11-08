@@ -84,17 +84,18 @@ class MCDAWithRobustness():
         j=0
         for i, pdf_type in enumerate(is_exact_pdf_mask):
             mean_col_position = j
-            if pdf_type == 0:  # non-exact PDF
+            if pdf_type == 0 and marginal_pdf[i] != 'poisson':  # non-exact PDF except Poisson
                 std_col_position = mean_col_position + 1  # standard deviation column follows mean
                 mean_col = input_matrix.columns[mean_col_position]
                 std_col = input_matrix.columns[std_col_position]
                 means = input_matrix[mean_col]
                 stds = input_matrix[std_col]
-                j += 1
-            elif pdf_type == 1:  # exact PDF
+                j += 2
+
+            elif pdf_type == 1 or marginal_pdf][i] == 'poisson':  # exact PDF or Poisson
                 mean_col = input_matrix.columns[mean_col_position]
                 means = input_matrix[mean_col]
-                j += 2
+                j += 1
 
             distribution_type = marginal_pdf[i // 2]
 
@@ -103,7 +104,7 @@ class MCDAWithRobustness():
             elif distribution_type == 'normal':
                 samples = np.random.normal(loc=means, scale=stds, size=(num_runs, len(means)))
             elif distribution_type == 'uniform':
-                samples = np.random.uniform(low=means - stds, high=means + stds, size=(num_runs, len(means)))
+                samples = np.random.uniform(low=means, high=stds, size=(num_runs, len(means)))
             elif distribution_type == 'lnorm':
                 samples = np.random.lognormal(mean=means, sigma=stds, size=(num_runs, len(means)))
             elif distribution_type == 'poisson':

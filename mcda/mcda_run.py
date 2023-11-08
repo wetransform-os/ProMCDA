@@ -299,7 +299,7 @@ def main(input_config: dict):
         # cores = config.monte_carlo_sampling["num_cores"] # never used yet
         if (mc_runs > 0):
             if (mc_runs < 1000):
-                logger.info("The number of Monte-Carlo runs is only {}".format(config.monte_carlo_runs))
+                logger.info("The number of Monte-Carlo runs is only {}".format(mc_runs))
                 logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
                 while True:
                     user_input = input("Do you want to continue (C) or stop (S)? ").strip().lower()

@@ -159,7 +159,7 @@ def check_averages_larger_std(input_matrix: pd.DataFrame, config: dict) -> bool:
     j = 0
     for i, pdf_type in enumerate(is_exact_pdf_mask):
         mean_col_position = j
-        if pdf_type == 0:  # non-exact PDF
+        if pdf_type == 0 and marginal_pdf[i] != 'uniform' and marginal_pdf[i] != 'poisson':  # non-exact PDF except for Uniform and Poisson
             std_col_position = mean_col_position + 1  # standard deviation column follows mean
             mean_col = input_matrix.columns[mean_col_position]
             std_col = input_matrix.columns[std_col_position]
@@ -169,7 +169,9 @@ def check_averages_larger_std(input_matrix: pd.DataFrame, config: dict) -> bool:
 
             satisfies_condition = all(x >= y for x, y in zip(means, stds))
 
-        elif pdf_type == 1:  # exact PDF
+        elif marginal_pdf[i] == 'uniform': # Uniform distribution
+            j += 2
+        elif pdf_type == 1 or marginal_pdf[i] == 'poisson':  # exact PDF or Poisson
             j += 1
 
     return satisfies_condition
