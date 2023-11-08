@@ -32,7 +32,7 @@ class TestMCDA_with_robustness(unittest.TestCase):
 
     @staticmethod
     def get_input_matrix() -> pd.DataFrame:
-        data = {'ind1': [0, 1, 2, 3], 'std1': [0, 0, 0, 0], 'ind2': [4, 5, 6, 7], 'std2': [0.1, 0.1, 0.1, 0.1],
+        data = {'ind1': [0, 1, 2, 3], 'ind2': [4, 5, 6, 7], 'std2': [0.1, 0.1, 0.1, 0.1],
                 'ind3': [8, 9, 10, 11], 'std3': [0.1, 0.1, 0.1, 0.1]}
         df = pd.DataFrame(data=data)
 
@@ -40,7 +40,7 @@ class TestMCDA_with_robustness(unittest.TestCase):
 
     @staticmethod
     def get_input_matrix_rescale() -> pd.DataFrame:
-        data = {'ind1': [0, 1, 2, 3], 'std1': [0, 0, 0, 0], 'ind2': [4, 5, 6, 7], 'std2': [5, 0.1, 7, 0.1],
+        data = {'ind1': [0, 1, 2, 3], 'ind2': [4, 5, 6, 7], 'std2': [5, 0.1, 7, 0.1],
                 'ind3': [8, 9, 10, 11], 'std3': [10, 0.1, 0.1, 0.1]}
         df = pd.DataFrame(data=data)
 

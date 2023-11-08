@@ -2,13 +2,36 @@ import unittest
 from unittest import TestCase
 
 from mcda.utils import *
+from mcda.configuration.config import Config
 
 
 class TestUtils(unittest.TestCase):
 
     @staticmethod
+    def get_test_config():
+        return {
+            "input_matrix_path": "/path/to/input_matrix.csv",
+            "polarity_for_each_indicator": ["-", "-", "+"],
+            "sensitivity": {
+                "sensitivity_on": "yes",
+                "normalization": "minmax",
+                "aggregation": "weighted_sum"},
+            "robustness": {
+                "robustness_on": "yes",
+                "on_single_weights": "no",
+                "on_all_weights": "no",
+                "given_weights": [0.5, 0.5, 0.5],
+                "on_indicators": "yes"},
+            "monte_carlo_sampling": {
+                "monte_carlo_runs": 10000,
+                "num_cores": 1,
+                "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal']},
+            "output_path": "/path/to/output"
+        }
+
+    @staticmethod
     def get_input_matrix_1() -> pd.DataFrame:
-        data = {'ind1': [1, 2, 3], 'std1': [0.1, 0.2, 0.3], 'ind2': [5, 6, 7], 'std2': [0.1, 0.1, 0.1],
+        data = {'ind1': [1, 2, 3], 'ind2': [5, 6, 7], 'std2': [0.1, 0.1, 0.1],
                 'ind3': [9, 10, 11], 'std3': [0.1, 0.1, 12]}
         df = pd.DataFrame(data=data)
 
@@ -17,12 +40,18 @@ class TestUtils(unittest.TestCase):
 
     @staticmethod
     def get_input_matrix_2() -> pd.DataFrame:
-        data = {'ind1': [1, 2, 3], 'std1': [0.1, 0.2, 0.3], 'ind2': [5, 6, 7], 'std2': [0.1, 0.1, 0.1],
+        data = {'ind1': [1, 2, 3], 'ind2': [5, 6, 7], 'std2': [0.1, 0.1, 0.1],
                 'ind3': [9, 10, 11], 'std3': [0.1, 0.1, 11]}
         df = pd.DataFrame(data=data)
 
         return df
 
+    @staticmethod
+    def get_list_pdf() -> list:
+        list_pdf = ['exact', 'lnorm', 'norm', 'poisson', 'exact']
+        return list_pdf
+
+    @staticmethod
     def get_input_matrix_negative() -> pd.DataFrame:
         data = {'ind1': [1, -2, 3], 'ind2': [-5, -6, -7], 'ind3': [9, 10, -11]}
         df = pd.DataFrame(data=data)
@@ -98,10 +127,12 @@ class TestUtils(unittest.TestCase):
         # Given
         input_matrix_1 = TestUtils.get_input_matrix_1()
         input_matrix_2 = TestUtils.get_input_matrix_2()
+        config = TestUtils.get_test_config()
 
         # When
-        is_average_larger_than_std_1 = check_averages_larger_std(input_matrix_1)
-        is_average_larger_than_std_2 = check_averages_larger_std(input_matrix_2)
+        config = Config(config)
+        is_average_larger_than_std_1 = check_averages_larger_std(input_matrix_1, config)
+        is_average_larger_than_std_2 = check_averages_larger_std(input_matrix_2, config)
 
         # Then
         isinstance(is_average_larger_than_std_1, bool)
@@ -124,6 +155,20 @@ class TestUtils(unittest.TestCase):
         assert (rescaled_matrix >= 0).all().all()
         isinstance(non_rescaled_matrix, pd.DataFrame)
         assert non_rescaled_matrix.equals(input_matrix_positive)
+
+    def test_check_if_pdf_is_exact(self):
+        # Given
+        list_pdf = TestUtils.get_list_pdf()
+
+        # When
+        output_mask = check_if_pdf_is_exact(list_pdf)
+        expected_mask = [1,0,0,0,1]
+
+        # Then
+        isinstance(output_mask, list)
+        assert(len(output_mask) == len(expected_mask))
+        self.assertListEqual(output_mask, expected_mask)
+
 
 
 

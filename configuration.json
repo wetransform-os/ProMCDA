@@ -1,11 +1,11 @@
 {
- "input_matrix_path": "/Users/flaminia/Documents/work/MCDA/Examples/input_matrix_12_alternatives_w_uncertainties_modified.csv",
+ "input_matrix_path": "/Users/flaminia/Documents/work/MCDA/Examples/input_matrix_12_alternatives_w_uncertainties_no_0_std.csv",
   "polarity_for_each_indicator": ["+","+","+","+","+","-","-","+"],
 
   "sensitivity": {
     "sensitivity_on": "no",
     "normalization": "minmax",
-    "aggregation": "weighted_sum"},
+    "aggregation": "geometric"},
 
   "robustness": {
     "robustness_on": "yes",

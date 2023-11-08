@@ -1,6 +1,7 @@
 import sys
 import copy
 import logging
+from mcda.utils import *
 from typing import List
 import pandas as pd
 import numpy as np
@@ -71,6 +72,8 @@ class MCDAWithRobustness():
         N: number of random samples
         """
         marginal_pdf = self._config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
+        is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
+
         num_runs = self._config.monte_carlo_sampling["monte_carlo_runs"] # N
         input_matrix = self._input_matrix # (AxI)
 
@@ -78,18 +81,24 @@ class MCDAWithRobustness():
 
         sampled_matrices = [] # list long I
 
-        for i in range(0, len(input_matrix.columns), 2):  # over indicators (every second value)
-            mean_col = input_matrix.columns[i]
-            std_col = input_matrix.columns[i + 1]
-
-            means = input_matrix[mean_col].values
-            stds = input_matrix[std_col].values
+        j=0
+        for i, pdf_type in enumerate(is_exact_pdf_mask):
+            mean_col_position = j
+            if pdf_type == 0:  # non-exact PDF
+                std_col_position = mean_col_position + 1  # standard deviation column follows mean
+                mean_col = input_matrix.columns[mean_col_position]
+                std_col = input_matrix.columns[std_col_position]
+                means = input_matrix[mean_col]
+                stds = input_matrix[std_col]
+                j += 1
+            elif pdf_type == 1:  # exact PDF
+                mean_col = input_matrix.columns[mean_col_position]
+                means = input_matrix[mean_col]
+                j += 2
 
             distribution_type = marginal_pdf[i // 2]
 
             if distribution_type == 'exact':
-                if any(stds != 0):
-                    raise ValueError('Also for *exact* marginal distributions you need a column representing std=0')
                 samples = self.repeat_series_to_create_df(means, num_runs).T
             elif distribution_type == 'normal':
                 samples = np.random.normal(loc=means, scale=stds, size=(num_runs, len(means)))
@@ -103,7 +112,7 @@ class MCDAWithRobustness():
                 raise ValueError(f"Invalid marginal distribution type: {distribution_type}")
 
             # check if any sample is negative and rescale btw 0 and 1
-            if np.any(samples < 0):
+            if (samples < 0).any().any():
                 samples -= samples.min()
                 samples /= samples.max()
 

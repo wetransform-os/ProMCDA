@@ -155,7 +155,7 @@ pip install -r requirements.txt
 ### Running the code (from root dir)
 ```bash
 source activate <your-env>
-python3 -m mcda.mcda_run -c configuration_w_robustness.json
+python3 -m mcda.mcda_run -c configuration.json
 ```
 where an example of configuration file can be found in `mcda/configuration_w_robustness.json` or `mcda/configuration_without_robustness.json`.
 

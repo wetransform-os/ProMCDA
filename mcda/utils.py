@@ -15,8 +15,9 @@ import json
 import os
 import io
 
-#logging.basicConfig(level=logging.WARNING)
-logging.getLogger('PIL').setLevel(logging.WARNING) # suppress the debug messages produced by PIL internal logging
+# logging.basicConfig(level=logging.WARNING)
+logging.getLogger('PIL').setLevel(logging.WARNING)  # suppress the debug messages produced by PIL internal logging
+
 
 def read_matrix(input_matrix_path: str) -> pd.DataFrame():
     try:
@@ -28,6 +29,7 @@ def read_matrix(input_matrix_path: str) -> pd.DataFrame():
             return matrix
     except Exception as e:
         print(e)
+
 
 def check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame():
     """If some indicators in the input matrix are negative, they are rescaled into [0-1]"""
@@ -135,7 +137,7 @@ def check_norm_sum_weights(weights: list) -> list:
         return weights
 
 
-def pop_indexed_elements(indexes: np.ndarray, original_list:list) -> list:
+def pop_indexed_elements(indexes: np.ndarray, original_list: list) -> list:
     """ The function eliminates the values in a list corresponding to the given indexes"""
     for i in range(len(indexes)):
         index = indexes[i]
@@ -143,26 +145,40 @@ def pop_indexed_elements(indexes: np.ndarray, original_list:list) -> list:
             original_list.pop(index)
         else:
             original_list.pop(index - i)
-    new_list=original_list
+    new_list = original_list
 
     return new_list
 
-def check_averages_larger_std(input_matrix: pd.DataFrame) -> bool:
+
+def check_averages_larger_std(input_matrix: pd.DataFrame, config: dict) -> bool:
     """ The function checks if the values of list means are larger or equal than the ones of list stds"""
-    mean_cols = []
-    std_cols = []
-    for i in range(0, len(input_matrix.columns), 2):  # over indicators (every second value)
-        mean_cols.append(input_matrix.columns[i])
-        std_cols.append(input_matrix.columns[i + 1])
 
-    means = input_matrix[mean_cols].values.tolist()
-    unique_list_means = [item for sublist in means for item in sublist]
-    stds = input_matrix[std_cols].values.tolist()
-    unique_list_stds = [item for sublist in stds for item in sublist]
+    marginal_pdf = config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
+    is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
 
-    satisfies_condition = all(x >= y for x, y in zip(unique_list_means, unique_list_stds))
+    j = 0
+    for i, pdf_type in enumerate(is_exact_pdf_mask):
+        mean_col_position = j
+        if pdf_type == 0:  # non-exact PDF
+            std_col_position = mean_col_position + 1  # standard deviation column follows mean
+            mean_col = input_matrix.columns[mean_col_position]
+            std_col = input_matrix.columns[std_col_position]
+            means = input_matrix[mean_col]
+            stds = input_matrix[std_col]
+            j += 2
+
+            satisfies_condition = all(x >= y for x, y in zip(means, stds))
+
+        elif pdf_type == 1:  # exact PDF
+            j += 1
 
     return satisfies_condition
+
+
+def check_if_pdf_is_exact(marginal_pdf: list) -> list:
+    exact_pdf_mask = [1 if pdf == 'exact' else 0 for pdf in marginal_pdf]
+
+    return exact_pdf_mask
 
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
@@ -248,8 +264,8 @@ def plot_mean_scores(all_means: pd.DataFrame, all_stds: pd.DataFrame, plot_std: 
         i = i + 1
     fig.update_traces(showlegend=True)
     fig.update_layout(barmode='group', height=600, width=1000,
-                      #title=f'<b>MCDA analysis with added randomness on the {rand_on}<b>',
-                      #title_font_size=22,
+                      # title=f'<b>MCDA analysis with added randomness on the {rand_on}<b>',
+                      # title_font_size=22,
 
                       xaxis=dict(
                           tickmode="array",

@@ -92,8 +92,6 @@ def main(input_config: dict):
             logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
             logger.info("Read input matrix with uncertainty of the indicators at {}".format(config.input_matrix_path))
     num_exact = marginal_pdf.count('exact')
-    if (is_robustness_indicators==1 and (len(input_matrix.columns) - 1) % 2 != 0): # Alternatives column is still in, therefore -1
-        raise ValueError("Number of columns for non exact indicators in the input matrix must be even.")
     if input_matrix.duplicated().any():
         logger.error('Error Message', stack_info=True)
         raise ValueError('There are duplicated rows in the input matrix.')
@@ -125,7 +123,7 @@ def main(input_config: dict):
         # non-exact indicators in the input matrix are associated to a column representing its mean
         # and a second column representing its std
         num_non_exact = len(marginal_pdf) - marginal_pdf.count('exact')
-        num_indicators = int(input_matrix_no_alternatives.shape[1]-input_matrix_no_alternatives.shape[1]/2)
+        num_indicators = (input_matrix_no_alternatives.shape[1]-num_non_exact)
         logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
         logger.info("Number of indicators: {}".format(num_indicators))
         # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional
@@ -312,7 +310,7 @@ def main(input_config: dict):
                     else:
                         print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
             logger.info("Start ProMCDA with uncertainty on the indicators")
-            is_average_larger_than_std = check_averages_larger_std(input_matrix_no_alternatives)
+            is_average_larger_than_std = check_averages_larger_std(input_matrix_no_alternatives, config)
             if is_average_larger_than_std is False:
                 logger.info('Some std values of some indicators are larger than their averages.')
                 logger.info('Maybe you need to investigate the nature of your data.')
