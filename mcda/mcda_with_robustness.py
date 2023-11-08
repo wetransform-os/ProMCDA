@@ -92,7 +92,7 @@ class MCDAWithRobustness():
                 stds = input_matrix[std_col]
                 j += 2
 
-            elif pdf_type == 1 or marginal_pdf][i] == 'poisson':  # exact PDF or Poisson
+            elif pdf_type == 1 or marginal_pdf[i] == 'poisson':  # exact PDF or Poisson
                 mean_col = input_matrix.columns[mean_col_position]
                 means = input_matrix[mean_col]
                 j += 1
