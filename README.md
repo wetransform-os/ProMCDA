@@ -4,12 +4,12 @@
 
 <!-- [![status](https://joss.theoj.org/papers/4214c6e588774490458e34630e8052c1/status.svg)](https://joss.theoj.org/papers/4214c6e588774490458e34630e8052c1) -->
 <!-- [![PyPi version](https://img.shields.io/pypi/v/promcda?color=blue)](https://pypi.org/project/promcda) -->
-[![pytest](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app-test.yml/badge.svg)](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app-test.yml)
+[![pytest](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app.yml/badge.svg)](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app.yml)
 ![License](https://img.shields.io/badge/license-EPL%202.0-blue)
 
 # Probabilistic Multi Criteria Decision Analysis
 
-A tool to estimate scores of alternatives and their uncertainties based on the Multi Criteria Decision Analysis (MCDA) approach.
+A tool to estimate scores of alternatives and their uncertainties based on a Multi Criteria Decision Analysis (MCDA) approach.
 
 ### MCDA quick overview and applications
 
@@ -47,7 +47,7 @@ These are just a few examples of how MCDA can be applied across a wide range of 
 that involve multiple, often conflicting, criteria. The specific application of MCDA will depend on the context 
 and the goals of the decision-maker.
 
-In MCDA context an *alternative* is one possible course of action available; 
+In a MCDA context an *alternative* is one possible course of action available; 
 an *indicator* is a parameter that describes the alternatives.
 The variability of the MCDA scores are caused by:
 
@@ -146,6 +146,13 @@ effect.
   
 
 ### Requirements
+On Windows:
+```bash
+conda create --name <choose-a-name-like-Promcda> python=3.6
+activate.bat <choose-a-name-like-Promcda>
+pip install -r requirements.txt
+```
+On Mac and Linux:
 ```bash
 conda create --name <choose-a-name-like-Promcda> python=3.6
 source activate <choose-a-name-like-Promcda>
@@ -153,6 +160,12 @@ pip install -r requirements.txt
 ```
 
 ### Running the code (from root dir)
+On Windows:
+```bash
+activate.bat <your-env>
+python3 -m mcda.mcda_run -c configuration.json
+```
+On Mac and Linux:
 ```bash
 source activate <your-env>
 python3 -m mcda.mcda_run -c configuration.json
@@ -178,14 +191,14 @@ If the weights are randomly sampled (robustness analysis of the weights), then:
 - if all weights are sampled together, MCDA calculations receive N-inputs (N being the number of `monte_carlo_runs`; 
   if the weights are sampled one at time, MCDA will receive (*n-inputs x num_weights*) inputs;
 - iterations 1,2,3 of the first condition follow;
-- the results of all the combinations normalization/aggregation (or the one selected) are provided in the form of mean and std over all the runs 
+- the results of all the combinations normalization/aggregation (or the one selected) are provided in the form of mean and standard deviation over all the runs 
   (if the weights are iteratively sampled, this applies for *num_indicators-times*).
 
 If the robustness analysis regards the indicators, then:
-- for each indicator, the mean and std are extracted from the input matrix;
+- for each indicator, the parameters (e.g., mean and standard deviation) describing the marginal distribution under interest are extracted from the input matrix;
 - for each N, and for each indicator, a value is sampled from the relative assigned marginal distribution: therefore, one of N input matrix is created;
 - normalizations and aggregations are performed as in points 1,2 of the first case: a list of all the results is created in the output directory;
-- mean and std of all the results are estimated across (monte_carlo_runs x pairs of combinations);  
+- mean and standard deviation of all the results are estimated across (monte_carlo_runs x pairs of combinations);  
 - in this case, no randomness on the weights is allowed.
 
 

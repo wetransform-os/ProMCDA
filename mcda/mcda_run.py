@@ -312,7 +312,7 @@ def main(input_config: dict):
             logger.info("Start ProMCDA with uncertainty on the indicators")
             is_average_larger_than_std = check_averages_larger_std(input_matrix_no_alternatives, config)
             if is_average_larger_than_std is False:
-                logger.info('Some std values of some indicators are larger than their averages.')
+                logger.info('Some standard deviation values of some indicators are larger than their averages.')
                 logger.info('Maybe you need to investigate the nature of your data.')
                 logger.info('If you continue, the negative values will be rescaled internally to a positive range.')
                 while True:

@@ -155,11 +155,13 @@ def check_averages_larger_std(input_matrix: pd.DataFrame, config: dict) -> bool:
 
     marginal_pdf = config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
     is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
+    is_poisson_pdf_mask = check_if_pdf_is_poisson(marginal_pdf)
+    is_uniform_pdf_mask = check_if_pdf_is_uniform(marginal_pdf)
 
     j = 0
     for i, pdf_type in enumerate(is_exact_pdf_mask):
         mean_col_position = j
-        if pdf_type == 0 and marginal_pdf[i] != 'uniform' and marginal_pdf[i] != 'poisson':  # non-exact PDF except for Uniform and Poisson
+        if pdf_type == 0 and not is_uniform_pdf_mask[i] and not is_poisson_pdf_mask[i]:  # non-exact PDF except for Uniform and Poisson distributions
             std_col_position = mean_col_position + 1  # standard deviation column follows mean
             mean_col = input_matrix.columns[mean_col_position]
             std_col = input_matrix.columns[std_col_position]
@@ -169,19 +171,28 @@ def check_averages_larger_std(input_matrix: pd.DataFrame, config: dict) -> bool:
 
             satisfies_condition = all(x >= y for x, y in zip(means, stds))
 
-        elif marginal_pdf[i] == 'uniform': # Uniform distribution
+        elif is_uniform_pdf_mask[i]: # Uniform distribution
             j += 2
-        elif pdf_type == 1 or marginal_pdf[i] == 'poisson':  # exact PDF or Poisson
+
+        elif pdf_type == 1 or is_poisson_pdf_mask[i]:  # exact PDF or Poisson distribution
             j += 1
 
     return satisfies_condition
-
 
 def check_if_pdf_is_exact(marginal_pdf: list) -> list:
     exact_pdf_mask = [1 if pdf == 'exact' else 0 for pdf in marginal_pdf]
 
     return exact_pdf_mask
 
+def check_if_pdf_is_poisson(marginal_pdf: list) -> list:
+    poisson_pdf_mask = [1 if pdf == 'poisson' else 0 for pdf in marginal_pdf]
+
+    return poisson_pdf_mask
+
+def check_if_pdf_is_uniform(marginal_pdf: list) -> list:
+    uniform_pdf_mask = [1 if pdf == 'uniform' else 0 for pdf in marginal_pdf]
+
+    return uniform_pdf_mask
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     num_of_combinations = scores.shape[1] - 1
