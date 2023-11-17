@@ -59,8 +59,10 @@ class MCDAWithRobustness():
 
     def create_n_randomly_sampled_matrices(self) -> List[pd.DataFrame]:
         """
-        This function receives an input matrix of dimensions (Ax2I) whose columns represent parameter 1 and parameter 2
-        of each indicator. In a first step, it produces a list of length I of matrices of dimension (AxN).
+        This function receives an input matrix of dimensions (AxnI).
+        nI = (num. indicators associated with an exact or Poisson PDF) + (2 x num. indicators associated with all others PDF)
+        The columns of the input matrix represent parameter 1 for exact and Poisson; or parameter1 and parameter 2 for the rest.
+        In a first step, the function produces a list of length I of matrices of dimension (AxN).
         Every matrix represents the N random samples of every alternative (A), per indicator (I).
         If there are negative random samples, they are rescaled into [0-1].
         In a second step, a utility function converts this list into a list of length N of matrices of dimension (AxI).
@@ -69,6 +71,7 @@ class MCDAWithRobustness():
 
         A: all alternatives
         I: all indicators
+        nI: all indicators first and second parameters, if the second is needed
         N: number of random samples
         """
         marginal_pdf = self._config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
@@ -76,29 +79,30 @@ class MCDAWithRobustness():
         is_poisson_pdf_mask = check_if_pdf_is_poisson(marginal_pdf)
 
         num_runs = self._config.monte_carlo_sampling["monte_carlo_runs"] # N
-        input_matrix = self._input_matrix # (AxI)
+        input_matrix = self._input_matrix # (AxnI)
 
         np.random.seed(42)
 
         sampled_matrices = [] # list long I
 
         j=0
-        for i, pdf_type in enumerate(is_exact_pdf_mask):
-            parameter1_col_position = j
-            if pdf_type == 0 and not is_poisson_pdf_mask[i]:  # non-exact PDF except Poisson
-                parameter2_col_position = parameter1_col_position + 1  # parameter 2 column follows parameter 1
-                parameter1_col = input_matrix.columns[parameter1_col_position]
-                parameter2_col = input_matrix.columns[parameter2_col_position]
+        for i, pdf_type in enumerate(zip(is_exact_pdf_mask, is_poisson_pdf_mask)):
+            pdf_exact, pdf_poisson = pdf_type
+            par1_position = j
+            if pdf_exact == 0 and pdf_poisson == 0:  # non-exact PDF except Poisson
+                par2_position = par1_position + 1  # parameter 2's column follows parameter 1's
+                parameter1_col = input_matrix.columns[par1_position]
+                parameter2_col = input_matrix.columns[par2_position]
                 parameter1 = input_matrix[parameter1_col]
                 parameter2 = input_matrix[parameter2_col]
                 j += 2
 
-            elif pdf_type == 1 or is_poisson_pdf_mask[i]:  # exact PDF or Poisson
-                parameter1_col = input_matrix.columns[parameter1_col_position]
+            elif pdf_exact == 1 or pdf_poisson == 1:  # exact PDF or Poisson
+                parameter1_col = input_matrix.columns[par1_position]
                 parameter1 = input_matrix[parameter1_col]
                 j += 1
 
-            distribution_type = marginal_pdf[i // 2]
+            distribution_type = marginal_pdf[i]
 
             if distribution_type == 'exact':
                 samples = self.repeat_series_to_create_df(parameter1, num_runs).T

@@ -4,7 +4,7 @@
 
 <!-- [![status](https://joss.theoj.org/papers/4214c6e588774490458e34630e8052c1/status.svg)](https://joss.theoj.org/papers/4214c6e588774490458e34630e8052c1) -->
 <!-- [![PyPi version](https://img.shields.io/pypi/v/promcda?color=blue)](https://pypi.org/project/promcda) -->
-[![pytest](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app.yml/badge.svg)](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app.yml)
+[![pytest](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app-tests.yml/badge.svg)](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app-tests.yml)
 ![License](https://img.shields.io/badge/license-EPL%202.0-blue)
 
 # Probabilistic Multi Criteria Decision Analysis
@@ -77,14 +77,20 @@ Examples of input matrix:
 - *input matrix without uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`)
 - *input matrix with uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`)
 
-If the input matrix without uncertainties has some values of some indicators that are negative, those values are rescaled
-between [0,1]. This is needed because some nromalization functions (as for example *target*) cannot handle negative values 
+If the input matrix without uncertainties has any values of any indicators that are negative, those values are rescaled
+between [0,1]. This is needed because some normalization functions (as for example *target*) cannot handle negative values 
 properly.
 
-The input matrix with uncertainties has for each indicator a column with the mean values and a column with the standard deviation; 
-if the marginal distribution relative to the indicator is 'exact', then the standard deviation column contains only 0.
-If any mean value of any indicator is equal of smaller of the relative value of the standard deviation, ```ProMCDA``` breaks 
-to ask you if you need to investigate your data further before applying MCDA. Your data seems to have a high variability 
+The input matrix with uncertainties has the following characteristics:
+
+- if an indicator is described by an exact probability density function (PDF), one needs only a column with its values;
+- if an indicator is described by a uniform PDF, one needs two columns with the lowest and highest values (in this order);
+- if an indicator is described by a normal PDF, one needs two columns with the mean and standard deviation values (in this order);
+- if an indicator is described by a lognormal PDF, one needs two columns with the log(mean) and log(standard deviation) values (in this order);
+- if an indicator is described by a Poisson PDF, one needs only one colum with the rate.
+
+If any mean value of any indicator is equal of smaller of the relative value of the standard deviation in case of a normal or lognormal PDF,
+```ProMCDA``` breaks to ask you if you need to investigate your data further before applying MCDA. In that case, your data have a high variability 
 regarding some indicators. If you want to continue anyway, negative randomly sampled data will be rescaled into [0,1] as 
 in the case without uncertainty.
 
@@ -170,7 +176,7 @@ On Mac and Linux:
 source activate <your-env>
 python3 -m mcda.mcda_run -c configuration.json
 ```
-where an example of configuration file can be found in `mcda/configuration_w_robustness.json` or `mcda/configuration_without_robustness.json`.
+where an example of configuration file can be found in `./configuration.json`.
 
 ### Running the tests
 ```bash

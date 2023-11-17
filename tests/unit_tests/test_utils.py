@@ -11,7 +11,7 @@ class TestUtils(unittest.TestCase):
     def get_test_config():
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
-            "polarity_for_each_indicator": ["-", "-", "+"],
+            "polarity_for_each_indicator": ["-", "-", "+", "+"],
             "sensitivity": {
                 "sensitivity_on": "yes",
                 "normalization": "minmax",
@@ -20,19 +20,19 @@ class TestUtils(unittest.TestCase):
                 "robustness_on": "yes",
                 "on_single_weights": "no",
                 "on_all_weights": "no",
-                "given_weights": [0.5, 0.5, 0.5],
+                "given_weights": [0.5, 0.5, 0.5, 0.5],
                 "on_indicators": "yes"},
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 10000,
                 "num_cores": 1,
-                "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal']},
+                "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal', 'poisson']},
             "output_path": "/path/to/output"
         }
 
     @staticmethod
     def get_input_matrix_1() -> pd.DataFrame:
-        data = {'ind1': [1, 2, 3], 'ind2': [5, 6, 7], 'std2': [0.1, 0.1, 0.1],
-                'ind3': [9, 10, 11], 'std3': [0.1, 0.1, 12]}
+        data = {'ind1': [1, 2, 3], 'ind2_min': [1, 2, 3], 'ind2_max': [5, 6, 7],
+                'ind3': [9, 10, 11], 'std3': [0.1, 0.1, 12], 'ind4_rate': [9, 10, 11]}
         df = pd.DataFrame(data=data)
 
         return df
@@ -40,8 +40,16 @@ class TestUtils(unittest.TestCase):
 
     @staticmethod
     def get_input_matrix_2() -> pd.DataFrame:
-        data = {'ind1': [1, 2, 3], 'ind2': [5, 6, 7], 'std2': [0.1, 0.1, 0.1],
-                'ind3': [9, 10, 11], 'std3': [0.1, 0.1, 11]}
+        data = {'ind1': [1, 2, 3], 'ind2_min': [-5, -6, -7], 'ind2_max': [5, 6, 7],
+                'ind3': [9, 10, 11], 'std3': [0.1, 0.1, 11], 'ind4_rate': [9, 10, 11]}
+        df = pd.DataFrame(data=data)
+
+        return df
+
+    @staticmethod
+    def get_input_matrix_3() -> pd.DataFrame:
+        data = {'ind1': [1, 2, 3], 'ind2_min': [6, -6, -7], 'ind2_max': [5, 6, 7],
+                'ind3': [9, 10, 11], 'std3': [0.1, 0.1, 11], 'ind4_rate': [9, 10, 11]}
         df = pd.DataFrame(data=data)
 
         return df
@@ -53,7 +61,7 @@ class TestUtils(unittest.TestCase):
 
     @staticmethod
     def get_input_matrix_negative() -> pd.DataFrame:
-        data = {'ind1': [1, -2, 3], 'ind2': [-5, -6, -7], 'ind3': [9, 10, -11]}
+        data = {'ind1': [1, -2, 3], 'ind2': [-5, -6, -7], 'ind3': [9, 10, -11], 'ind4': [9, 10, -11]}
         df = pd.DataFrame(data=data)
 
         return df
@@ -123,22 +131,31 @@ class TestUtils(unittest.TestCase):
         isinstance(out_list, list)
         TestCase.assertListEqual(self, out_list, expected_list)
 
-    def test_check_averages_larger_std(self):
+    def test_check_parameters_pdf(self):
         # Given
         input_matrix_1 = TestUtils.get_input_matrix_1()
         input_matrix_2 = TestUtils.get_input_matrix_2()
+        input_matrix_3 = TestUtils.get_input_matrix_3()
         config = TestUtils.get_test_config()
 
         # When
         config = Config(config)
-        is_average_larger_than_std_1 = check_averages_larger_std(input_matrix_1, config)
-        is_average_larger_than_std_2 = check_averages_larger_std(input_matrix_2, config)
+        are_parameters_correct_1 = check_parameters_pdf(input_matrix_1, config)
+        are_parameters_correct_2 = check_parameters_pdf(input_matrix_2, config)
+        are_parameters_correct_3 = check_parameters_pdf(input_matrix_3, config)
 
         # Then
-        isinstance(is_average_larger_than_std_1, bool)
-        self.assertFalse(is_average_larger_than_std_1)
-        isinstance(is_average_larger_than_std_2, bool)
-        assert(is_average_larger_than_std_2)
+        isinstance(are_parameters_correct_1, list)
+        self.assertFalse(all(are_parameters_correct_1))
+        self.assertEqual(are_parameters_correct_1[2], False)
+
+        isinstance(are_parameters_correct_2, list)
+        self.assertTrue(all(are_parameters_correct_2))
+
+        isinstance(are_parameters_correct_3, list)
+        self.assertFalse(all(are_parameters_correct_3))
+        self.assertEqual(are_parameters_correct_3[1], False)
+
 
 
     def test_check_and_rescale_negative_indicators(self):

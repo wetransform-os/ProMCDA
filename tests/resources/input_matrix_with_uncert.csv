@@ -1,5 +1,5 @@
-﻿alternatives;ind1_average;ind1_std; ind2; ind3_average;ind3_std; ind4_average;ind4_std; ind5; ind6_average;ind6_std
+﻿alternatives;ind1_min;ind1_max; ind2; ind3_average;ind3_std; ind4_average;ind4_std; ind5; ind6_average;ind6_std
 alt1;-15.20;8.20; 0.04; 24.50;6.20; -15.20;8.20; 0.04; 24.50;6.20
 alt2;-12.40;8.70; 0.05; 24.50;4.80; -12.40;8.70; 0.05; 24.50;4.80
-alt3;1.60;2.00;   0.11; 14.00;0.60;   1.60;2.00; 0.11; 14.00;0.60
+alt3;10.60;2.00;   0.11; 14.00;0.60;   1.60;2.00; 0.11; 14.00;0.60
 alt4;-39.70;14.00; 0.01; 26.50;4.41; -39.70;14.00; 0.01; 26.50;4.41

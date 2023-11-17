@@ -15,7 +15,10 @@ formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("ProMCDA")
 
-def main(input_config: dict):
+class UserStoppedError(Exception):
+    pass
+
+def main(input_config: dict, user_input_callback=input):
 
     is_sensitivity = None
     is_robustness = None
@@ -98,11 +101,11 @@ def main(input_config: dict):
     elif input_matrix.iloc[:,0].duplicated().any():
         logger.info('There are duplicated rows in the alternatives column.')
         while True:
-            user_input = input("Do you want to continue (C) or stop (S)? ").strip().lower()
+            user_input = user_input_callback("Do you want to continue (C) or stop (S)? ").strip().lower()
             if user_input == 'c':
                 break
             elif user_input == 's':
-                raise SystemExit
+                raise UserStoppedError()
             else:
                 print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
     logger.info("Alternatives are {}".format(input_matrix.iloc[:, 0].tolist()))
@@ -120,10 +123,10 @@ def main(input_config: dict):
         logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
         logger.info("Number of indicators: {}".format(num_indicators))
     else: # matrix with uncertainty on indicators
-        # non-exact indicators in the input matrix are associated to a column representing its mean
-        # and a second column representing its std
-        num_non_exact = len(marginal_pdf) - marginal_pdf.count('exact')
-        num_indicators = (input_matrix_no_alternatives.shape[1]-num_non_exact)
+        # non-exact and non-poisson indicators in the input matrix are associated to a column representing its mean
+        # and a second column representing its std; uniform is also associated to two columns being its min and max values
+        num_non_exact_and_non_poisson = len(marginal_pdf) - marginal_pdf.count('exact') - marginal_pdf.count('poisson')
+        num_indicators = (input_matrix_no_alternatives.shape[1]-num_non_exact_and_non_poisson)
         logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
         logger.info("Number of indicators: {}".format(num_indicators))
         # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional
@@ -302,25 +305,26 @@ def main(input_config: dict):
                 logger.info("The number of Monte-Carlo runs is only {}".format(mc_runs))
                 logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
                 while True:
-                    user_input = input("Do you want to continue (C) or stop (S)? ").strip().lower()
+                    user_input = user_input_callback("Do you want to continue (C) or stop (S)? ").strip().lower()
                     if user_input == 'c':
                         break
                     elif user_input == 's':
-                        raise SystemExit
+                        raise UserStoppedError()
                     else:
                         print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
             logger.info("Start ProMCDA with uncertainty on the indicators")
-            is_average_larger_than_std = check_averages_larger_std(input_matrix_no_alternatives, config)
-            if is_average_larger_than_std is False:
-                logger.info('Some standard deviation values of some indicators are larger than their averages.')
-                logger.info('Maybe you need to investigate the nature of your data.')
+            are_parameters_correct = check_parameters_pdf(input_matrix_no_alternatives, config)
+            if any(not value for value in are_parameters_correct):
+                logger.info('There is a problem with the parameters given in the input matrix with uncertainties. Check your data!')
+                logger.info('Either standard deviation values of normal/lognormal distributed indicators are larger than their means,')
+                logger.info('or max. values of uniform distributed indicators are smaller than their min. values.')
                 logger.info('If you continue, the negative values will be rescaled internally to a positive range.')
                 while True:
-                    user_input = input("Do you want to continue (C) or stop (S)? ").strip().lower()
+                    user_input = user_input_callback("Do you want to continue (C) or stop (S)? ").strip().lower()
                     if user_input == 'c':
                         break
                     elif user_input == 's':
-                        raise SystemExit
+                        raise UserStoppedError()
                     else:
                         print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
             t = time.time()

@@ -12,7 +12,7 @@ class TestMCDA_with_robustness(unittest.TestCase):
     def get_test_config():
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
-            "polarity_for_each_indicator": ["-", "-", "+"],
+            "polarity_for_each_indicator": ["-", "-", "+", "+"],
             "sensitivity": {
                 "sensitivity_on": "yes",
                 "normalization": "minmax",
@@ -21,27 +21,27 @@ class TestMCDA_with_robustness(unittest.TestCase):
                 "robustness_on": "yes",
                 "on_single_weights": "no",
                 "on_all_weights": "no",
-                "given_weights": [0.5, 0.5, 0.5],
+                "given_weights": [0.5, 0.5, 0.5, 0.5],
                 "on_indicators": "yes"},
             "monte_carlo_sampling": {
-                "monte_carlo_runs": 10000,
+                "monte_carlo_runs": 100,
                 "num_cores": 1,
-                "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal']},
+                "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal', 'poisson']},
             "output_path": "/path/to/output"
         }
 
     @staticmethod
     def get_input_matrix() -> pd.DataFrame:
-        data = {'ind1': [0, 1, 2, 3], 'ind2': [4, 5, 6, 7], 'std2': [0.1, 0.1, 0.1, 0.1],
-                'ind3': [8, 9, 10, 11], 'std3': [0.1, 0.1, 0.1, 0.1]}
+        data = {'col1': [0, 1, 2, 3], 'col2': [-4, -5, -6, -7], 'col3': [4, 5, 6, 7],
+                'col4': [8, 9, 10, 11], 'col5': [0.1, 0.1, 0.1, 0.1], 'col6': [8, 9, 10, 11]}
         df = pd.DataFrame(data=data)
 
         return df
 
     @staticmethod
     def get_input_matrix_rescale() -> pd.DataFrame:
-        data = {'ind1': [0, 1, 2, 3], 'ind2': [4, 5, 6, 7], 'std2': [5, 0.1, 7, 0.1],
-                'ind3': [8, 9, 10, 11], 'std3': [10, 0.1, 0.1, 0.1]}
+        data = {'col1': [0, 1, 2, 3], 'col2': [-4, -5, -6, -7], 'col3': [4, 5, 6, 7],
+                'col4': [8, 9, 10, 11], 'col5': [10, 0.1, 0.1, 0.1], 'col6': [8, 9, 10, 11]}
         df = pd.DataFrame(data=data)
 
         return df
@@ -75,11 +75,23 @@ class TestMCDA_with_robustness(unittest.TestCase):
         data1 = pd.DataFrame(
             data={'0': [0, 1, 2, 3], '1': [0, 1, 2, 3], '2': [0, 1, 2, 3], '3': [0, 1, 2, 3], '4': [0, 1, 2, 3],
                   '5': [0, 1, 2, 3], '6': [0, 1, 2, 3], '7': [0, 1, 2, 3], '8': [0, 1, 2, 3], '9': [0, 1, 2, 3]})
-        data2 = np.random.uniform(low=5.5 - 0.1, high=5.5 + 0.1, size=(4, 10))
+        low_values = np.array([-4, -5, -6, -7])
+        high_values = np.array([4, 5, 6, 7])
+        low_values_2d = low_values[:, np.newaxis] # broadcasting the 1D arrays to a shape of (4, 10)
+        high_values_2d = high_values[:, np.newaxis]
+        data2 = np.random.uniform(low=low_values_2d, high=high_values_2d, size=(4,10))
+        mean_values = np.array([8, 9, 10, 11])
+        std_values = np.array([0.1, 0.1, 0.1, 0.1])
+        mean_values_2d = mean_values[:, np.newaxis]
+        std_values_2d = std_values[:, np.newaxis]
         data2 = pd.DataFrame(data2)
-        data3 = np.random.normal(loc=9.5, scale=0.1, size=(4, 10))
+        data3 = np.random.normal(loc=mean_values_2d, scale=std_values_2d, size=(4,10))
         data3 = pd.DataFrame(data3)
-        out_list = [data1, data2, data3]
+        lambda_values = np.array([8, 9, 10, 11])
+        lambda_values_2d = lambda_values[:, np.newaxis]
+        data4 = np.random.poisson(lam=lambda_values_2d, size=(4,10))
+        data4 = pd.DataFrame(data4)
+        out_list = [data1, data2, data3, data4]
 
         input_matrix = TestMCDA_with_robustness.get_input_matrix()
         config = TestMCDA_with_robustness.get_test_config()
@@ -147,7 +159,7 @@ class TestMCDA_with_robustness(unittest.TestCase):
         assert isinstance(n_random_matrices, list)
         assert len(n_random_matrices) == config.monte_carlo_sampling["monte_carlo_runs"]
         for df1, df2 in zip(n_random_matrices, exp_n_random_matrices):
-            assert df1.shape == (4, 3)
+            assert df1.shape == (4, 4)
             assert df1.values.all() == df2.values.all()
         for df in n_random_matrices_rescale:
             assert (df >= 0).all().all()

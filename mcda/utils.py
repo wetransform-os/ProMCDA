@@ -3,6 +3,7 @@ from sklearn import preprocessing
 import plotly.graph_objects as go
 from datetime import datetime
 from typing import List
+from typing import Tuple
 import plotly.io as pio
 from PIL import Image
 import pandas as pd
@@ -150,8 +151,13 @@ def pop_indexed_elements(indexes: np.ndarray, original_list: list) -> list:
     return new_list
 
 
-def check_averages_larger_std(input_matrix: pd.DataFrame, config: dict) -> bool:
-    """ The function checks if the values of list means are larger or equal than the ones of list stds"""
+def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict) -> List[bool]:
+    """ The function checks if the values of list parameter1 are larger or equal than the ones of list parameter2
+        (or vice-versa for the uniform PDF) in case of an input matrix with uncertainties.
+        The check runs only in the case of indicators with a PDF of the type normal/lognormal, and uniform.
+        In the first case the parameters represent the (log)mean and (log)std;
+        in the second case, they represent min and max values.
+    """
 
     marginal_pdf = config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
     is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
@@ -159,40 +165,49 @@ def check_averages_larger_std(input_matrix: pd.DataFrame, config: dict) -> bool:
     is_uniform_pdf_mask = check_if_pdf_is_uniform(marginal_pdf)
 
     j = 0
-    for i, pdf_type in enumerate(is_exact_pdf_mask):
-        mean_col_position = j
-        if pdf_type == 0 and not is_uniform_pdf_mask[i] and not is_poisson_pdf_mask[i]:  # non-exact PDF except for Uniform and Poisson distributions
-            std_col_position = mean_col_position + 1  # standard deviation column follows mean
-            mean_col = input_matrix.columns[mean_col_position]
-            std_col = input_matrix.columns[std_col_position]
-            means = input_matrix[mean_col]
-            stds = input_matrix[std_col]
+    list_of_satisfied_conditions = []
+    for i, pdf_type in enumerate(zip(is_exact_pdf_mask, is_poisson_pdf_mask, is_uniform_pdf_mask)):
+        pdf_exact, pdf_poisson, pdf_uniform = pdf_type
+        param1_position = j
+        if pdf_exact == 0 and pdf_poisson == 0:  # non-exact PDF, except Poisson
+            param2_position = param1_position + 1  # param2 column follows param1
+            param1_col = input_matrix.columns[param1_position]
+            param2_col = input_matrix.columns[param2_position]
+            param1 = input_matrix[param1_col]
+            param2 = input_matrix[param2_col]
             j += 2
 
-            satisfies_condition = all(x >= y for x, y in zip(means, stds))
+            if pdf_uniform == 0:  # normal/lognormal
+                satisfies_condition = all(x >= y for x, y in zip(param1, param2))  # check param1 > param2 (mean > std=
+            else:  # uniform
+                satisfies_condition = all(x <= y for x, y in zip(param1, param2))  # check param2 > param1 (max > min)
 
-        elif is_uniform_pdf_mask[i]: # Uniform distribution
-            j += 2
+        elif pdf_exact == 1 or pdf_poisson == 1:  # exact PDF or Poisson distribution
+            satisfies_condition = True
+            j += 1  # no check, read one column only (rate)
 
-        elif pdf_type == 1 or is_poisson_pdf_mask[i]:  # exact PDF or Poisson distribution
-            j += 1
+        list_of_satisfied_conditions.append(satisfies_condition)
 
-    return satisfies_condition
+    return list_of_satisfied_conditions
+
 
 def check_if_pdf_is_exact(marginal_pdf: list) -> list:
     exact_pdf_mask = [1 if pdf == 'exact' else 0 for pdf in marginal_pdf]
 
     return exact_pdf_mask
 
+
 def check_if_pdf_is_poisson(marginal_pdf: list) -> list:
     poisson_pdf_mask = [1 if pdf == 'poisson' else 0 for pdf in marginal_pdf]
 
     return poisson_pdf_mask
 
+
 def check_if_pdf_is_uniform(marginal_pdf: list) -> list:
     uniform_pdf_mask = [1 if pdf == 'uniform' else 0 for pdf in marginal_pdf]
 
     return uniform_pdf_mask
+
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     num_of_combinations = scores.shape[1] - 1
