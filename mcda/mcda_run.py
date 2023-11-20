@@ -101,17 +101,13 @@ def main(input_config: dict, user_input_callback=input):
     elif input_matrix.iloc[:,0].duplicated().any():
         logger.info('There are duplicated rows in the alternatives column.')
         while True:
-            try:
-                user_input = user_input_callback("Do you want to continue (C) or stop (S)? ").strip().lower()
-                if user_input == 'c':
-                    break
-                elif user_input == 's':
-                    raise UserStoppedError()
-                else:
-                    print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
-            except UserStoppedError:
-                print("User stopped the operation.")
-                sys.exit()
+            user_input = user_input_callback("Do you want to continue (C) or stop (S)? ").strip().lower()
+            if user_input == 'c':
+                break
+            elif user_input == 's':
+                raise UserStoppedError()
+            else:
+                print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
     logger.info("Alternatives are {}".format(input_matrix.iloc[:, 0].tolist()))
     input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0],axis=1)  # drop first column with alternatives
     input_matrix_no_alternatives = check_and_rescale_negative_indicators(input_matrix_no_alternatives)
@@ -309,17 +305,13 @@ def main(input_config: dict, user_input_callback=input):
                 logger.info("The number of Monte-Carlo runs is only {}".format(mc_runs))
                 logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
                 while True:
-                    try:
-                        user_input = user_input_callback("Do you want to continue (C) or stop (S)? ").strip().lower()
-                        if user_input == 'c':
-                            break
-                        elif user_input == 's':
-                            raise UserStoppedError()
-                        else:
-                            print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
-                    except UserStoppedError:
-                        print("User stopped the operation.")
-                        sys.exit()
+                    user_input = user_input_callback("Do you want to continue (C) or stop (S)? ").strip().lower()
+                    if user_input == 'c':
+                        break
+                    elif user_input == 's':
+                        raise UserStoppedError()
+                    else:
+                        print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
             logger.info("Start ProMCDA with uncertainty on the indicators")
             are_parameters_correct = check_parameters_pdf(input_matrix_no_alternatives, config)
             if any(not value for value in are_parameters_correct):
@@ -328,17 +320,13 @@ def main(input_config: dict, user_input_callback=input):
                 logger.info('or max. values of uniform distributed indicators are smaller than their min. values.')
                 logger.info('If you continue, the negative values will be rescaled internally to a positive range.')
                 while True:
-                    try:
-                        user_input = user_input_callback("Do you want to continue (C) or stop (S)? ").strip().lower()
-                        if user_input == 'c':
-                            break
-                        elif user_input == 's':
-                            raise UserStoppedError()
-                        else:
-                            print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
-                    except UserStoppedError:
-                        print("User stopped the operation.")
-                        sys.exit()
+                    user_input = user_input_callback("Do you want to continue (C) or stop (S)? ").strip().lower()
+                    if user_input == 'c':
+                        break
+                    elif user_input == 's':
+                        raise UserStoppedError()
+                    else:
+                        print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
             t = time.time()
             mcda_with_uncert = MCDAWithRobustness(config, input_matrix_no_alternatives)
             n_random_input_matrices = mcda_with_uncert.create_n_randomly_sampled_matrices() # N random matrices
