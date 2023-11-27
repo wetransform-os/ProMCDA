@@ -1,14 +1,13 @@
-<div style="text-align: left;margin-bottom: 0.01px;">
-<img src="https://github.com/wetransform-os/ProMCDA/blob/release/logo/ProMCDA_logo.png" alt="logo">
+.. image:: https://github.com/wetransform-os/ProMCDA/blob/release/logo/ProMCDA_logo.png
+   :alt: ProMCDA Logo
+   :align: left
 
-</div>
+# Probabilistic Multi Criteria Decision Analysis
 
 <!-- [![status](https://joss.theoj.org/papers/4214c6e588774490458e34630e8052c1/status.svg)](https://joss.theoj.org/papers/4214c6e588774490458e34630e8052c1) -->
 <!-- [![PyPi version](https://img.shields.io/pypi/v/promcda?color=blue)](https://pypi.org/project/promcda) -->
 [![pytest](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app-tests.yml/badge.svg)](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app-tests.yml)
 ![License](https://img.shields.io/badge/license-EPL%202.0-blue)
-
-# Probabilistic Multi Criteria Decision Analysis
 
 A tool to estimate scores of alternatives and their uncertainties based on a Multi Criteria Decision Analysis (MCDA) approach.
 
