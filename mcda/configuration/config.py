@@ -17,19 +17,27 @@ class Config(object):
 
     """
 
-    _valid_keys = ['input_matrix_path', 'marginal_distribution_for_each_indicator',
-                   'polarity_for_each_indicator', 'monte_carlo_runs',
-                   'num_cores', 'weight_for_each_indicator', 'output_path']
+    _valid_keys = ['input_matrix_path',
+                   'polarity_for_each_indicator',
+                   'sensitivity',
+                   'robustness',
+                   'monte_carlo_sampling',
+                   'output_path']
 
     _list_values: list[str] = ['marginal_distribution_for_each_indicator', 'polarity_for_each_indicator']
 
-    _str_values = ['input_matrix_path', 'output_path']
+    _str_values = ['input_matrix_path', 'output_path', 'sensitivity_on', 'normalization', 'aggregation',
+                   'robustness_on', 'on_single_weights', 'on_all_weights','given_weights', 'on_indicators']
 
     _int_values = ['monte_carlo_runs', 'num_cores']
 
-    _dict_values = ['weight_for_each_indicator']
+    _dict_values = ['sensitivity', 'robustness', 'monte_carlo_sampling']
 
-    _keys_of_dict_values = {'weight_for_each_indicator': ['random_weights', 'iterative', 'num_samples', 'given_weights']}
+    _keys_of_dict_values = {'sensitivity': ['sensitivity_on', 'normalization', 'aggregation'],
+                            'robustness': ['robustness_on', 'on_single_weights', 'on_all_weights',
+                                            'given_weights', 'on_indicators'],
+                            'monte_carlo_sampling': ['monte_carlo_runs', 'num_cores',
+                                                     'marginal_distribution_for_each_indicator']}
 
     def __init__(self, input_config: dict):
         """
@@ -42,13 +50,12 @@ class Config(object):
         int_values = self._int_values
         list_values = self._list_values
         dict_values = self._dict_values
-        keys_of_dict_values = self._keys_of_dict_values
+        #keys_of_dict_values = self._keys_of_dict_values
 
-        self._validate(input_config, valid_keys, str_values, int_values, list_values, dict_values, keys_of_dict_values)
+        self._validate(input_config, valid_keys, str_values, int_values, list_values, dict_values)
         self._config = copy.deepcopy(input_config)
 
-    def _validate(self, input_config, valid_keys, str_values, int_values, list_values, dict_values,
-                  keys_of_dict_values):
+    def _validate(self, input_config, valid_keys, str_values, int_values, list_values, dict_values):
         if not isinstance(input_config, dict):
             raise TypeError("input configuration file is not a dictionary")
 
@@ -73,6 +80,7 @@ class Config(object):
                     raise TypeError("value of {} in the input config is not a dictionary".format(key))
                 Config.check_dict_keys(input_config[key], Config._keys_of_dict_values[key])
 
+
     def get_property(self, property_name: str):
         return self._config[property_name]
 
@@ -81,24 +89,20 @@ class Config(object):
         return self.get_property('input_matrix_path')
 
     @property
-    def marginal_distribution_for_each_indicator(self):
-        return self.get_property('marginal_distribution_for_each_indicator')
-
-    @property
     def polarity_for_each_indicator(self):
         return self.get_property('polarity_for_each_indicator')
 
     @property
-    def monte_carlo_runs(self):
-        return self.get_property('monte_carlo_runs')
+    def sensitivity(self):
+        return self.get_property('sensitivity')
 
     @property
-    def num_cores(self):
-        return self.get_property('num_cores')
+    def robustness(self):
+        return self.get_property('robustness')
 
     @property
-    def weight_for_each_indicator(self):
-        return self.get_property('weight_for_each_indicator')
+    def monte_carlo_sampling(self):
+        return self.get_property('monte_carlo_sampling')
 
     @property
     def output_file_path(self):
