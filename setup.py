@@ -14,7 +14,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Eclipse Public License 2.0 (EPL-2.0)",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
 

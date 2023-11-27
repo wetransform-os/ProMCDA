@@ -2,8 +2,6 @@
 LICENSE
 README.md
 __init__.py
-configuration_w_robustness.json
-configuration_without_robustness.json
 requirements.txt
 setup.py
 setup_utils.py
