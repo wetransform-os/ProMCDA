@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: ProMCDA
-Version: 1.0.6
+Version: 1.0.7
 Summary: A probabilistic Multi Criteria Decision Analysis
 Home-page: https://github.com/wetransform-os/ProMCDA
 Author: Flaminia Catalli - wetransform GmbH, Matteo Spada - Zurich University of Applied Sciences
@@ -18,10 +18,9 @@ Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 License-File: LICENSE
 
-
-.. image:: https://github.com/wetransform-os/ProMCDA/blob/release/logo/ProMCDA_logo.png
-   :alt: ProMCDA Logo
-   :align: left
+<div align="left">
+<img src="https://raw.githubusercontent.com/wetransform-os/ProMCDA/release/logo/ProMCDA_logo.png">
+<div>
 
 # Probabilistic Multi Criteria Decision Analysis
 
