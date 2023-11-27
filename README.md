@@ -65,6 +65,7 @@ The tool can be also used as a simple (i.e. deterministic) MCDA ranking tool wit
 ### Input information needed in the configuration file
 The configuration file collects all the input information to run ```ProMCDA```.
 The following input information should be all contained in the `configuration.json` file.
+You find a configuration.json file as an example in this directory: please modify it for your needs.
 
 ***Path to the input matrix***, a table where rows represent the alternatives and columns represent the indicators.
 Be sure that the column containing the names of the alternatives is set as index column, e.g. by:
@@ -75,8 +76,11 @@ Be also sure that there are no duplicates among the rows. If the values of one o
 the indicators are dropped from the input matrix.
 Examples of input matrix:
 
-- *input matrix without uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`)
-- *input matrix with uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`)
+- *input matrix without uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`);
+- *input matrix with uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`).
+
+The example input matrix with uncertainties is designed for an example where the PDFs describing the indicators are: uniform; 
+exact; normal (or lognormal); exact; and normal (or lognormal). Please modify it for your specific needs.
 
 If the input matrix without uncertainties has any values of any indicators that are negative, those values are rescaled
 between [0,1]. This is needed because some normalization functions (as for example *target*) cannot handle negative values 
