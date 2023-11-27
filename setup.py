@@ -20,7 +20,7 @@ classifiers = [
 
 setuptools.setup(
     name="ProMCDA",
-    version="1.0.2",
+    version="1.0.3",
     license='EPL v 2.0',
     author="Flaminia Catalli - wetransform GmbH, Matteo Spada - Zurich University of Applied Sciences",
     author_email='flaminia.catalli@wetransform.to, matteo.spada@zhaw.ch',
