@@ -15,7 +15,7 @@ formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("ProMCDA")
 
-class UserStoppedError(Exception):
+class UserStoppedInfo(Exception):
     pass
 
 def main(input_config: dict, user_input_callback=input):
@@ -105,7 +105,7 @@ def main(input_config: dict, user_input_callback=input):
             if user_input == 'c':
                 break
             elif user_input == 's':
-                raise UserStoppedError()
+                raise UserStoppedInfo()
             else:
                 print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
     logger.info("Alternatives are {}".format(input_matrix.iloc[:, 0].tolist()))
@@ -309,7 +309,7 @@ def main(input_config: dict, user_input_callback=input):
                     if user_input == 'c':
                         break
                     elif user_input == 's':
-                        raise UserStoppedError()
+                        raise UserStoppedInfo()
                     else:
                         print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
             logger.info("Start ProMCDA with uncertainty on the indicators")
@@ -324,7 +324,7 @@ def main(input_config: dict, user_input_callback=input):
                     if user_input == 'c':
                         break
                     elif user_input == 's':
-                        raise UserStoppedError()
+                        raise UserStoppedInfo()
                     else:
                         print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
             t = time.time()

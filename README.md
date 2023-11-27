@@ -1,5 +1,6 @@
 <div style="text-align: left;margin-bottom: 0.01px;">
-<img src="logo/total_logo.jpg" alt="logo" width="400" height="100">
+<img src="logo/ProMCDA_logo.png" alt="logo">
+
 </div>
 
 <!-- [![status](https://joss.theoj.org/papers/4214c6e588774490458e34630e8052c1/status.svg)](https://joss.theoj.org/papers/4214c6e588774490458e34630e8052c1) -->
@@ -67,7 +68,7 @@ The following input information should be all contained in the `configuration.js
 
 ***Path to the input matrix***, a table where rows represent the alternatives and columns represent the indicators.
 Be sure that the column containing the names of the alternatives is set as index column, e.g. by:
-```python
+```bash
 input_matrix = input_matrix.set_index('Alternatives').
 ```
 Be also sure that there are no duplicates among the rows. If the values of one or more indicators are all the same, 
@@ -180,7 +181,7 @@ where an example of configuration file can be found in `./configuration.json`.
 
 ### Running the tests
 ```bash
-python3 -m pytest -s tests/unit_tests/test_mcda_run.py -vv
+python3 -m pytest -s tests/unit_tests -vv
 ```
 
 ### Code overview: a high-level summary

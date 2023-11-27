@@ -2,7 +2,7 @@ import unittest
 import logging
 import pytest
 from unittest.mock import patch
-from mcda.mcda_run import main, UserStoppedError
+from mcda.mcda_run import main, UserStoppedInfo
 
 log = logging.getLogger(__name__)
 
@@ -127,7 +127,7 @@ class TestMCDA(unittest.TestCase):
         with pytest.raises(ValueError):
             main(input_config_3, user_input_callback=mock_input)
         with self.assertLogs(level="INFO") as cm:
-            with pytest.raises(UserStoppedError):
+            with pytest.raises(UserStoppedInfo):
                 main(input_config_correct, user_input_callback=mock_input)
                 self.assertIn('There is a problem with the parameters given in the input matrix with uncertainties. '
                               'Check your data!', cm.output)
