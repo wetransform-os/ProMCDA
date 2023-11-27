@@ -1,5 +1,5 @@
 <div style="text-align: left;margin-bottom: 0.01px;">
-<img src="logo/ProMCDA_logo.png" alt="logo">
+<img src="https://github.com/wetransform-os/ProMCDA/blob/release/logo/ProMCDA_logo.png" alt="logo">
 
 </div>
 
