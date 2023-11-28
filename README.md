@@ -1,19 +1,17 @@
-<div style="text-align: left;margin-bottom: 0.01px;">
-<img src="logo/ProMCDA_logo.png" alt="logo">
+<div align="left">
+<img src="https://raw.githubusercontent.com/wetransform-os/ProMCDA/release/logo/ProMCDA_logo.png">
+<div>
 
-</div>
+# Probabilistic Multi Criteria Decision Analysis
 
 <!-- [![status](https://joss.theoj.org/papers/4214c6e588774490458e34630e8052c1/status.svg)](https://joss.theoj.org/papers/4214c6e588774490458e34630e8052c1) -->
 <!-- [![PyPi version](https://img.shields.io/pypi/v/promcda?color=blue)](https://pypi.org/project/promcda) -->
 [![pytest](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app-tests.yml/badge.svg)](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app-tests.yml)
 ![License](https://img.shields.io/badge/license-EPL%202.0-blue)
 
-# Probabilistic Multi Criteria Decision Analysis
-
 A tool to estimate scores of alternatives and their uncertainties based on a Multi Criteria Decision Analysis (MCDA) approach.
 
 ### MCDA quick overview and applications
-
 A MCDA approach is a systematic framework for making decisions in situations where multiple criteria or objectives need to be 
 considered. It can be applied in various domains and contexts. Here are some possible usages of an MCDA approach:
 
@@ -48,11 +46,12 @@ These are just a few examples of how MCDA can be applied across a wide range of 
 that involve multiple, often conflicting, criteria. The specific application of MCDA will depend on the context 
 and the goals of the decision-maker.
 
-In a MCDA context an *alternative* is one possible course of action available; 
-an *indicator* is a parameter that describes the alternatives.
-The variability of the MCDA scores are caused by:
+Before using ```ProMCDA```, we suggest you first to get familiar with the main steps and concepts of an MCDA method: 
+the normalization of the criteria values; their polarities and weights; and the aggregation of information into a composite indicator. 
+In MCDA context an *alternative* is one possible course of action available; an *indicator*, or *criterion*, is a parameter 
+that describes the alternatives. The variability of the MCDA scores are caused by:
 
-- the sensitivity of the algorithm to the different pairs of norm/agg functions (--> sensitivity analysis);
+- the sensitivity of the algorithm to the different pairs of normalization/aggregation functions (--> sensitivity analysis);
 - the randomness that can be associated to the weights (--> robustness analysis);
 - the uncertainty associated with the indicators (--> robustness analysis).
 
@@ -63,20 +62,25 @@ Here we define:
 The tool can be also used as a simple (i.e. deterministic) MCDA ranking tool with no robustness/sensitivity analysis (see below for instructions).
 
 ### Input information needed in the configuration file
-The configuration file collects all the input information to run ```ProMCDA```.
-The following input information should be all contained in the `configuration.json` file.
+A configuration file is needed to run```ProMCDA```.
+The configuration file collects all the input information to run ```ProMCDA``` in your specific study case.
+You find a configuration.json file as an example in this directory: please modify it for your needs. In the following, 
+the entries of the configuration file are described.
 
 ***Path to the input matrix***, a table where rows represent the alternatives and columns represent the indicators.
-Be sure that the column containing the names of the alternatives is set as index column, e.g. by:
+Be sure that the column containing the names of the alternatives is set as the index column, e.g. by:
 ```bash
 input_matrix = input_matrix.set_index('Alternatives').
 ```
-Be also sure that there are no duplicates among the rows. If the values of one or more indicators are all the same, 
-the indicators are dropped from the input matrix.
+Be sure that there are no duplicates among the rows. If the values of one or more indicators are all the same, 
+the indicators are dropped from the input matrix because they contain no information.
 Examples of input matrix:
 
-- *input matrix without uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`)
-- *input matrix with uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`)
+- *input matrix without uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`);
+- *input matrix with uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`).
+
+The example input matrix with uncertainties is designed for an example where the PDFs describing the indicators are respectively: 
+uniform; exact; normal (or lognormal); exact; and normal (or lognormal). Please modify it for your specific needs.
 
 If the input matrix without uncertainties has any values of any indicators that are negative, those values are rescaled
 between [0,1]. This is needed because some normalization functions (as for example *target*) cannot handle negative values 
@@ -84,23 +88,24 @@ properly.
 
 The input matrix with uncertainties has the following characteristics:
 
-- if an indicator is described by an exact probability density function (PDF), one needs only a column with its values;
-- if an indicator is described by a uniform PDF, one needs two columns with the lowest and highest values (in this order);
-- if an indicator is described by a normal PDF, one needs two columns with the mean and standard deviation values (in this order);
-- if an indicator is described by a lognormal PDF, one needs two columns with the log(mean) and log(standard deviation) values (in this order);
-- if an indicator is described by a Poisson PDF, one needs only one colum with the rate.
+- if an indicator is described by an *exact* probability density function (PDF), one needs only a column with its values;
+- if an indicator is described by a *uniform* PDF, one needs two columns with the lowest and highest values (in this order);
+- if an indicator is described by a *normal* PDF, one needs two columns with the mean and standard deviation values (in this order);
+- if an indicator is described by a *lognormal* PDF, one needs two columns with the log(mean) and log(standard deviation) values (in this order);
+- if an indicator is described by a *Poisson* PDF, one needs only one colum with the rate.
 
-If any mean value of any indicator is equal of smaller of the relative value of the standard deviation in case of a normal or lognormal PDF,
-```ProMCDA``` breaks to ask you if you need to investigate your data further before applying MCDA. In that case, your data have a high variability 
-regarding some indicators. If you want to continue anyway, negative randomly sampled data will be rescaled into [0,1] as 
-in the case without uncertainty.
+If any mean value of any indicator is equal or smaller of its standard deviation - in case of a normal or lognormal PDF - 
+```ProMCDA``` breaks to ask you if you need to investigate your data further before applying MCDA. In fact, your data shows
+a high variability regarding some indicators. If you want to continue anyway, negative sampled data will be rescaled 
+into [0,1], as in the case without uncertainty.
 
 
 ***List of polarities*** for each indicator, "+" (the higher the value of the indicator the better for the evaluation) 
 or "-" (the lower the value of the indicator the better).
 
 The configuration file can trigger a run with or without ***sensitivity analysis***; this is set in the `sensitivity_on` parameter (*yes* or *no*); 
-if *no* is selected, then the pair normalization/aggregation should be given in `normalization` and `aggregation`.
+if *no* is selected, then the pair normalization/aggregation should be given in `normalization` and `aggregation`. If *yes*
+is selected, then the normalization/aggregation pair is disregarded.
 
 Similarly, a run with or without uncertainty on the indicators or on the weights (i.e. with ***robustness analysis***) 
 can be triggered by setting the `robustness_on` parameter to *yes* or *no*. If `robustness_on` is set to *yes*, then 
@@ -108,8 +113,8 @@ the uncertainties might be on the indicators (`on_indicators`) or on the weights
 In the first case (`on_single_weights=yes`) one weight at time is randomly sampled from a uniform distribution; 
 in the second case (`on_all_weights=yes`) all weights are simultaneously sampled from a normal distribution. 
 If there is no uncertainty associated to the weights, then the user should provide a ***list of weights*** for the indicators. 
-The sum of the weights should always be equal to 1 or the values will be normalised. 
-Depending on the different options, the other information are disregard. Sensitivity and robustness analysis can be run
+The sum of the weights should always be equal to 1 or the values will be normalised internally. 
+Depending on the different options, information not needed are disregard. Sensitivity and robustness analysis can be run
 together. If robustness analysis is selected, it can run either on the weights or on the indicators, but not on both simultaneously.
 
 If robustness analysis is selected, a last block of information is needed:
