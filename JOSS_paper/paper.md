@@ -60,14 +60,14 @@ The tool is designed to be used by both researchers and practitioners in operati
 
 <a name="Table 1"></a>*Table 1: Normalization functions used in `ProMCDA`.*
 \begin{center} 
-\includegraphics[]{Table1.png}
+\includegraphics[width=300px]{Table1.png}
 \end{center} 
 
 <br />
 
 <a name="Table 2"></a>*Table 2: Aggregation functions used in `ProMCDA`.The sum of the weights is normalized to 1 as in @langhans_method_2014.*
 \begin{center} 
-\includegraphics[]{Table2.png}
+\includegraphics[width=300px]{Table2.png}
 \end{center} 
 
 The user can also decide to run `ProMCDA` with or without a robustness analysis. The robustness analysis is triggered by adding randomness to either the weights or the criteria. This means that either the weights or the criteria values are randomly sampled using a Monte Carlo method. In `ProMCDA` randomness is not allowed for both weights and criteria in order to make the results as transparent as possible. In fact, mixing uncertainty from both weights and criteria would lead to a lack of distinction between the effect of one or the other. Randomness in the weights can be applied to one weight at a time or to all weights at the same time. In the first case, the aim is to be able to analyse the effect of each individual criteria on the scores; in the second case, it is to have an overview of the uncertainty associated with all the weights. In both cases, by default, the weights are sampled from a uniform distribution [0-1]. On the other hand, if the user decides to analyse the robustness of the criteria, he/she has to provide the parameters defining the marginal distribution (i.e. a probability density function, pdf) that best describes the criteria, rather than the criteria values. This means that if a criterion is characterized by a pdf described by 2 parameters, two columns should be allocated in the input CSV file for it. In `ProMCDA` 4 different pdfs describing the criteria uncertainty are considered:
@@ -88,7 +88,7 @@ Finally, in all possible cases (i.e. a simple MCDA; MCDA with sensitivity analys
 
 <a name="Table 3"></a>*Table 3: Overview on the functionalities of ProMCDA.*
 \begin{center} 
-\includegraphics[]{Table3.png}
+\includegraphics[width=300px]{Table3.png}
 \end{center} 
 
 # Acknowledgements
