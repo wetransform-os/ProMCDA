@@ -41,13 +41,17 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
 
     if method is None or method == 'minmax':
         indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
-        indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
+        # for aggregation "geometric" and "harmonic" that accept no 0
+        indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1))
     if method is None or method == 'target':
         indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
-        indicators_scaled_target_no0 = norm.target(feature_range=(0.1, 1)) # for aggregation "geometric" and "harmonic" that accept no 0
+        # for aggregation "geometric" and "harmonic" that accept no 0
+        indicators_scaled_target_no0 = norm.target(feature_range=(0.1, 1))
     if method is None or method == 'standardized':
-        indicators_scaled_standardized_any = norm.standardized(feature_range=('-inf', '+inf'))
-        indicators_scaled_standardized_no0 = norm.standardized(feature_range=(0.1, '+inf'))
+        indicators_scaled_standardized_any = norm.standardized(
+            feature_range=('-inf', '+inf'))
+        indicators_scaled_standardized_no0 = norm.standardized(
+            feature_range=(0.1, '+inf'))
     if method is None or method == 'rank':
         indicators_scaled_rank = norm.rank()
     if method != None and method not in ['minmax', 'target', 'standardized', 'rank']:
@@ -63,7 +67,8 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
                              "rank":  indicators_scaled_rank
                             }
 
-    normalized_indicators = {k: v for k, v in normalized_indicators.items() if v is not None}
+    normalized_indicators = {
+        k: v for k, v in normalized_indicators.items() if v is not None}
 
     return normalized_indicators
 
@@ -82,23 +87,28 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, m
                  'min-standardized_any'] # same order as in the following loop
     for key, values in normalized_indicators.items():
         if method is None or method == 'weighted_sum':
-            if key in ["standardized_any", "minmax_01", "target_01", "rank"]:  # ws goes only with some specific normalizations
+            # ws goes only with some specific normalizations
+            if key in ["standardized_any", "minmax_01", "target_01", "rank"]:
                 scores_weighted_sum[key] = agg.weighted_sum(values)
                 col_names_method.append("ws-" + key)
         if method is None or method == 'geometric':
-            if key in ["standardized_no0", "minmax_no0", "target_no0", "rank"]:  # geom goes only with some specific normalizations
+            # geom goes only with some specific normalizations
+            if key in ["standardized_no0", "minmax_no0", "target_no0", "rank"]:
                 scores_geometric[key] = pd.Series(agg.geometric(values))
                 col_names_method.append("geom-" + key)
         if method is None or method == 'harmonic':
-            if key in ["standardized_no0", "minmax_no0", "target_no0", "rank"]:  # harm goes only with some specific normalizations
+            # harm goes only with some specific normalizations
+            if key in ["standardized_no0", "minmax_no0", "target_no0", "rank"]:
                 scores_harmonic[key] = pd.Series(agg.harmonic(values))
                 col_names_method.append("harm-" + key)
         if method is None or method == 'minimum':
             if key == "standardized_any":
-                scores_minimum[key] = pd.Series(agg.minimum(normalized_indicators["standardized_any"]))
+                scores_minimum[key] = pd.Series(agg.minimum(
+                    normalized_indicators["standardized_any"]))
                 col_names_method.append("min-" + key)
 
-    dict_list = [scores_weighted_sum, scores_geometric, scores_harmonic, scores_minimum]
+    dict_list = [scores_weighted_sum, scores_geometric,
+        scores_harmonic, scores_minimum]
 
     for d in dict_list:
         if d:

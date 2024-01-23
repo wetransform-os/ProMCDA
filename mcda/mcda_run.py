@@ -44,28 +44,35 @@ def main(input_config: dict, user_input_callback=input):
         f_agg = config.sensitivity['aggregation']
         if f_norm not in ['minmax', 'target', 'standardized', 'rank']:
             logger.error('Error Message', stack_info=True)
-            raise ValueError('The available normalization functions are: minmax, target, standardized, rank.')
+            raise ValueError(
+                'The available normalization functions are: minmax, target, standardized, rank.')
         if f_agg not in ['weighted_sum', 'geometric', 'harmonic', 'minimum']:
             logger.error('Error Message', stack_info=True)
             raise ValueError('The available aggregation functions are: weighted_sum, geometric, harmonic, minimum.'
                              '\nWatch the correct spelling int the configuration file.')
-        logger.info("ProMCDA will only use one pair of norm/agg functions: " + f_norm + '/' + f_agg)
+        logger.info(
+            "ProMCDA will only use one pair of norm/agg functions: " + f_norm + '/' + f_agg)
     else:
-        logger.info("ProMCDA will use a set of different pairs of norm/agg functions")
+        logger.info(
+            "ProMCDA will use a set of different pairs of norm/agg functions")
     if is_robustness == "no":
-        logger.info("ProMCDA will run without uncertainty on the indicators or weights")
-        logger.info("Read input matrix without uncertainties at {}".format(config.input_matrix_path))
+        logger.info(
+            "ProMCDA will run without uncertainty on the indicators or weights")
+        logger.info("Read input matrix without uncertainties at {}".format(
+            config.input_matrix_path))
     else: # robustness yes
         if (config.robustness["on_single_weights"] == "no"
                 and config.robustness["on_all_weights"] == "no"
                 and config.robustness["on_indicators"] == "no"):
             logger.error('Error Message', stack_info=True)
-            raise ValueError('Robustness analysis is requested but where is not defined: weights or indicators? Please clarify.')
+            raise ValueError(
+                'Robustness analysis is requested but where is not defined: weights or indicators? Please clarify.')
         if (config.robustness["on_single_weights"] == "yes"
                 and config.robustness["on_all_weights"] == "yes"
                 and config.robustness["on_indicators"] == "no"):
             logger.error('Error Message', stack_info=True)
-            raise ValueError('Robustness analysis is requested on the weights: but on all or one at time? Please clarify.')
+            raise ValueError(
+                'Robustness analysis is requested on the weights: but on all or one at time? Please clarify.')
         if ((config.robustness["on_single_weights"] == "yes"
                 and config.robustness["on_all_weights"] == "yes"
                 and config.robustness["on_indicators"] == "yes") or
@@ -76,7 +83,8 @@ def main(input_config: dict, user_input_callback=input):
                and config.robustness["on_all_weights"] == "yes"
                and config.robustness["on_indicators"] == "yes")):
             logger.error('Error Message', stack_info=True)
-            raise ValueError('Robustness analysis is requested: but on weights or indicators? Please clarify.')
+            raise ValueError(
+                'Robustness analysis is requested: but on weights or indicators? Please clarify.')
         if ((config.robustness["on_single_weights"] == "yes"
                  and config.robustness["on_all_weights"] == "no"
                  and config.robustness["on_indicators"] == "no") or
@@ -93,7 +101,8 @@ def main(input_config: dict, user_input_callback=input):
             is_robustness_indicators = 1
             marginal_pdf = config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
             logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
-            logger.info("Read input matrix with uncertainty of the indicators at {}".format(config.input_matrix_path))
+            logger.info("Read input matrix with uncertainty of the indicators at {}".format(
+                config.input_matrix_path))
     num_exact = marginal_pdf.count('exact')
     if input_matrix.duplicated().any():
         logger.error('Error Message', stack_info=True)
@@ -101,7 +110,8 @@ def main(input_config: dict, user_input_callback=input):
     elif input_matrix.iloc[:,0].duplicated().any():
         logger.info('There are duplicated rows in the alternatives column.')
         while True:
-            user_input = user_input_callback("Do you want to continue (C) or stop (S)? ").strip().lower()
+            user_input = user_input_callback(
+                "Do you want to continue (C) or stop (S)? ").strip().lower()
             if user_input == 'c':
                 break
             elif user_input == 's':
@@ -109,44 +119,58 @@ def main(input_config: dict, user_input_callback=input):
             else:
                 print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
     logger.info("Alternatives are {}".format(input_matrix.iloc[:, 0].tolist()))
-    input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0],axis=1)  # drop first column with alternatives
-    input_matrix_no_alternatives = check_and_rescale_negative_indicators(input_matrix_no_alternatives)
+    input_matrix_no_alternatives = input_matrix.drop(
+        input_matrix.columns[0],axis=1)  # drop first column with alternatives
+    input_matrix_no_alternatives = check_and_rescale_negative_indicators(
+        input_matrix_no_alternatives)
     if is_robustness_indicators == 0:
-        num_unique = input_matrix_no_alternatives.nunique() # search for column with constant values
+        # search for column with constant values
+        num_unique = input_matrix_no_alternatives.nunique()
         cols_to_drop = num_unique[num_unique == 1].index
-        col_to_drop_indexes = input_matrix_no_alternatives.columns.get_indexer(cols_to_drop)
+        col_to_drop_indexes = input_matrix_no_alternatives.columns.get_indexer(
+            cols_to_drop)
         if any(value == 1 for value in num_unique):
-            logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
-            input_matrix_no_alternatives = input_matrix_no_alternatives.drop(cols_to_drop, axis=1)
+            logger.info(
+                "Indicators {} have been dropped because they carry no information".format(cols_to_drop))
+            input_matrix_no_alternatives = input_matrix_no_alternatives.drop(
+                cols_to_drop, axis=1)
         # every column of the input matrix represents an indicator
         num_indicators = input_matrix_no_alternatives.shape[1]
-        logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
+        logger.info("Number of alternatives: {}".format(
+            input_matrix_no_alternatives.shape[0]))
         logger.info("Number of indicators: {}".format(num_indicators))
     else: # matrix with uncertainty on indicators
         # non-exact and non-poisson indicators in the input matrix are associated to a column representing its mean
         # and a second column representing its std; uniform is also associated to two columns being its min and max values
-        num_non_exact_and_non_poisson = len(marginal_pdf) - marginal_pdf.count('exact') - marginal_pdf.count('poisson')
-        num_indicators = (input_matrix_no_alternatives.shape[1]-num_non_exact_and_non_poisson)
-        logger.info("Number of alternatives: {}".format(input_matrix_no_alternatives.shape[0]))
+        num_non_exact_and_non_poisson = len(
+            marginal_pdf) - marginal_pdf.count('exact') - marginal_pdf.count('poisson')
+        num_indicators = (
+            input_matrix_no_alternatives.shape[1]-num_non_exact_and_non_poisson)
+        logger.info("Number of alternatives: {}".format(
+            input_matrix_no_alternatives.shape[0]))
         logger.info("Number of indicators: {}".format(num_indicators))
         # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional
 
     if (is_robustness_indicators == 0):
-        if any(value == 1 for value in num_unique): polar = pop_indexed_elements(col_to_drop_indexes, polar)
+        if any(value == 1 for value in num_unique): polar = pop_indexed_elements(
+            col_to_drop_indexes, polar)
     logger.info("Polarities: {}".format(polar))
 
     if (is_robustness_weights == 0):
         fixed_weights = config.robustness["given_weights"]
-        if any(value == 1 for value in num_unique): fixed_weights = pop_indexed_elements(col_to_drop_indexes,fixed_weights)
+        if any(value == 1 for value in num_unique): fixed_weights = pop_indexed_elements(
+            col_to_drop_indexes,fixed_weights)
         norm_fixed_weights = check_norm_sum_weights(fixed_weights)
         logger.info("Weights: {}".format(fixed_weights))
         logger.info("Normalized weights: {}".format(norm_fixed_weights))
     else:
         if mc_runs == 0:
             logger.error('Error Message', stack_info=True)
-            raise ValueError('The number of MC runs should be larger than 0 for a robustness analysis')
+            raise ValueError(
+                'The number of MC runs should be larger than 0 for a robustness analysis')
         if config.robustness["on_single_weights"] == "no" and config.robustness["on_all_weights"] == "yes":
-            random_weights = randomly_sample_all_weights(num_indicators, mc_runs)
+            random_weights = randomly_sample_all_weights(
+                num_indicators, mc_runs)
             for weights in random_weights:
                 weights = check_norm_sum_weights(weights)
                 norm_random_weights.append(weights)
@@ -154,21 +178,25 @@ def main(input_config: dict, user_input_callback=input):
             i=0
             rand_weight_per_indicator = {}
             while i< num_indicators:
-                random_weights = randomly_sample_ix_weight(num_indicators, i, mc_runs)
+                random_weights = randomly_sample_ix_weight(
+                    num_indicators, i, mc_runs)
                 norm_random_weight = []
                 for weights in random_weights:
                     weights = check_norm_sum_weights(weights)
                     norm_random_weight.append(weights)
-                rand_weight_per_indicator["indicator_{}".format(i+1)] = norm_random_weight
+                rand_weight_per_indicator["indicator_{}".format(
+                    i+1)] = norm_random_weight
                 i=i+1
 
     # checks on the number of indicators, weights, and polarities
     if num_indicators != len(polar):
         logger.error('Error Message', stack_info=True)
-        raise ValueError('The number of polarities does not correspond to the no. of indicators')
+        raise ValueError(
+            'The number of polarities does not correspond to the no. of indicators')
     if ((config.robustness["on_all_weights"] == "no") and (num_indicators != len(config.robustness["given_weights"]))):
         logger.error('Error Message', stack_info=True)
-        raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
+        raise ValueError(
+            'The no. of fixed weights does not correspond to the no. of indicators')
     # ----------------------------
     # NO UNCERTAINTY OF INDICATORS
     # ----------------------------
@@ -177,7 +205,8 @@ def main(input_config: dict, user_input_callback=input):
         t = time.time()
         scores = pd.DataFrame()
         all_weights_means = pd.DataFrame()
-        mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix_no_alternatives)
+        mcda_no_uncert = MCDAWithoutRobustness(
+            config, input_matrix_no_alternatives)
         # normalize the indicators
         if is_sensitivity == "yes":
             normalized_indicators = mcda_no_uncert.normalize_indicators()
@@ -186,50 +215,81 @@ def main(input_config: dict, user_input_callback=input):
         # estimate the scores through aggregation
         if (config.robustness["robustness_on"] == "no"): # FIXED INDICATORS & WEIGHTS
             if is_sensitivity == "yes":
-                scores = mcda_no_uncert.aggregate_indicators(normalized_indicators, norm_fixed_weights)
+                scores = mcda_no_uncert.aggregate_indicators(
+                    normalized_indicators, norm_fixed_weights)
             else:
-                scores = mcda_no_uncert.aggregate_indicators(normalized_indicators, norm_fixed_weights, f_agg)
+                scores = mcda_no_uncert.aggregate_indicators(
+                    normalized_indicators, norm_fixed_weights, f_agg)
             normalized_scores = rescale_minmax(scores) # normalized scores
-            normalized_scores.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-        elif (config.robustness["on_all_weights"]  == "yes" and config.robustness["robustness_on"] == "yes"): # ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)
-            logger.info("All weights are randomly sampled from a uniform distribution")
+            normalized_scores.insert(
+                0, 'Alternatives', input_matrix.iloc[:, 0])
+        # ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)
+        elif (config.robustness["on_all_weights"]  == "yes" and config.robustness["robustness_on"] == "yes"):
+            logger.info(
+                "All weights are randomly sampled from a uniform distribution")
             all_weights_normalized = []
-            args_for_parallel_agg = [(lst, normalized_indicators) for lst in norm_random_weights]
+            args_for_parallel_agg = [(lst, normalized_indicators)
+                                      for lst in norm_random_weights]
             if is_sensitivity == "yes":
-                all_weights = parallelize_aggregation(args_for_parallel_agg) # rough scores coming from all runs
+                all_weights = parallelize_aggregation(
+                    args_for_parallel_agg) # rough scores coming from all runs
             else:
-                all_weights = parallelize_aggregation(args_for_parallel_agg, f_agg)
+                all_weights = parallelize_aggregation(
+                    args_for_parallel_agg, f_agg)
             for matrix in all_weights: # rescale the scores coming from all runs
-                normalized_matrix = rescale_minmax(matrix) # all score normalization
+                normalized_matrix = rescale_minmax(
+                    matrix) # all score normalization
                 all_weights_normalized.append(normalized_matrix)
-            all_weights_means, all_weights_stds = estimate_runs_mean_std(all_weights) # mean and std of rough scores
-            all_weights_means_normalized, all_weights_stds_normalized = estimate_runs_mean_std(all_weights_normalized) # mean and std of norm. scores
+            all_weights_means, all_weights_stds = estimate_runs_mean_std(
+                all_weights) # mean and std of rough scores
+            all_weights_means_normalized, all_weights_stds_normalized = estimate_runs_mean_std(
+                all_weights_normalized) # mean and std of norm. scores
             all_weights_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-            all_weights_means_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-            all_weights_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-        elif (config.robustness["on_single_weights"]  == "yes") and (config.robustness["robustness_on"] == "yes"): # ONE RANDOMLY SAMPLED WEIGHT A TIME (MCDA runs (num_samples * num_indicators) times)
-            logger.info("One weight at time is randomly sampled from a uniform distribution")
+            all_weights_means_normalized.insert(
+                0, 'Alternatives', input_matrix.iloc[:, 0])
+            all_weights_stds_normalized.insert(
+                0, 'Alternatives', input_matrix.iloc[:, 0])
+        # ONE RANDOMLY SAMPLED WEIGHT A TIME (MCDA runs (num_samples * num_indicators) times)
+        elif (config.robustness["on_single_weights"]  == "yes") and (config.robustness["robustness_on"] == "yes"):
+            logger.info(
+                "One weight at time is randomly sampled from a uniform distribution")
             scores_one_random_weight_normalized = []
             for index in range(num_indicators):
-                norm_one_random_weight = rand_weight_per_indicator["indicator_{}".format(index+1)] # 'norm' refers to all weights, which are normalized
-                args_for_parallel_agg = [(lst, normalized_indicators) for lst in norm_one_random_weight]
+                norm_one_random_weight = rand_weight_per_indicator["indicator_{}".format(
+                    index+1)] # 'norm' refers to all weights, which are normalized
+                args_for_parallel_agg = [(lst, normalized_indicators)
+                                          for lst in norm_one_random_weight]
                 if is_sensitivity == "yes":
-                    scores_one_random_weight = parallelize_aggregation(args_for_parallel_agg)
+                    scores_one_random_weight = parallelize_aggregation(
+                        args_for_parallel_agg)
                 else:
-                    scores_one_random_weight = parallelize_aggregation(args_for_parallel_agg, f_agg)
+                    scores_one_random_weight = parallelize_aggregation(
+                        args_for_parallel_agg, f_agg)
                 for matrix in scores_one_random_weight:
-                    matrix_normalized = rescale_minmax(matrix) # normalize scores
-                    scores_one_random_weight_normalized.append(matrix_normalized)
-                one_random_weight_means, one_random_weight_stds = estimate_runs_mean_std(scores_one_random_weight)
-                one_random_weight_means_normalized, one_random_weight_stds_normalized = estimate_runs_mean_std(scores_one_random_weight_normalized) # normalized mean and std
-                one_random_weight_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-                one_random_weight_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-                one_random_weight_means_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-                one_random_weight_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-                iterative_random_w_means["indicator_{}".format(index+1)] = one_random_weight_means # create output dictionaries
-                iterative_random_w_stds["indicator_{}".format(index+1)] = one_random_weight_stds
-                iterative_random_w_means_normalized["indicator_{}".format(index + 1)] = one_random_weight_means_normalized
-                iterative_random_w_stds_normalized["indicator_{}".format(index + 1)] = one_random_weight_stds_normalized
+                    matrix_normalized = rescale_minmax(
+                        matrix) # normalize scores
+                    scores_one_random_weight_normalized.append(
+                        matrix_normalized)
+                one_random_weight_means, one_random_weight_stds = estimate_runs_mean_std(
+                    scores_one_random_weight)
+                one_random_weight_means_normalized, one_random_weight_stds_normalized = estimate_runs_mean_std(
+                    scores_one_random_weight_normalized) # normalized mean and std
+                one_random_weight_means.insert(
+                    0, 'Alternatives', input_matrix.iloc[:, 0])
+                one_random_weight_stds.insert(
+                    0, 'Alternatives', input_matrix.iloc[:, 0])
+                one_random_weight_means_normalized.insert(
+                    0, 'Alternatives', input_matrix.iloc[:, 0])
+                one_random_weight_stds_normalized.insert(
+                    0, 'Alternatives', input_matrix.iloc[:, 0])
+                iterative_random_w_means["indicator_{}".format(
+                    index+1)] = one_random_weight_means # create output dictionaries
+                iterative_random_w_stds["indicator_{}".format(
+                    index+1)] = one_random_weight_stds
+                iterative_random_w_means_normalized["indicator_{}".format(
+                    index + 1)] = one_random_weight_means_normalized
+                iterative_random_w_stds_normalized["indicator_{}".format(
+                    index + 1)] = one_random_weight_stds_normalized
         # estimate the ranks
         if not scores.empty:
             ranks = scores.rank(pct=True)
@@ -245,42 +305,60 @@ def main(input_config: dict, user_input_callback=input):
         if not scores.empty:
             scores.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
             save_df(scores, config.output_file_path, 'scores.csv')
-            save_df(normalized_scores, config.output_file_path, 'normalized_scores.csv')
+            save_df(normalized_scores, config.output_file_path,
+                    'normalized_scores.csv')
             save_df(ranks, config.output_file_path, 'ranks.csv')
         elif not all_weights_means.empty:
-            all_weights_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+            all_weights_means.insert(
+                0, 'Alternatives', input_matrix.iloc[:, 0])
             save_df(all_weights_means, config.output_file_path, 'score_means.csv')
             save_df(all_weights_stds, config.output_file_path, 'score_stds.csv')
-            save_df(all_weights_means_normalized, config.output_file_path, 'score_means_normalized.csv')
+            save_df(all_weights_means_normalized,
+                    config.output_file_path, 'score_means_normalized.csv')
             #save_df(all_weights_stds_normalized, config.output_file_path, 'score_stds_normalized.csv')
             # the std on rescaled values is not statistically informative
             save_df(ranks, config.output_file_path, 'ranks.csv')
         elif not bool(iterative_random_w_means) == False:
-            save_dict(iterative_random_w_means,config.output_file_path, 'score_means.pkl')
-            save_dict(iterative_random_w_stds, config.output_file_path, 'score_stds.pkl')
-            save_dict(iterative_random_w_means_normalized, config.output_file_path, 'score_means_normalized.pkl')
+            save_dict(iterative_random_w_means,
+                      config.output_file_path, 'score_means.pkl')
+            save_dict(iterative_random_w_stds,
+                      config.output_file_path, 'score_stds.pkl')
+            save_dict(iterative_random_w_means_normalized,
+                      config.output_file_path, 'score_means_normalized.pkl')
             #save_dict(iterative_random_w_stds_normalized, config.output_file_path, 'score_stds_normalized.pkl')
             # the std on rescaled values is not statistically informative
-        save_config(input_config, config.output_file_path, 'configuration.json')
+        save_config(input_config, config.output_file_path,
+                    'configuration.json')
         # plots
         if not scores.empty:
-            plot_norm_scores = plot_norm_scores_without_uncert(normalized_scores)
-            save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores.png")
+            plot_norm_scores = plot_norm_scores_without_uncert(
+                normalized_scores)
+            save_figure(plot_norm_scores, config.output_file_path,
+                        "MCDA_norm_scores.png")
             plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
-            save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores.png")
+            save_figure(plot_no_norm_scores,
+                        config.output_file_path, "MCDA_rough_scores.png")
         elif not all_weights_means.empty:
-            plot_weight_mean_scores = plot_mean_scores(all_weights_means, all_weights_stds, "plot_std", "weights")
-            plot_weight_mean_scores_norm = plot_mean_scores(all_weights_means_normalized, all_weights_stds_normalized, "not_plot_std", "weights")
-            save_figure(plot_weight_mean_scores, config.output_file_path, "MCDA_rough_scores.png")
-            save_figure(plot_weight_mean_scores_norm, config.output_file_path, "MCDA_norm_scores.png")
+            plot_weight_mean_scores = plot_mean_scores(
+                all_weights_means, all_weights_stds, "plot_std", "weights")
+            plot_weight_mean_scores_norm = plot_mean_scores(
+                all_weights_means_normalized, all_weights_stds_normalized, "not_plot_std", "weights")
+            save_figure(plot_weight_mean_scores,
+                        config.output_file_path, "MCDA_rough_scores.png")
+            save_figure(plot_weight_mean_scores_norm,
+                        config.output_file_path, "MCDA_norm_scores.png")
         elif not bool(iterative_random_w_means) == False:
             images = []
             images_norm = []
             for index in range(num_indicators):
-                one_random_weight_means = iterative_random_w_means["indicator_{}".format(index + 1)]
-                one_random_weight_stds = iterative_random_w_stds["indicator_{}".format(index + 1)]
-                one_random_weight_means_normalized = iterative_random_w_means_normalized["indicator_{}".format(index + 1)]
-                one_random_weight_stds_normalized = iterative_random_w_stds_normalized["indicator_{}".format(index + 1)]
+                one_random_weight_means = iterative_random_w_means["indicator_{}".format(
+                    index + 1)]
+                one_random_weight_stds = iterative_random_w_stds["indicator_{}".format(
+                    index + 1)]
+                one_random_weight_means_normalized = iterative_random_w_means_normalized["indicator_{}".format(
+                    index + 1)]
+                one_random_weight_stds_normalized = iterative_random_w_stds_normalized["indicator_{}".format(
+                    index + 1)]
                 plot_weight_mean_scores = plot_mean_scores_iterative(one_random_weight_means,
                                                                     one_random_weight_stds,
                                                                     input_matrix_no_alternatives.columns, index, "plot_std")
@@ -289,8 +367,10 @@ def main(input_config: dict, user_input_callback=input):
                                                                     input_matrix_no_alternatives.columns, index, "not_plot_std")
                 images.append(plot_weight_mean_scores)
                 images_norm.append(plot_weight_mean_scores_norm)
-            combine_images(images, config.output_file_path, "MCDA_one_weight_randomness_rough_scores.png")
-            combine_images(images_norm, config.output_file_path, "MCDA_one_weight_randomness_norm_scores.png")
+            combine_images(images, config.output_file_path,
+                           "MCDA_one_weight_randomness_rough_scores.png")
+            combine_images(images_norm, config.output_file_path,
+                           "MCDA_one_weight_randomness_norm_scores.png")
         logger.info("ProMCDA finished calculations: check the output files")
         elapsed = time.time() - t
         logger.info("All calculations finished in seconds {}".format(elapsed))
@@ -302,76 +382,111 @@ def main(input_config: dict, user_input_callback=input):
         # cores = config.monte_carlo_sampling["num_cores"] # never used yet
         if (mc_runs > 0):
             if (mc_runs < 1000):
-                logger.info("The number of Monte-Carlo runs is only {}".format(mc_runs))
-                logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
+                logger.info(
+                    "The number of Monte-Carlo runs is only {}".format(mc_runs))
+                logger.info(
+                    "A meaningful number of Monte-Carlo runs is equal or larger than 1000")
                 while True:
-                    user_input = user_input_callback("Do you want to continue (C) or stop (S)? ").strip().lower()
+                    user_input = user_input_callback(
+                        "Do you want to continue (C) or stop (S)? ").strip().lower()
                     if user_input == 'c':
                         break
                     elif user_input == 's':
                         raise UserStoppedInfo()
                     else:
-                        print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
+                        print(
+                            "Invalid input. Please enter 'C' to continue or 'S' to stop.")
             logger.info("Start ProMCDA with uncertainty on the indicators")
-            are_parameters_correct = check_parameters_pdf(input_matrix_no_alternatives, config)
+            are_parameters_correct = check_parameters_pdf(
+                input_matrix_no_alternatives, config)
             if any(not value for value in are_parameters_correct):
-                logger.info('There is a problem with the parameters given in the input matrix with uncertainties. Check your data!')
-                logger.info('Either standard deviation values of normal/lognormal distributed indicators are larger than their means,')
-                logger.info('or max. values of uniform distributed indicators are smaller than their min. values.')
-                logger.info('If you continue, the negative values will be rescaled internally to a positive range.')
+                logger.info(
+                    'There is a problem with the parameters given in the input matrix with uncertainties. Check your data!')
+                logger.info(
+                    'Either standard deviation values of normal/lognormal distributed indicators are larger than their means,')
+                logger.info(
+                    'or max. values of uniform distributed indicators are smaller than their min. values.')
+                logger.info(
+                    'If you continue, the negative values will be rescaled internally to a positive range.')
                 while True:
-                    user_input = user_input_callback("Do you want to continue (C) or stop (S)? ").strip().lower()
+                    user_input = user_input_callback(
+                        "Do you want to continue (C) or stop (S)? ").strip().lower()
                     if user_input == 'c':
                         break
                     elif user_input == 's':
                         raise UserStoppedInfo()
                     else:
-                        print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
+                        print(
+                            "Invalid input. Please enter 'C' to continue or 'S' to stop.")
             t = time.time()
-            mcda_with_uncert = MCDAWithRobustness(config, input_matrix_no_alternatives)
-            n_random_input_matrices = mcda_with_uncert.create_n_randomly_sampled_matrices() # N random matrices
+            mcda_with_uncert = MCDAWithRobustness(
+                config, input_matrix_no_alternatives)
+            # N random matrices
+            n_random_input_matrices = mcda_with_uncert.create_n_randomly_sampled_matrices()
             if is_sensitivity == "yes":
-                n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar) # parallel normalization
+                n_normalized_input_matrices = parallelize_normalization(
+                    n_random_input_matrices, polar) # parallel normalization
             else:
-                n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar, f_norm)
-            args_for_parallel_agg = [(norm_fixed_weights, normalized_indicators) for normalized_indicators in n_normalized_input_matrices] # weights are fixed
+                n_normalized_input_matrices = parallelize_normalization(
+                    n_random_input_matrices, polar, f_norm)
+            args_for_parallel_agg = [(norm_fixed_weights, normalized_indicators)
+                                      for normalized_indicators in n_normalized_input_matrices] # weights are fixed
             if is_sensitivity == "yes":
-                all_indicators = parallelize_aggregation(args_for_parallel_agg)  # rough scores coming from all runs with random indicator values
+                # rough scores coming from all runs with random indicator values
+                all_indicators = parallelize_aggregation(args_for_parallel_agg)
             else:
-                all_indicators = parallelize_aggregation(args_for_parallel_agg, f_agg)
+                all_indicators = parallelize_aggregation(
+                    args_for_parallel_agg, f_agg)
             for matrix in all_indicators:  # rescale the scores coming from all runs
-                normalized_matrix = rescale_minmax(matrix)  # all score normalization
+                normalized_matrix = rescale_minmax(
+                    matrix)  # all score normalization
                 all_indicators_normalized.append(normalized_matrix)
-            all_indicators_means, all_indicators_stds = estimate_runs_mean_std(all_indicators)  # mean and std of rough scores
-            all_indicators_means_normalized, all_indicators_stds_normalized = estimate_runs_mean_std(all_indicators_normalized)  # mean and std of norm. scores
+            all_indicators_means, all_indicators_stds = estimate_runs_mean_std(
+                all_indicators)  # mean and std of rough scores
+            all_indicators_means_normalized, all_indicators_stds_normalized = estimate_runs_mean_std(
+                all_indicators_normalized)  # mean and std of norm. scores
             # estimate the ranks
             ranks = all_indicators_means.rank(pct=True)
             # re-insert the Alternatives column
-            all_indicators_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-            all_indicators_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-            all_indicators_means_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-            all_indicators_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+            all_indicators_means.insert(
+                0, 'Alternatives', input_matrix.iloc[:, 0])
+            all_indicators_stds.insert(
+                0, 'Alternatives', input_matrix.iloc[:, 0])
+            all_indicators_means_normalized.insert(
+                0, 'Alternatives', input_matrix.iloc[:, 0])
+            all_indicators_stds_normalized.insert(
+                0, 'Alternatives', input_matrix.iloc[:, 0])
             ranks.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
             # save output files
             logger.info("Saving results in {}".format(config.output_file_path))
             check_path_exists(config.output_file_path)
-            save_df(all_indicators_means, config.output_file_path, 'score_means.csv')
-            save_df(all_indicators_stds, config.output_file_path, 'score_stds.csv')
-            save_df(all_indicators_means_normalized, config.output_file_path, 'score_means_normalized.csv')
+            save_df(all_indicators_means,
+                    config.output_file_path, 'score_means.csv')
+            save_df(all_indicators_stds,
+                    config.output_file_path, 'score_stds.csv')
+            save_df(all_indicators_means_normalized,
+                    config.output_file_path, 'score_means_normalized.csv')
             save_df(ranks, config.output_file_path, 'ranks.csv')
-            save_config(input_config, config.output_file_path, 'configuration.json')
+            save_config(input_config, config.output_file_path,
+                        'configuration.json')
             # plots
-            plot_indicators_mean_scores = plot_mean_scores(all_indicators_means, all_indicators_stds, "plot_std", "indicators")
+            plot_indicators_mean_scores = plot_mean_scores(
+                all_indicators_means, all_indicators_stds, "plot_std", "indicators")
             plot_indicators_mean_scores_norm = plot_mean_scores(all_indicators_means_normalized,
                                                                 all_indicators_stds_normalized, "not_plot_std", "indicators")
-            save_figure(plot_indicators_mean_scores, config.output_file_path, "MCDA_rough_scores.png")
-            save_figure(plot_indicators_mean_scores_norm, config.output_file_path, "MCDA_norm_scores.png")
-            logger.info("ProMCDA finished calculations: check the output files")
+            save_figure(plot_indicators_mean_scores,
+                        config.output_file_path, "MCDA_rough_scores.png")
+            save_figure(plot_indicators_mean_scores_norm,
+                        config.output_file_path, "MCDA_norm_scores.png")
+            logger.info(
+                "ProMCDA finished calculations: check the output files")
             elapsed = time.time() - t
-            logger.info("All calculations finished in seconds {}".format(elapsed))
+            logger.info(
+                "All calculations finished in seconds {}".format(elapsed))
         else:
             logger.error('Error Message', stack_info=True)
-            raise ValueError('The number of MC runs should be larger than 0 for a robustness analysis')
+            raise ValueError(
+                'The number of MC runs should be larger than 0 for a robustness analysis')
 
 if __name__ == '__main__':
     config_path = parse_args()

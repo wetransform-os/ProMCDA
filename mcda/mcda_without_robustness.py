@@ -38,13 +38,15 @@ class MCDAWithoutRobustness():
         :return: a dictionary that contains the normalized values of each indicator per normalization method.
         Normalization functions implemented: minmax; target; standardized; rank
         """
-        norm = Normalization(self._input_matrix, self._config.polarity_for_each_indicator)
+        norm = Normalization(self._input_matrix,
+                             self._config.polarity_for_each_indicator)
 
         normalized_indicators = {}
 
         if method is None or method == 'minmax':
             indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
-            indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1))  # for aggregation "geometric" and "harmonic" that accept no 0
+            # for aggregation "geometric" and "harmonic" that accept no 0
+            indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1))
             normalized_indicators["minmax_no0"] = indicators_scaled_minmax_no0
             normalized_indicators["minmax_01"] = indicators_scaled_minmax_01
         if method is None or method == 'target':
@@ -54,8 +56,10 @@ class MCDAWithoutRobustness():
             normalized_indicators["target_no0"] = indicators_scaled_target_no0
             normalized_indicators["target_01"] = indicators_scaled_target_01
         if method is None or method == 'standardized':
-            indicators_scaled_standardized_any = norm.standardized(feature_range=('-inf', '+inf'))
-            indicators_scaled_standardized_no0 = norm.standardized(feature_range=(0.1, '+inf'))
+            indicators_scaled_standardized_any = norm.standardized(
+                feature_range=('-inf', '+inf'))
+            indicators_scaled_standardized_no0 = norm.standardized(
+                feature_range=(0.1, '+inf'))
             normalized_indicators["standardized_any"] = indicators_scaled_standardized_any
             normalized_indicators["standardized_no0"] = indicators_scaled_standardized_no0
         if method is None or method == 'rank':
@@ -63,7 +67,8 @@ class MCDAWithoutRobustness():
             normalized_indicators["rank"] = indicators_scaled_rank
         if method != None and method not in ['minmax', 'target', 'standardized', 'rank']:
             logger.error('Error Message', stack_info=True)
-            raise ValueError('The selected normalization method is not supported')
+            raise ValueError(
+                'The selected normalization method is not supported')
 
         return normalized_indicators
 
@@ -110,10 +115,12 @@ class MCDAWithoutRobustness():
                     col_names_method.append("harm-" + key)
             if method is None or method == 'minimum':
                 if key == "standardized_any":
-                    scores_minimum[key] = pd.Series(agg.minimum(self.normalized_indicators["standardized_any"]))
+                    scores_minimum[key] = pd.Series(agg.minimum(
+                        self.normalized_indicators["standardized_any"]))
                     col_names_method.append("min-" + key)
 
-        dict_list = [scores_weighted_sum, scores_geometric, scores_harmonic, scores_minimum]
+        dict_list = [scores_weighted_sum, scores_geometric,
+            scores_harmonic, scores_minimum]
 
         for d in dict_list:
             if d:

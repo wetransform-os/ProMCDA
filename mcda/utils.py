@@ -17,7 +17,8 @@ import os
 import io
 
 # logging.basicConfig(level=logging.WARNING)
-logging.getLogger('PIL').setLevel(logging.WARNING)  # suppress the debug messages produced by PIL internal logging
+# suppress the debug messages produced by PIL internal logging
+logging.getLogger('PIL').setLevel(logging.WARNING)
 
 
 def read_matrix(input_matrix_path: str) -> pd.DataFrame():
@@ -38,7 +39,8 @@ def check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.Data
     if (input_matrix < 0).any().any():
         scaler = MinMaxScaler()
         scaled_data = scaler.fit_transform(input_matrix)
-        scaled_matrix = pd.DataFrame(scaled_data, columns=input_matrix.columns, index=input_matrix.index)
+        scaled_matrix = pd.DataFrame(
+            scaled_data, columns=input_matrix.columns, index=input_matrix.index)
         return scaled_matrix
     else:
         return input_matrix
@@ -178,9 +180,11 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict) -> List[bool]
             j += 2
 
             if pdf_uniform == 0:  # normal/lognormal
-                satisfies_condition = all(x >= y for x, y in zip(param1, param2))  # check param1 > param2 (mean > std=
+                satisfies_condition = all(x >= y for x, y in zip(
+                    param1, param2))  # check param1 > param2 (mean > std=
             else:  # uniform
-                satisfies_condition = all(x <= y for x, y in zip(param1, param2))  # check param2 > param1 (max > min)
+                satisfies_condition = all(x <= y for x, y in zip(
+                    param1, param2))  # check param2 > param1 (max > min)
 
         elif pdf_exact == 1 or pdf_poisson == 1:  # exact PDF or Poisson distribution
             satisfies_condition = True
@@ -229,7 +233,8 @@ def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
 
                       xaxis=dict(
                           tickmode="array",
-                          tickvals=np.arange(0, len(scores['Alternatives'][:])),
+                          tickvals=np.arange(
+                              0, len(scores['Alternatives'][:])),
                           ticktext=scores['Alternatives'][:],
                           tickangle=45),
                       yaxis=dict(
@@ -258,7 +263,8 @@ def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
 
                       xaxis=dict(
                           tickmode="array",
-                          tickvals=np.arange(0, len(scores['Alternatives'][:])),
+                          tickvals=np.arange(
+                              0, len(scores['Alternatives'][:])),
                           ticktext=scores['Alternatives'][:],
                           tickangle=45)
                       )
@@ -297,7 +303,8 @@ def plot_mean_scores(all_means: pd.DataFrame, all_stds: pd.DataFrame, plot_std: 
 
                       xaxis=dict(
                           tickmode="array",
-                          tickvals=np.arange(0, len(all_means['Alternatives'][:])),
+                          tickvals=np.arange(
+                              0, len(all_means['Alternatives'][:])),
                           ticktext=all_means['Alternatives'][:],
                           tickangle=45)
                       )
@@ -316,7 +323,8 @@ def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, all_weights_stds
                 name=all_weights_means.columns[i + 1],
                 x=all_weights_means['Alternatives'][:].values.tolist(),
                 y=all_weights_means.iloc[:, i + 1],
-                error_y=dict(type='data', array=all_weights_stds.iloc[:, i + 1])
+                error_y=dict(
+                    type='data', array=all_weights_stds.iloc[:, i + 1])
             ))
         else:
             fig.add_trace(go.Bar(
@@ -328,12 +336,14 @@ def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, all_weights_stds
         i = i + 1
     fig.update_traces(showlegend=True)
     fig.update_layout(barmode='group', height=600, width=1000,
-                      title="MCDA analysis with random sampled weight for the indicator '{}'".format(indicators[index]),
+                      title="MCDA analysis with random sampled weight for the indicator '{}'".format(
+                          indicators[index]),
                       title_font_size=22,
 
                       xaxis=dict(
                           tickmode="array",
-                          tickvals=np.arange(0, len(all_weights_means['Alternatives'][:])),
+                          tickvals=np.arange(
+                              0, len(all_weights_means['Alternatives'][:])),
                           ticktext=all_weights_means['Alternatives'][:],
                           tickangle=45)
                       )

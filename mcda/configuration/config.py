@@ -24,10 +24,11 @@ class Config(object):
                    'monte_carlo_sampling',
                    'output_path']
 
-    _list_values: list[str] = ['marginal_distribution_for_each_indicator', 'polarity_for_each_indicator']
+    _list_values: list[str] = [
+        'marginal_distribution_for_each_indicator', 'polarity_for_each_indicator']
 
     _str_values = ['input_matrix_path', 'output_path', 'sensitivity_on', 'normalization', 'aggregation',
-                   'robustness_on', 'on_single_weights', 'on_all_weights','given_weights', 'on_indicators']
+                   'robustness_on', 'on_single_weights', 'on_all_weights', 'given_weights', 'on_indicators']
 
     _int_values = ['monte_carlo_runs', 'num_cores']
 
@@ -35,7 +36,7 @@ class Config(object):
 
     _keys_of_dict_values = {'sensitivity': ['sensitivity_on', 'normalization', 'aggregation'],
                             'robustness': ['robustness_on', 'on_single_weights', 'on_all_weights',
-                                            'given_weights', 'on_indicators'],
+                                           'given_weights', 'on_indicators'],
                             'monte_carlo_sampling': ['monte_carlo_runs', 'num_cores',
                                                      'marginal_distribution_for_each_indicator']}
 
@@ -50,9 +51,10 @@ class Config(object):
         int_values = self._int_values
         list_values = self._list_values
         dict_values = self._dict_values
-        #keys_of_dict_values = self._keys_of_dict_values
+        # keys_of_dict_values = self._keys_of_dict_values
 
-        self._validate(input_config, valid_keys, str_values, int_values, list_values, dict_values)
+        self._validate(input_config, valid_keys, str_values,
+                       int_values, list_values, dict_values)
         self._config = copy.deepcopy(input_config)
 
     def _validate(self, input_config, valid_keys, str_values, int_values, list_values, dict_values):
@@ -65,21 +67,25 @@ class Config(object):
 
             if key in str_values:
                 if not isinstance(input_config[key], str):
-                    raise TypeError("value of {} in the input config is not a string".format(key))
+                    raise TypeError(
+                        "value of {} in the input config is not a string".format(key))
 
             if key in int_values:
                 if not isinstance(input_config[key], int):
-                    raise TypeError("value of {} in the input config is not an integer".format(key))
+                    raise TypeError(
+                        "value of {} in the input config is not an integer".format(key))
 
             if key in list_values:
                 if not isinstance(input_config[key], list):
-                    raise TypeError("value of {} in the input config is not a list".format(key))
+                    raise TypeError(
+                        "value of {} in the input config is not a list".format(key))
 
             if key in dict_values:
                 if not isinstance(input_config[key], dict):
-                    raise TypeError("value of {} in the input config is not a dictionary".format(key))
-                Config.check_dict_keys(input_config[key], Config._keys_of_dict_values[key])
-
+                    raise TypeError(
+                        "value of {} in the input config is not a dictionary".format(key))
+                Config.check_dict_keys(
+                    input_config[key], Config._keys_of_dict_values[key])
 
     def get_property(self, property_name: str):
         return self._config[property_name]
@@ -118,4 +124,5 @@ class Config(object):
     def check_key(dic: dict, key: str):
         """Check if a key is in a dict"""
         if key not in dic.keys():
-            raise KeyError("The key = {} is not present in dictionary: {}".format(key, dic))
+            raise KeyError(
+                "The key = {} is not present in dictionary: {}".format(key, dic))

@@ -49,7 +49,8 @@ class MCDAWithRobustness():
         """
         alternatives, num_runs = data_list[0].shape
 
-        transposed_list = [pd.DataFrame(index=range(alternatives)) for _ in range(num_runs)]
+        transposed_list = [pd.DataFrame(index=range(
+            alternatives)) for _ in range(num_runs)]
 
         for i, df in enumerate(data_list):
             for n in range(num_runs):
@@ -105,17 +106,23 @@ class MCDAWithRobustness():
             distribution_type = marginal_pdf[i]
 
             if distribution_type == 'exact':
-                samples = self.repeat_series_to_create_df(parameter1, num_runs).T
+                samples = self.repeat_series_to_create_df(
+                    parameter1, num_runs).T
             elif distribution_type == 'normal':
-                samples = np.random.normal(loc=parameter1, scale=parameter2, size=(num_runs, len(parameter1)))
+                samples = np.random.normal(
+                    loc=parameter1, scale=parameter2, size=(num_runs, len(parameter1)))
             elif distribution_type == 'uniform':
-                samples = np.random.uniform(low=parameter1, high=parameter2, size=(num_runs, len(parameter1)))
+                samples = np.random.uniform(
+                    low=parameter1, high=parameter2, size=(num_runs, len(parameter1)))
             elif distribution_type == 'lnorm':
-                samples = np.random.lognormal(mean=parameter1, sigma=parameter2, size=(num_runs, len(parameter1)))
+                samples = np.random.lognormal(
+                    mean=parameter1, sigma=parameter2, size=(num_runs, len(parameter1)))
             elif distribution_type == 'poisson':
-                samples = np.random.poisson(lam=parameter1, size=(num_runs, len(parameter1)))
+                samples = np.random.poisson(
+                    lam=parameter1, size=(num_runs, len(parameter1)))
             else:
-                raise ValueError(f"Invalid marginal distribution type: {distribution_type}")
+                raise ValueError(
+                    f"Invalid marginal distribution type: {distribution_type}")
 
             # check if any sample is negative and rescale btw 0 and 1
             if (samples < 0).any().any():

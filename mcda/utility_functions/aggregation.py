@@ -57,9 +57,11 @@ class Aggregation(object):
 
         if (norm_indicators <= 0).any().any():
             logger.error('Error Message', stack_info=True)
-            raise ValueError('Weighted geometric mean cannot work with non-positive values in normalized indicators')
+            raise ValueError(
+                'Weighted geometric mean cannot work with non-positive values in normalized indicators')
         else:
-            scores = stats.mstats.gmean(norm_indicators.astype(float), axis=1, weights=self.weights)
+            scores = stats.mstats.gmean(norm_indicators.astype(
+                float), axis=1, weights=self.weights)
 
         return scores
 
@@ -78,7 +80,8 @@ class Aggregation(object):
 
         if (norm_indicators == 0).any().any():
             logger.error('Error Message', stack_info=True)
-            raise ValueError('With 0 values normalized indicators, the weighted harmonic mean will output 0s')
+            raise ValueError(
+                'With 0 values normalized indicators, the weighted harmonic mean will output 0s')
         else:
             scores = stats.hmean(norm_indicators, axis=1, weights=self.weights)
 

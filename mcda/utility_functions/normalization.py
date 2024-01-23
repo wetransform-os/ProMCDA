@@ -62,7 +62,8 @@ class Normalization(object):
         if (feature_range == (0, 1)):
             scaled_data = (max_val - data) / (max_val - min_val)
         else:
-            scaled_data = (max_val - data) / (max_val - min_val) * (1 - 0.1) + 0.1
+            scaled_data = (max_val - data) / \
+                           (max_val - min_val) * (1 - 0.1) + 0.1
 
         return scaled_data
 
@@ -83,7 +84,8 @@ class Normalization(object):
 
         # for + polarity
         x = indicators_plus.to_numpy()  # returns a numpy array
-        min_max_scaler = preprocessing.MinMaxScaler(feature_range=feature_range, copy=False)
+        min_max_scaler = preprocessing.MinMaxScaler(
+            feature_range=feature_range, copy=False)
         x_scaled = min_max_scaler.fit_transform(x)
         indicators_scaled_minmax_plus = pd.DataFrame(x_scaled)
 
@@ -93,7 +95,8 @@ class Normalization(object):
         indicators_scaled_minmax_minus = pd.DataFrame(y_scaled)
 
         # merge back scaled values for positive and negative polarities
-        indicators_scaled_minmax = pd.DataFrame(index=range(original_shape[0]), columns=range(original_shape[1]))
+        indicators_scaled_minmax = pd.DataFrame(index=range(
+            original_shape[0]), columns=range(original_shape[1]))
         for i, index_p in enumerate(ind_plus): indicators_scaled_minmax.iloc[:,
                                                index_p] = indicators_scaled_minmax_plus.iloc[:, i]
         for j, index_n in enumerate(ind_minus): indicators_scaled_minmax.iloc[:,
@@ -116,8 +119,10 @@ class Normalization(object):
         indicators_minus = pol[3]
 
         if (feature_range == (0, 1)):
-            indicators_scaled_target_plus = indicators_plus / indicators_plus.max(axis=0)  # for + polarity
-            indicators_scaled_target_minus = 1 - indicators_minus / indicators_minus.max(axis=0)   # for - polarity
+            indicators_scaled_target_plus = indicators_plus / \
+                indicators_plus.max(axis=0)  # for + polarity
+            indicators_scaled_target_minus = 1 - indicators_minus / \
+                indicators_minus.max(axis=0)   # for - polarity
         else:
             indicators_scaled_target_plus = indicators_plus / indicators_plus.max(axis=0) * (
                         1 - 0.1) + 0.1  # for + polarity
@@ -125,7 +130,8 @@ class Normalization(object):
                         1 - 0.1) + 0.1  # for - polarity
 
         # merge back scaled values for positive and negative polarities
-        indicators_scaled_target = pd.DataFrame(index=range(original_shape[0]), columns=range(original_shape[1]))
+        indicators_scaled_target = pd.DataFrame(index=range(
+            original_shape[0]), columns=range(original_shape[1]))
         for i, index_p in enumerate(ind_plus): indicators_scaled_target.iloc[:,
                                                index_p] = indicators_scaled_target_plus.iloc[:, i]
         for j, index_n in enumerate(ind_minus): indicators_scaled_target.iloc[:,
@@ -153,7 +159,8 @@ class Normalization(object):
             axis=0)  # for - polarity
 
         # merge back scaled values for positive and negative polarities
-        indicators_scaled_standardized = pd.DataFrame(index=range(original_shape[0]), columns=range(original_shape[1]))
+        indicators_scaled_standardized = pd.DataFrame(index=range(
+            original_shape[0]), columns=range(original_shape[1]))
         for i, index_p in enumerate(ind_plus): indicators_scaled_standardized.iloc[:,
                                                index_p] = indicators_scaled_stand_plus.iloc[:, i]
         for j, index_n in enumerate(ind_minus): indicators_scaled_standardized.iloc[:,
@@ -180,11 +187,14 @@ class Normalization(object):
         indicators_plus = pol[2]
         indicators_minus = pol[3]
 
-        indicators_scaled_rank_plus = indicators_plus.rank(axis=0)  # for + polarity
-        indicators_scaled_rank_minus = (-1 * indicators_minus).rank(axis=0)  # for - polarity
+        indicators_scaled_rank_plus = indicators_plus.rank(
+            axis=0)  # for + polarity
+        # for - polarity
+        indicators_scaled_rank_minus = (-1 * indicators_minus).rank(axis=0)
 
         # merge back scaled values for positive and negative polarities
-        indicators_scaled_rank = pd.DataFrame(index=range(original_shape[0]), columns=range(original_shape[1]))
+        indicators_scaled_rank = pd.DataFrame(index=range(
+            original_shape[0]), columns=range(original_shape[1]))
         for i, index_p in enumerate(ind_plus): indicators_scaled_rank.iloc[:,
                                                index_p] = indicators_scaled_rank_plus.iloc[:, i]
         for j, index_n in enumerate(ind_minus): indicators_scaled_rank.iloc[:,
