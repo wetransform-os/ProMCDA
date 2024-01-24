@@ -1,17 +1,17 @@
-import sys
 import copy
-import logging
-from mcda.utils import *
+import sys
 from typing import List
-import pandas as pd
-import numpy as np
 
+import numpy as np
+import pandas as pd
 
 from mcda.configuration.config import Config
+from mcda.utils import *
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("MCDA with sensitivity")
+
 
 class MCDAWithRobustness():
     """
@@ -29,7 +29,7 @@ class MCDAWithRobustness():
         self._input_matrix = copy.deepcopy(input_matrix)
 
     @staticmethod
-    def repeat_series_to_create_df(initial_series: pd.Series, num_runs:int) -> pd.DataFrame:
+    def repeat_series_to_create_df(initial_series: pd.Series, num_runs: int) -> pd.DataFrame:
         """
         This is a helper function to create a (AxN) df by concatenating
         a series of values of length A for N times. This reproduces a fake random
@@ -37,7 +37,7 @@ class MCDAWithRobustness():
         """
 
         data_list = [initial_series[:] for _ in range(num_runs)]
-        out_df = pd.DataFrame(data_list,index=range(num_runs)).T
+        out_df = pd.DataFrame(data_list, index=range(num_runs)).T
 
         return out_df
 
@@ -54,7 +54,7 @@ class MCDAWithRobustness():
 
         for i, df in enumerate(data_list):
             for n in range(num_runs):
-                transposed_list[n][i] = df.iloc[:,n]
+                transposed_list[n][i] = df.iloc[:, n]
 
         return transposed_list
 
@@ -79,14 +79,14 @@ class MCDAWithRobustness():
         is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
         is_poisson_pdf_mask = check_if_pdf_is_poisson(marginal_pdf)
 
-        num_runs = self._config.monte_carlo_sampling["monte_carlo_runs"] # N
-        input_matrix = self._input_matrix # (AxnI)
+        num_runs = self._config.monte_carlo_sampling["monte_carlo_runs"]  # N
+        input_matrix = self._input_matrix  # (AxnI)
 
         np.random.seed(42)
 
-        sampled_matrices = [] # list long I
+        sampled_matrices = []  # list long I
 
-        j=0
+        j = 0
         for i, pdf_type in enumerate(zip(is_exact_pdf_mask, is_poisson_pdf_mask)):
             pdf_exact, pdf_poisson = pdf_type
             par1_position = j
@@ -129,7 +129,7 @@ class MCDAWithRobustness():
                 samples -= samples.min()
                 samples /= samples.max()
 
-            sampled_df = pd.DataFrame(samples.transpose()) # (AxN)
+            sampled_df = pd.DataFrame(samples.transpose())  # (AxN)
             sampled_matrices.append(sampled_df)
 
         list_random_matrix = self.convert_list(sampled_matrices)

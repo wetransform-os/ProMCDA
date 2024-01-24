@@ -165,7 +165,7 @@ window.buildTabsets = function(tocID) {
       id = id.replace(/[.\/?&!#<>]/g, '').replace(/\s/g, '_');
       tab.attr('id', id);
 
-      // get the heading element within it, grab it's text, then remove it
+      // get the heading element within it, grab its text, then remove it
       var heading = tab.find('h' + tabLevel + ':first');
       var headingText = heading.html();
       heading.remove();
@@ -414,7 +414,7 @@ and weights.</p>
 literature. In <em>R</em>, there is an existing package called
 <code>COINr</code>, which allows the user to develop CIs by including
 all common operations, from criteria selection, data treatment,
-normalization and aggregation, and sensitivity analysis (<span class="citation">Becker et al. (2022)</span>). There are also other
+normalization and aggregation, and sensitivity analysis (<span class="citation">Becker et al. (2022)</span>). There are other
 packages in R, such as <code>compind</code>, that focus on weighting and
 aggregation (<span class="citation">Fusco, Vidoli, and Sahoo
 (2018)</span>). In <em>MATLAB</em>, there are some packages dedicated to

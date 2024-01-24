@@ -1,20 +1,20 @@
-from sklearn.preprocessing import MinMaxScaler
-from sklearn import preprocessing
-import plotly.graph_objects as go
-from datetime import datetime
-from typing import List
-from typing import Tuple
-import plotly.io as pio
-from PIL import Image
-import pandas as pd
-import numpy as np
-import logging
 import argparse
+import io
+import json
+import logging
+import os
 import pickle
 import random
-import json
-import os
-import io
+from datetime import datetime
+from typing import List
+
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.io as pio
+from PIL import Image
+from sklearn import preprocessing
+from sklearn.preprocessing import MinMaxScaler
 
 # logging.basicConfig(level=logging.WARNING)
 # suppress the debug messages produced by PIL internal logging

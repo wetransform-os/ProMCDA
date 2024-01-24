@@ -2,6 +2,7 @@ import copy
 from typing import List, Dict, Any
 
 
+# noinspection PyMethodMayBeStatic
 class Config(object):
     """
     Class Configuration

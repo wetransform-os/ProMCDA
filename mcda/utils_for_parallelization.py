@@ -54,18 +54,18 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
             feature_range=(0.1, '+inf'))
     if method is None or method == 'rank':
         indicators_scaled_rank = norm.rank()
-    if method != None and method not in ['minmax', 'target', 'standardized', 'rank']:
+    if method is not None and method not in ['minmax', 'target', 'standardized', 'rank']:
         logger.error('Error Message', stack_info=True)
         raise ValueError('The selected normalization method is not supported')
 
     normalized_indicators = {"standardized_any": indicators_scaled_standardized_any,
                              "standardized_no0": indicators_scaled_standardized_no0,
-                             "minmax_01":  indicators_scaled_minmax_01,
+                             "minmax_01": indicators_scaled_minmax_01,
                              "minmax_no0": indicators_scaled_minmax_no0,
-                             "target_01":  indicators_scaled_target_01,
+                             "target_01": indicators_scaled_target_01,
                              "target_no0": indicators_scaled_target_no0,
-                             "rank":  indicators_scaled_rank
-                            }
+                             "rank": indicators_scaled_rank
+                             }
 
     normalized_indicators = {
         k: v for k, v in normalized_indicators.items() if v is not None}
@@ -84,7 +84,7 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, m
     col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
                  'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
                  'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
-                 'min-standardized_any'] # same order as in the following loop
+                 'min-standardized_any']  # same order as in the following loop
     for key, values in normalized_indicators.items():
         if method is None or method == 'weighted_sum':
             # ws goes only with some specific normalizations
@@ -108,7 +108,7 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, m
                 col_names_method.append("min-" + key)
 
     dict_list = [scores_weighted_sum, scores_geometric,
-        scores_harmonic, scores_minimum]
+                 scores_harmonic, scores_minimum]
 
     for d in dict_list:
         if d:

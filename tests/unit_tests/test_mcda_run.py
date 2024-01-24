@@ -90,26 +90,26 @@ class TestMCDA(unittest.TestCase):
 
     @staticmethod
     def get_correct_config():
-         return {
-             "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
-             "polarity_for_each_indicator": ["-", "-", "+", "+", "-", "+"],
-             "sensitivity": {
-                 "sensitivity_on": "no",
-                 "normalization": "minmax",
-                 "aggregation": "weighted_sum"},
-             "robustness": {
-                 "robustness_on": "yes",
-                 "on_single_weights": "no",
-                 "on_all_weights": "no",
-                 "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-                 "on_indicators": "yes"},
-             "monte_carlo_sampling": {
-                 "monte_carlo_runs": 1000,
-                 "num_cores": 1,
-                 "marginal_distribution_for_each_indicator": ['uniform', 'exact', 'normal', 'normal', 'exact',
-                                                              'lnorm']},
-             "output_path": "/path/to/output"
-         }
+        return {
+            "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
+            "polarity_for_each_indicator": ["-", "-", "+", "+", "-", "+"],
+            "sensitivity": {
+                "sensitivity_on": "no",
+                "normalization": "minmax",
+                "aggregation": "weighted_sum"},
+            "robustness": {
+                "robustness_on": "yes",
+                "on_single_weights": "no",
+                "on_all_weights": "no",
+                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                "on_indicators": "yes"},
+            "monte_carlo_sampling": {
+                "monte_carlo_runs": 1000,
+                "num_cores": 1,
+                "marginal_distribution_for_each_indicator": ['uniform', 'exact', 'normal', 'normal', 'exact',
+                                                             'lnorm']},
+            "output_path": "/path/to/output"
+        }
 
     @patch('builtins.input', side_effect=['S'])
     def test_main_continue(self, mock_input):

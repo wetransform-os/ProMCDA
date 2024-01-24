@@ -13,7 +13,6 @@ logger = logging.getLogger("ProMCDA aggregation")
 
 
 class MCDAWithoutRobustness():
-    
     """
     Class MCDA without indicators' uncertainty
 
@@ -28,6 +27,8 @@ class MCDAWithoutRobustness():
     """
 
     def __init__(self, config: Config, input_matrix: pd.DataFrame()):
+        self.normalized_indicators = None
+        self.weights = None
         self._config = copy.deepcopy(config)
         self._input_matrix = copy.deepcopy(input_matrix)
 
@@ -65,7 +66,7 @@ class MCDAWithoutRobustness():
         if method is None or method == 'rank':
             indicators_scaled_rank = norm.rank()
             normalized_indicators["rank"] = indicators_scaled_rank
-        if method != None and method not in ['minmax', 'target', 'standardized', 'rank']:
+        if method is not None and method not in ['minmax', 'target', 'standardized', 'rank']:
             logger.error('Error Message', stack_info=True)
             raise ValueError(
                 'The selected normalization method is not supported')
@@ -95,7 +96,7 @@ class MCDAWithoutRobustness():
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
                      'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
                      'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
-                     'min-standardized_any'] # same order as in the following loop
+                     'min-standardized_any']  # same order as in the following loop
 
         for key, values in self.normalized_indicators.items():
             if method is None or method == 'weighted_sum':
@@ -120,7 +121,7 @@ class MCDAWithoutRobustness():
                     col_names_method.append("min-" + key)
 
         dict_list = [scores_weighted_sum, scores_geometric,
-            scores_harmonic, scores_minimum]
+                     scores_harmonic, scores_minimum]
 
         for d in dict_list:
             if d:

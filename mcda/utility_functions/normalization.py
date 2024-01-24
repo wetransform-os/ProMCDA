@@ -41,7 +41,7 @@ class Normalization(object):
         indicators_plus = self._input_matrix.iloc[:, ind_plus]
         indicators_minus = self._input_matrix.iloc[:, ind_minus]
 
-        return (ind_plus, ind_minus, indicators_plus, indicators_minus)
+        return ind_plus, ind_minus, indicators_plus, indicators_minus
 
     @staticmethod
     def reversed_minmax_scaler(data, feature_range: tuple):
@@ -59,11 +59,11 @@ class Normalization(object):
         max_val = np.max(data, axis=0)
         min_val = np.min(data, axis=0)
 
-        if (feature_range == (0, 1)):
+        if feature_range == (0, 1):
             scaled_data = (max_val - data) / (max_val - min_val)
         else:
             scaled_data = (max_val - data) / \
-                           (max_val - min_val) * (1 - 0.1) + 0.1
+                          (max_val - min_val) * (1 - 0.1) + 0.1
 
         return scaled_data
 
@@ -118,16 +118,16 @@ class Normalization(object):
         indicators_plus = pol[2]
         indicators_minus = pol[3]
 
-        if (feature_range == (0, 1)):
+        if feature_range == (0, 1):
             indicators_scaled_target_plus = indicators_plus / \
-                indicators_plus.max(axis=0)  # for + polarity
+                                            indicators_plus.max(axis=0)  # for + polarity
             indicators_scaled_target_minus = 1 - indicators_minus / \
-                indicators_minus.max(axis=0)   # for - polarity
+                                             indicators_minus.max(axis=0)  # for - polarity
         else:
             indicators_scaled_target_plus = indicators_plus / indicators_plus.max(axis=0) * (
-                        1 - 0.1) + 0.1  # for + polarity
+                    1 - 0.1) + 0.1  # for + polarity
             indicators_scaled_target_minus = (1 - indicators_minus / indicators_minus.max(axis=0)) * (
-                        1 - 0.1) + 0.1  # for - polarity
+                    1 - 0.1) + 0.1  # for - polarity
 
         # merge back scaled values for positive and negative polarities
         indicators_scaled_target = pd.DataFrame(index=range(

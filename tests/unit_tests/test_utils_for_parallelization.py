@@ -1,11 +1,10 @@
 import unittest
-from unittest import TestCase
+from statistics import mean, stdev
+
+from pandas.testing import assert_frame_equal
 
 from mcda.mcda_without_robustness import *
 from mcda.utils_for_parallelization import *
-from pandas.testing import assert_frame_equal
-from statistics import mean, stdev
-
 
 
 class TestUtilsForParallelization(unittest.TestCase):
@@ -14,7 +13,7 @@ class TestUtilsForParallelization(unittest.TestCase):
     def get_test_config():
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
-            "polarity_for_each_indicator": ["+","+","+","+","+"],
+            "polarity_for_each_indicator": ["+", "+", "+", "+", "+"],
             "sensitivity": {
                 "sensitivity_on": "yes",
                 "normalization": "minmax",
@@ -28,7 +27,7 @@ class TestUtilsForParallelization(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 10000,
                 "num_cores": 1,
-                "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal','exact', 'uniform']},
+                "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal', 'exact', 'uniform']},
             "output_path": "/path/to/output"
         }
 
@@ -42,20 +41,20 @@ class TestUtilsForParallelization(unittest.TestCase):
         df2 = pd.DataFrame(data2, columns=['numbers'])
         df3 = pd.DataFrame(data3, columns=['numbers'])
 
-        list_of_dfs = [df1,df2,df3]
+        list_of_dfs = [df1, df2, df3]
 
         return list_of_dfs
 
     @staticmethod
     def get_list_of_output_dfs():
-        average1 = mean([10,20,30])
-        stand_dev1 = stdev([10,20,30])
+        average1 = mean([10, 20, 30])
+        stand_dev1 = stdev([10, 20, 30])
         average2 = mean([2, 2, 2])
         stand_dev2 = stdev([2, 2, 2])
         average3 = mean([30, 3, 0.3])
         stand_dev3 = stdev([30, 3, 0.3])
-        average = pd.DataFrame([average1,average2,average3],columns=['numbers'])
-        stand_dev = pd.DataFrame([stand_dev1,stand_dev2,stand_dev3],columns=['numbers'])
+        average = pd.DataFrame([average1, average2, average3], columns=['numbers'])
+        stand_dev = pd.DataFrame([stand_dev1, stand_dev2, stand_dev3], columns=['numbers'])
 
         list_of_dfs = [average, stand_dev]
 
@@ -92,16 +91,15 @@ class TestUtilsForParallelization(unittest.TestCase):
 
         # Then
         isinstance(res, list)
-        for i in range(2): isinstance(res[i],pd.DataFrame)
-        assert_frame_equal(res[0],output[0])
-        assert_frame_equal(res[1],output[1])
-
+        for i in range(2): isinstance(res[i], pd.DataFrame)
+        assert_frame_equal(res[0], output[0])
+        assert_frame_equal(res[1], output[1])
 
     def test_parallelize_normalization(self):
         # Given
         list_input_matrices = TestUtilsForParallelization.get_input_list()
         list_output_dictionaries = TestUtilsForParallelization.get_output_dict()
-        polarities = ["+","+","+","+","+"]
+        polarities = ["+", "+", "+", "+", "+"]
 
         # When
         res = parallelize_normalization(list_input_matrices, polarities)

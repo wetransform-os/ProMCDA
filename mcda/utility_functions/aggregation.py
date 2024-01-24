@@ -8,6 +8,7 @@ formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("ProMCDA")
 
+
 class Aggregation(object):
     """
     Class Aggregation
@@ -35,8 +36,8 @@ class Aggregation(object):
         gets as input the normalized values of the indicators in a matrix
         and estimates the scores over the indicators, per alternative.
 
-        :gets: pd.DataFrame() of shape (no.alternatives x no.indicators)
-        :returns: pd.Series of length = no. of alternatives
+        :gets: pd.DataFrame() of shape (no.alternatives x num. indicators)
+        :returns: pd.Series of length = num. of alternatives
         """
 
         scores = (norm_indicators * self.weights).sum(axis=1)
@@ -51,8 +52,8 @@ class Aggregation(object):
         Gets as input the normalized values of the indicators in a matrix
         and estimates the scores over the indicators, per alternative.
 
-        :gets: pd.DataFrame() of shape (no.alternatives x no.indicators)
-        :returns: pd.Series of length = no. of alternatives
+        :gets: pd.DataFrame() of shape (no.alternatives x num. indicators)
+        :returns: pd.Series of length = num. of alternatives
         """
 
         if (norm_indicators <= 0).any().any():
@@ -73,10 +74,9 @@ class Aggregation(object):
         Gets as input the normalized values of the indicators in a matrix
         and estimates the scores over the indicators, per alternative.
 
-        :gets: pd.DataFrame() of shape (no.alternatives x no.indicators)
-        :returns: pd.Series of length = no. of alternatives
+        :gets: pd.DataFrame() of shape (no.alternatives x num. indicators)
+        :returns: pd.Series of length = num. of alternatives
         """
-        num_indicators = norm_indicators.shape[1]
 
         if (norm_indicators == 0).any().any():
             logger.error('Error Message', stack_info=True)
@@ -87,18 +87,17 @@ class Aggregation(object):
 
         return scores
 
+    # noinspection PyMethodMayBeStatic
     def minimum(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
         """
         Minimum aggregation function. It does not consider the weights.
         Gets as input the normalized values of the indicators
         in a matrix and estimates the scores over the indicators, per alternative.
 
-        :gets: pd.DataFrame() of shape (no.alternatives x no.indicators)
-        :returns: pd.Series of length = no. of alternatives
+        :gets: pd.DataFrame() of shape (no.alternatives x num. indicators)
+        :returns: pd.Series of length = num. of alternatives
         """
 
         scores = norm_indicators.min(axis=1)
 
         return scores
-
-

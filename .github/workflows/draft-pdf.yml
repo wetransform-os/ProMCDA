@@ -1,4 +1,5 @@
-on: [push]
+#file: noinspection SpellCheckingInspection,SpellCheckingInspection
+on: [ push]
 
 jobs:
   paper:

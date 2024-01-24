@@ -37,7 +37,6 @@ class TestUtils(unittest.TestCase):
 
         return df
 
-
     @staticmethod
     def get_input_matrix_2() -> pd.DataFrame:
         data = {'ind1': [1, 2, 3], 'ind2_min': [-5, -6, -7], 'ind2_max': [5, 6, 7],
@@ -73,7 +72,7 @@ class TestUtils(unittest.TestCase):
         num_runs = 10
 
         # When
-        out = randomly_sample_ix_weight(num_weights,index,num_runs)
+        out = randomly_sample_ix_weight(num_weights, index, num_runs)
 
         # Then
         isinstance(out, list)
@@ -86,29 +85,27 @@ class TestUtils(unittest.TestCase):
                 else:
                     assert out[j][i] != 1
 
-
     def test_randomly_sample_all_weights(self):
         # Given
         num_weights = 4
         num_runs = 10
 
         # When
-        out = randomly_sample_all_weights(num_weights,num_runs)
+        out = randomly_sample_all_weights(num_weights, num_runs)
 
         # Then
         isinstance(out, list)
         assert len(out) == num_runs
         assert [len(out[i]) == num_weights for i in range(num_weights)]
         for j in range(num_runs):
-            assert (elem != out[0] for elem in out) # check all items are different
+            assert (elem != out[0] for elem in out)  # check all items are different
             for i in range(num_weights):
-                    assert out[j][i] <= 1
-                    assert out[j][i] >= 0
-
+                assert out[j][i] <= 1
+                assert out[j][i] >= 0
 
     def test_check_norm_sum_weights(self):
         # Given
-        weights = [1,2,3,4,5]
+        weights = [1, 2, 3, 4, 5]
 
         # When
         out = check_norm_sum_weights(weights)
@@ -117,15 +114,14 @@ class TestUtils(unittest.TestCase):
         assert len(out) == len(weights)
         assert sum(out) == 1.0
 
-
     def test_pop_indexed_elements(self):
         # Given
-        indexes = [0,2,4]
-        in_list = [1,2,3,4,5,6]
+        indexes = [0, 2, 4]
+        in_list = [1, 2, 3, 4, 5, 6]
 
         # When
         out_list = pop_indexed_elements(indexes, in_list)
-        expected_list = [2,4,6]
+        expected_list = [2, 4, 6]
 
         # Then
         isinstance(out_list, list)
@@ -156,8 +152,6 @@ class TestUtils(unittest.TestCase):
         self.assertFalse(all(are_parameters_correct_3))
         self.assertEqual(are_parameters_correct_3[1], False)
 
-
-
     def test_check_and_rescale_negative_indicators(self):
         # Given
         input_matrix_negative = TestUtils.get_input_matrix_negative()
@@ -179,13 +173,9 @@ class TestUtils(unittest.TestCase):
 
         # When
         output_mask = check_if_pdf_is_exact(list_pdf)
-        expected_mask = [1,0,0,0,1]
+        expected_mask = [1, 0, 0, 0, 1]
 
         # Then
         isinstance(output_mask, list)
-        assert(len(output_mask) == len(expected_mask))
+        assert (len(output_mask) == len(expected_mask))
         self.assertListEqual(output_mask, expected_mask)
-
-
-
-

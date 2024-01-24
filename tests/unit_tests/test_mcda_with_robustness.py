@@ -77,19 +77,19 @@ class TestMCDA_with_robustness(unittest.TestCase):
                   '5': [0, 1, 2, 3], '6': [0, 1, 2, 3], '7': [0, 1, 2, 3], '8': [0, 1, 2, 3], '9': [0, 1, 2, 3]})
         low_values = np.array([-4, -5, -6, -7])
         high_values = np.array([4, 5, 6, 7])
-        low_values_2d = low_values[:, np.newaxis] # broadcasting the 1D arrays to a shape of (4, 10)
+        low_values_2d = low_values[:, np.newaxis]  # broadcasting the 1D arrays to a shape of (4, 10)
         high_values_2d = high_values[:, np.newaxis]
-        data2 = np.random.uniform(low=low_values_2d, high=high_values_2d, size=(4,10))
+        data2 = np.random.uniform(low=low_values_2d, high=high_values_2d, size=(4, 10))
         mean_values = np.array([8, 9, 10, 11])
         std_values = np.array([0.1, 0.1, 0.1, 0.1])
         mean_values_2d = mean_values[:, np.newaxis]
         std_values_2d = std_values[:, np.newaxis]
         data2 = pd.DataFrame(data2)
-        data3 = np.random.normal(loc=mean_values_2d, scale=std_values_2d, size=(4,10))
+        data3 = np.random.normal(loc=mean_values_2d, scale=std_values_2d, size=(4, 10))
         data3 = pd.DataFrame(data3)
         lambda_values = np.array([8, 9, 10, 11])
         lambda_values_2d = lambda_values[:, np.newaxis]
-        data4 = np.random.poisson(lam=lambda_values_2d, size=(4,10))
+        data4 = np.random.poisson(lam=lambda_values_2d, size=(4, 10))
         data4 = pd.DataFrame(data4)
         out_list = [data1, data2, data3, data4]
 

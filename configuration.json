@@ -19,5 +19,5 @@
       "num_cores": 1,
       "marginal_distribution_for_each_indicator": ["normal", "normal", "normal", "normal", "normal", "normal", "normal", "normal"]},
 
-  "output_path": "/Users/flaminia/Dekstop/ProMCDA_test.csv"
+  "output_path": "/Users/flaminia/Desktop/ProMCDA_test.csv"
 }

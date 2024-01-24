@@ -1,6 +1,6 @@
 <div align="left">
 <img src="https://raw.githubusercontent.com/wetransform-os/ProMCDA/release/logo/ProMCDA_logo.png">
-<div>
+</div>
 
 # Probabilistic Multi Criteria Decision Analysis
 
