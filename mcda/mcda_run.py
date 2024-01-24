@@ -1,6 +1,9 @@
 #! /usr/bin/env python3
 
+import sys
 import time
+import logging
+import pandas as pd
 
 from mcda.configuration.config import Config
 from mcda.mcda_with_robustness import MCDAWithRobustness
@@ -71,24 +74,24 @@ def main(input_config: dict, user_input_callback=input):
             logger.error('Error Message', stack_info=True)
             raise ValueError(
                 'Robustness analysis is requested on the weights: but on all or one at time? Please clarify.')
-        if ((config.robustness["on_single_weights"] == "yes"
-             and config.robustness["on_all_weights"] == "yes"
-             and config.robustness["on_indicators"] == "yes") or
-                (config.robustness["on_single_weights"] == "yes"
-                 and config.robustness["on_all_weights"] == "no"
-                 and config.robustness["on_indicators"] == "yes") or
-                (config.robustness["on_single_weights"] == "no"
-                 and config.robustness["on_all_weights"] == "yes"
-                 and config.robustness["on_indicators"] == "yes")):
+        if ((config.robustness["on_single_weights"] == "yes" and
+             config.robustness["on_all_weights"] == "yes"
+             and config.robustness["on_indicators"] == "yes")
+                or (config.robustness["on_single_weights"] == "yes"
+                    and config.robustness["on_all_weights"] == "no"
+                    and config.robustness["on_indicators"] == "yes")
+                or (config.robustness["on_single_weights"] == "no"
+                    and config.robustness["on_all_weights"] == "yes"
+                    and config.robustness["on_indicators"] == "yes")):
             logger.error('Error Message', stack_info=True)
             raise ValueError(
                 'Robustness analysis is requested: but on weights or indicators? Please clarify.')
-        if ((config.robustness["on_single_weights"] == "yes"
-             and config.robustness["on_all_weights"] == "no"
-             and config.robustness["on_indicators"] == "no") or
-                (config.robustness["on_single_weights"] == "no"
-                 and config.robustness["on_all_weights"] == "yes"
-                 and config.robustness["on_indicators"] == "no")):
+        if ((config.robustness["on_single_weights"] == "yes" and
+             config.robustness["on_all_weights"] == "no"
+             and config.robustness["on_indicators"] == "no")
+                or (config.robustness["on_single_weights"] == "no" and
+                    config.robustness["on_all_weights"] == "yes"
+                    and config.robustness["on_indicators"] == "no")):
             logger.info("ProMCDA will consider uncertainty on the weights")
             is_robustness_weights = 1
             logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
@@ -138,7 +141,8 @@ def main(input_config: dict, user_input_callback=input):
         logger.info("Number of indicators: {}".format(num_indicators))
     else:  # matrix with uncertainty on indicators
         # non-exact and non-poisson indicators in the input matrix are associated to a column representing its mean
-        # and a second column representing its std; uniform is also associated to two columns being its min and max values
+        # and a second column representing its std;
+        # uniform is also associated to two columns being its min and max values
         num_non_exact_and_non_poisson = len(
             marginal_pdf) - marginal_pdf.count('exact') - marginal_pdf.count('poisson')
         num_indicators = (
@@ -149,14 +153,16 @@ def main(input_config: dict, user_input_callback=input):
         # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional
 
     if is_robustness_indicators == 0:
-        if any(value == 1 for value in num_unique): polar = pop_indexed_elements(
-            col_to_drop_indexes, polar)
+        if any(value == 1 for value in num_unique):
+            polar = pop_indexed_elements(
+                col_to_drop_indexes, polar)
     logger.info("Polarities: {}".format(polar))
 
     if is_robustness_weights == 0:
         fixed_weights = config.robustness["given_weights"]
-        if any(value == 1 for value in num_unique): fixed_weights = pop_indexed_elements(
-            col_to_drop_indexes, fixed_weights)
+        if any(value == 1 for value in num_unique):
+            fixed_weights = pop_indexed_elements(
+                col_to_drop_indexes, fixed_weights)
         norm_fixed_weights = check_norm_sum_weights(fixed_weights)
         logger.info("Weights: {}".format(fixed_weights))
         logger.info("Normalized weights: {}".format(norm_fixed_weights))

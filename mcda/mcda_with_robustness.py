@@ -1,9 +1,6 @@
 import copy
 import sys
-from typing import List
 
-import numpy as np
-import pandas as pd
 
 from mcda.configuration.config import Config
 from mcda.utils import *
