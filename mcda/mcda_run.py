@@ -1,5 +1,14 @@
 #! /usr/bin/env python3
 
+"""
+This script serves as the main entry point for running all pieces of functionality in a consequential way
+following the settings given in the configuration file configuration.json.
+
+Usage (from root directory):
+    $ python3 -m mcda.mcda_run -c configuration.json
+"""
+
+
 import sys
 import time
 import logging
@@ -11,17 +20,38 @@ from mcda.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.utils import *
 from mcda.utils_for_parallelization import *
 
-formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
+FORMATTER: str = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=FORMATTER)
 logger = logging.getLogger("ProMCDA")
 
 
 class UserStoppedInfo(Exception):
+    """A class representing information about user stopping conditions"""
     pass
 
 
 # noinspection PyTypeChecker
 def main(input_config: dict, user_input_callback=input):
+    """
+        Execute the ProMCDA (Probabilistic Multi-Criteria Decision Analysis) process.
+
+        Parameters:
+        - input_config (dict): Configuration parameters for the ProMCDA process.
+        - user_input_callback (function, optional): Callback function for user input.
+
+        Raises:
+        - ValueError: If there are issues with the input matrix, weights, or indicators.
+        - UserStoppedInfo: If the user chooses to stop the process during execution.
+
+        This function performs the ProMCDA process based on the provided configuration.
+        It handles various aspects such as sensitivity analysis, robustness analysis,
+        and uncertainty in indicators. The results are saved in output files, and plots
+        are generated to visualize the scores and rankings.
+
+        Note: Ensure that the input matrix, weights, and indicators are correctly specified
+        in the input configuration.
+        """
+
     is_sensitivity = None
     is_robustness = None
     is_robustness_indicators = 0
@@ -35,7 +65,7 @@ def main(input_config: dict, user_input_callback=input):
     iterative_random_w_stds_normalized = {}
 
     config = Config(input_config)
-    input_matrix = read_matrix(config.input_matrix_path)
+    # pylint: disable=E0602
     polar = config.polarity_for_each_indicator
     is_sensitivity = config.sensitivity['sensitivity_on']
     is_robustness = config.robustness['robustness_on']

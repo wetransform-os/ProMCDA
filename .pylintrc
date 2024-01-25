@@ -1,0 +1,11 @@
+[FORMAT]
+max-line-length = 129
+
+[MESSAGES CONTROL]
+disable = too-many-arguments, W0401, E0611, E0401, W0621, W1202
+# Disable: wildcard, no-name import warning, redefining name from outer scope,
+# lazy formatting
+
+[MASTER]
+init-hook = 'import sys; sys.path.append("/mcda")'
+ignored-modules = mcda_with_robustness, mcda_without_robustness, utils, utils_for_parallelization

@@ -12,7 +12,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("ProMCDA aggregation")
 
 
-class MCDAWithoutRobustness():
+class MCDAWithoutRobustness:
     """
     Class MCDA without indicators' uncertainty
 

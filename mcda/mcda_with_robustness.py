@@ -10,7 +10,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("MCDA with sensitivity")
 
 
-class MCDAWithRobustness():
+class MCDAWithRobustness:
     """
 
     Class MCDA with indicators' uncertainty

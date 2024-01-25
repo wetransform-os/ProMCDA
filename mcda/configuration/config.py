@@ -1,9 +1,14 @@
+"""
+This module serves as a configuration object for ProMCDA.
+It is designed to store and manage configuration settings in a structured way.
+"""
+
 import copy
 from typing import List, Dict, Any
 
 
 # noinspection PyMethodMayBeStatic
-class Config(object):
+class Config():
     """
     Class Configuration
 
@@ -18,22 +23,22 @@ class Config(object):
 
     """
 
-    _valid_keys = ['input_matrix_path',
-                   'polarity_for_each_indicator',
-                   'sensitivity',
-                   'robustness',
-                   'monte_carlo_sampling',
-                   'output_path']
+    _valid_keys: List[str] = ['input_matrix_path',
+                              'polarity_for_each_indicator',
+                              'sensitivity',
+                              'robustness',
+                              'monte_carlo_sampling',
+                              'output_path']
 
-    _list_values: list[str] = [
+    _list_values: List[str] = [
         'marginal_distribution_for_each_indicator', 'polarity_for_each_indicator']
 
-    _str_values = ['input_matrix_path', 'output_path', 'sensitivity_on', 'normalization', 'aggregation',
+    _str_values: List[str] = ['input_matrix_path', 'output_path', 'sensitivity_on', 'normalization', 'aggregation',
                    'robustness_on', 'on_single_weights', 'on_all_weights', 'given_weights', 'on_indicators']
 
-    _int_values = ['monte_carlo_runs', 'num_cores']
+    _int_values: List[str] = ['monte_carlo_runs', 'num_cores']
 
-    _dict_values = ['sensitivity', 'robustness', 'monte_carlo_sampling']
+    _dict_values: List[str] = ['sensitivity', 'robustness', 'monte_carlo_sampling']
 
     _keys_of_dict_values = {'sensitivity': ['sensitivity_on', 'normalization', 'aggregation'],
                             'robustness': ['robustness_on', 'on_single_weights', 'on_all_weights',
