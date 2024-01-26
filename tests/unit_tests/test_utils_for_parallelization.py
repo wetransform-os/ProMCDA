@@ -4,7 +4,7 @@ from statistics import mean, stdev
 from pandas.testing import assert_frame_equal
 
 from mcda.mcda_without_robustness import *
-from mcda.utils_for_parallelization import *
+from mcda.utils.utils_for_parallelization import *
 
 
 class TestUtilsForParallelization(unittest.TestCase):

@@ -8,17 +8,15 @@ Usage (from root directory):
     $ python3 -m mcda.mcda_run -c configuration.json
 """
 
-
-import sys
 import time
 import logging
-import pandas as pd
 
 from mcda.configuration.config import Config
 from mcda.mcda_with_robustness import MCDAWithRobustness
 from mcda.mcda_without_robustness import MCDAWithoutRobustness
-from mcda.utils import *
-from mcda.utils_for_parallelization import *
+from mcda.utils.utils_for_main import *
+from mcda.utils.utils_for_plotting import *
+from mcda.utils.utils_for_parallelization import *
 
 FORMATTER: str = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=FORMATTER)
@@ -36,7 +34,7 @@ def main(input_config: dict, user_input_callback=input):
         Execute the ProMCDA (Probabilistic Multi-Criteria Decision Analysis) process.
 
         Parameters:
-        - input_config (dict): Configuration parameters for the ProMCDA process.
+        - input_config (dictionary): Configuration parameters for the ProMCDA process.
         - user_input_callback (function, optional): Callback function for user input.
 
         Raises:
@@ -64,95 +62,97 @@ def main(input_config: dict, user_input_callback=input):
     iterative_random_w_means_normalized = {}
     iterative_random_w_stds_normalized = {}
 
+    # Extracting relevant configuration values
     config = Config(input_config)
-    # pylint: disable=E0602
+    input_matrix = read_matrix(config.input_matrix_path)
     polar = config.polarity_for_each_indicator
     is_sensitivity = config.sensitivity['sensitivity_on']
     is_robustness = config.robustness['robustness_on']
     mc_runs = config.monte_carlo_sampling["monte_carlo_runs"]
+
+    # Check for sensitivity-related configuration errors
     if is_sensitivity == "no":
         f_norm = config.sensitivity['normalization']
         f_agg = config.sensitivity['aggregation']
-        if f_norm not in ['minmax', 'target', 'standardized', 'rank']:
-            logger.error('Error Message', stack_info=True)
-            raise ValueError(
-                'The available normalization functions are: minmax, target, standardized, rank.')
-        if f_agg not in ['weighted_sum', 'geometric', 'harmonic', 'minimum']:
-            logger.error('Error Message', stack_info=True)
-            raise ValueError('The available aggregation functions are: weighted_sum, geometric, harmonic, minimum.'
-                             '\nWatch the correct spelling int the configuration file.')
-        logger.info(
-            "ProMCDA will only use one pair of norm/agg functions: " + f_norm + '/' + f_agg)
+        check_config_error(f_norm not in ['minmax', 'target', 'standardized', 'rank'],
+                           'The available normalization functions are: minmax, target, standardized, rank.')
+        check_config_error(f_agg not in ['weighted_sum', 'geometric', 'harmonic', 'minimum'],
+                           'The available aggregation functions are: weighted_sum, geometric, harmonic, minimum.'
+                           '\nWatch the correct spelling in the configuration file.')
+        logger.info("ProMCDA will only use one pair of norm/agg functions: " + f_norm + '/' + f_agg)
     else:
-        logger.info(
-            "ProMCDA will use a set of different pairs of norm/agg functions")
+        logger.info("ProMCDA will use a set of different pairs of norm/agg functions")
+
+    # Check for robustness-related configuration errors
     if is_robustness == "no":
-        logger.info(
-            "ProMCDA will run without uncertainty on the indicators or weights")
-        logger.info("Read input matrix without uncertainties at {}".format(
+        logger.info("ProMCDA will run without uncertainty on the indicators or weights")
+        logger.info("Read input matrix without uncertainties at {}".format(config.input_matrix_path))
+    else:
+        check_config_error((config.robustness["on_single_weights"] == "no" and
+                            config.robustness["on_all_weights"] == "no" and
+                            config.robustness["on_indicators"] == "no"),
+                           'Robustness analysis is requested but where is not defined: weights or indicators? Please clarify.')
+
+        check_config_error((config.robustness["on_single_weights"] == "yes" and
+                            config.robustness["on_all_weights"] == "yes" and
+                            config.robustness["on_indicators"] == "no"),
+                           'Robustness analysis is requested on the weights: but on all or one at a time? Please clarify.')
+
+        check_config_error(((config.robustness["on_single_weights"] == "yes" and
+                             config.robustness["on_all_weights"] == "yes" and
+                             config.robustness["on_indicators"] == "yes") or
+                            (config.robustness["on_single_weights"] == "yes" and
+                             config.robustness["on_all_weights"] == "no" and
+                             config.robustness["on_indicators"] == "yes") or
+                            (config.robustness["on_single_weights"] == "no" and
+                             config.robustness["on_all_weights"] == "yes" and
+                             config.robustness["on_indicators"] == "yes")),
+                           'Robustness analysis is requested: but on weights or indicators? Please clarify.')
+
+        check_config_setting(((config.robustness["on_single_weights"] == "yes" and
+                             config.robustness["on_all_weights"] == "no" and
+                             config.robustness["on_indicators"] == "no") or
+                            (config.robustness["on_single_weights"] == "no" and
+                             config.robustness["on_all_weights"] == "yes" and
+                             config.robustness["on_indicators"] == "no")),
+                           'ProMCDA will consider uncertainty on the weights')
+        is_robustness_weights = 1
+        logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
+
+        check_config_setting((config.robustness["on_single_weights"] == "no" and
+                            config.robustness["on_all_weights"] == "no" and
+                            config.robustness["on_indicators"] == "yes"),
+                           'ProMCDA will consider uncertainty on the indicators')
+        is_robustness_indicators = 1
+        marginal_pdf = config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
+        logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
+        logger.info("Read input matrix with uncertainty of the indicators at {}".format(
             config.input_matrix_path))
-    else:  # robustness yes
-        if (config.robustness["on_single_weights"] == "no"
-                and config.robustness["on_all_weights"] == "no"
-                and config.robustness["on_indicators"] == "no"):
-            logger.error('Error Message', stack_info=True)
-            raise ValueError(
-                'Robustness analysis is requested but where is not defined: weights or indicators? Please clarify.')
-        if (config.robustness["on_single_weights"] == "yes"
-                and config.robustness["on_all_weights"] == "yes"
-                and config.robustness["on_indicators"] == "no"):
-            logger.error('Error Message', stack_info=True)
-            raise ValueError(
-                'Robustness analysis is requested on the weights: but on all or one at time? Please clarify.')
-        if ((config.robustness["on_single_weights"] == "yes" and
-             config.robustness["on_all_weights"] == "yes"
-             and config.robustness["on_indicators"] == "yes")
-                or (config.robustness["on_single_weights"] == "yes"
-                    and config.robustness["on_all_weights"] == "no"
-                    and config.robustness["on_indicators"] == "yes")
-                or (config.robustness["on_single_weights"] == "no"
-                    and config.robustness["on_all_weights"] == "yes"
-                    and config.robustness["on_indicators"] == "yes")):
-            logger.error('Error Message', stack_info=True)
-            raise ValueError(
-                'Robustness analysis is requested: but on weights or indicators? Please clarify.')
-        if ((config.robustness["on_single_weights"] == "yes" and
-             config.robustness["on_all_weights"] == "no"
-             and config.robustness["on_indicators"] == "no")
-                or (config.robustness["on_single_weights"] == "no" and
-                    config.robustness["on_all_weights"] == "yes"
-                    and config.robustness["on_indicators"] == "no")):
-            logger.info("ProMCDA will consider uncertainty on the weights")
-            is_robustness_weights = 1
-            logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
-        elif (config.robustness["on_single_weights"] == "no"
-              and config.robustness["on_all_weights"] == "no"
-              and config.robustness["on_indicators"] == "yes"):
-            logger.info("ProMCDA will consider uncertainty on the indicators")
-            is_robustness_indicators = 1
-            marginal_pdf = config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
-            logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
-            logger.info("Read input matrix with uncertainty of the indicators at {}".format(
-                config.input_matrix_path))
+
+    # Check the input matrix
     if input_matrix.duplicated().any():
-        logger.error('Error Message', stack_info=True)
-        raise ValueError('There are duplicated rows in the input matrix.')
+        raise ValueError('Error: Duplicated rows in the alternatives column.')
+
     elif input_matrix.iloc[:, 0].duplicated().any():
-        logger.info('There are duplicated rows in the alternatives column.')
+        logger.info('Duplicated rows in the alternatives column.')
+
         while True:
             user_input = user_input_callback(
                 "Do you want to continue (C) or stop (S)? ").strip().lower()
+
             if user_input == 'c':
                 break
             elif user_input == 's':
                 raise UserStoppedInfo()
             else:
                 print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
+
     logger.info("Alternatives are {}".format(input_matrix.iloc[:, 0].tolist()))
     input_matrix_no_alternatives = input_matrix.drop(
         input_matrix.columns[0], axis=1)  # drop first column with alternatives
     input_matrix_no_alternatives = check_and_rescale_negative_indicators(
         input_matrix_no_alternatives)
+    # QUI!!
     if is_robustness_indicators == 0:
         # search for column with constant values
         num_unique = input_matrix_no_alternatives.nunique()

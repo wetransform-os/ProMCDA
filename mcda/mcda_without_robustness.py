@@ -4,8 +4,8 @@ import logging
 import pandas as pd
 
 from mcda.configuration.config import Config
-from mcda.utility_functions.normalization import Normalization
-from mcda.utility_functions.aggregation import Aggregation
+from mcda.mcda_functions.normalization import Normalization
+from mcda.mcda_functions.aggregation import Aggregation
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)

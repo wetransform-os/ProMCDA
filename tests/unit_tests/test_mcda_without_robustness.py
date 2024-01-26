@@ -4,9 +4,9 @@ from unittest import TestCase
 
 from mcda.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.configuration.config import Config
-from mcda.utils import *
-from mcda.utils_for_parallelization import *
-from mcda.utility_functions.aggregation import Aggregation
+from mcda.utils.utils_for_parallelization import *
+from mcda.utils.utils_for_main import *
+from mcda.mcda_functions.aggregation import Aggregation
 
 
 class TestMCDA_without_robustness(unittest.TestCase):

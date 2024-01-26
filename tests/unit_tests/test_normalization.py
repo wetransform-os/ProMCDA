@@ -3,8 +3,8 @@ import unittest
 from pandas.testing import assert_frame_equal
 from numpy.testing import assert_almost_equal
 
-from mcda.utils import *
-from mcda.utility_functions.normalization import Normalization
+from mcda.utils.utils_for_main import *
+from mcda.mcda_functions.normalization import Normalization
 
 
 class TestNormalization(unittest.TestCase):

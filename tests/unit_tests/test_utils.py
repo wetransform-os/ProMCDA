@@ -1,7 +1,8 @@
+import pandas as pd
 import unittest
 from unittest import TestCase
 
-from mcda.utils import *
+from mcda.utils.utils_for_main import *
 from mcda.configuration.config import Config
 
 

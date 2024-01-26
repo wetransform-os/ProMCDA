@@ -49,7 +49,7 @@ class Config():
     def __init__(self, input_config: dict):
         """
         Instantiate a configuration object
-        :param input_config: dict
+        :param input_config: dictionary
         """
 
         valid_keys = self._valid_keys
@@ -122,13 +122,13 @@ class Config():
 
     @staticmethod
     def check_dict_keys(dic: Dict[str, Any], keys: List[str]):
-        """Check if a specific key is in a dict"""
+        """Check if a specific key is in a dictionary"""
         for key in keys:
             Config.check_key(dic, key)
 
     @staticmethod
     def check_key(dic: dict, key: str):
-        """Check if a key is in a dict"""
+        """Check if a key is in a dictionary"""
         if key not in dic.keys():
             raise KeyError(
                 "The key = {} is not present in dictionary: {}".format(key, dic))

@@ -1,9 +1,9 @@
 import copy
 import sys
-
+import logging
 
 from mcda.configuration.config import Config
-from mcda.utils import *
+from mcda.utils.utils_for_main import *
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)

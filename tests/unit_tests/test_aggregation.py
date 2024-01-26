@@ -3,8 +3,8 @@ import pytest
 
 from pandas.testing import assert_series_equal
 
-from mcda.utils import *
-from mcda.utility_functions.aggregation import Aggregation
+from mcda.utils.utils_for_main import *
+from mcda.mcda_functions.aggregation import Aggregation
 
 
 class TestAggregation(unittest.TestCase):
