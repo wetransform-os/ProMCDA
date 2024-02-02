@@ -54,7 +54,6 @@ def main(input_config: dict, user_input_callback=input):
     is_robustness = None
     is_robustness_indicators = 0
     is_robustness_weights = 0
-    norm_random_weights = []
     marginal_pdf = []
     num_unique = []
     iterative_random_w_means = {}
@@ -129,109 +128,27 @@ def main(input_config: dict, user_input_callback=input):
         logger.info("Read input matrix with uncertainty of the indicators at {}".format(
             config.input_matrix_path))
 
-    # Check the input matrix
-    if input_matrix.duplicated().any():
-        raise ValueError('Error: Duplicated rows in the alternatives column.')
-
-    elif input_matrix.iloc[:, 0].duplicated().any():
-        logger.info('Duplicated rows in the alternatives column.')
-
-        while True:
-            user_input = user_input_callback(
-                "Do you want to continue (C) or stop (S)? ").strip().lower()
-
-            if user_input == 'c':
-                break
-            elif user_input == 's':
-                raise UserStoppedInfo()
-            else:
-                print("Invalid input. Please enter 'C' to continue or 'S' to stop.")
-
-    logger.info("Alternatives are {}".format(input_matrix.iloc[:, 0].tolist()))
-    input_matrix_no_alternatives = input_matrix.drop(
-        input_matrix.columns[0], axis=1)  # drop first column with alternatives
-    input_matrix_no_alternatives = check_and_rescale_negative_indicators(
-        input_matrix_no_alternatives)
-    # QUI!!
+    # Check the input matrix for duplicated rows in the alternatives and rescale negative indicator values
+    input_matrix_no_alternatives = check_input_matrix(input_matrix)
     if is_robustness_indicators == 0:
-        # search for column with constant values
-        num_unique = input_matrix_no_alternatives.nunique()
-        cols_to_drop = num_unique[num_unique == 1].index
-        col_to_drop_indexes = input_matrix_no_alternatives.columns.get_indexer(
-            cols_to_drop)
-        if any(value == 1 for value in num_unique):
-            logger.info(
-                "Indicators {} have been dropped because they carry no information".format(cols_to_drop))
-            input_matrix_no_alternatives = input_matrix_no_alternatives.drop(
-                cols_to_drop, axis=1)
-        # every column of the input matrix represents an indicator
         num_indicators = input_matrix_no_alternatives.shape[1]
-        logger.info("Number of alternatives: {}".format(
-            input_matrix_no_alternatives.shape[0]))
-        logger.info("Number of indicators: {}".format(num_indicators))
-    else:  # matrix with uncertainty on indicators
-        # non-exact and non-poisson indicators in the input matrix are associated to a column representing its mean
-        # and a second column representing its std;
-        # uniform is also associated to two columns being its min and max values
-        num_non_exact_and_non_poisson = len(
-            marginal_pdf) - marginal_pdf.count('exact') - marginal_pdf.count('poisson')
-        num_indicators = (
-                input_matrix_no_alternatives.shape[1] - num_non_exact_and_non_poisson)
-        logger.info("Number of alternatives: {}".format(
-            input_matrix_no_alternatives.shape[0]))
-        logger.info("Number of indicators: {}".format(num_indicators))
-        # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional
-
-    if is_robustness_indicators == 0:
-        if any(value == 1 for value in num_unique):
-            polar = pop_indexed_elements(
-                col_to_drop_indexes, polar)
-    logger.info("Polarities: {}".format(polar))
-
-    if is_robustness_weights == 0:
-        fixed_weights = config.robustness["given_weights"]
-        if any(value == 1 for value in num_unique):
-            fixed_weights = pop_indexed_elements(
-                col_to_drop_indexes, fixed_weights)
-        norm_fixed_weights = check_norm_sum_weights(fixed_weights)
-        logger.info("Weights: {}".format(fixed_weights))
-        logger.info("Normalized weights: {}".format(norm_fixed_weights))
     else:
-        if mc_runs == 0:
-            logger.error('Error Message', stack_info=True)
-            raise ValueError(
-                'The number of MC runs should be larger than 0 for a robustness analysis')
-        if config.robustness["on_single_weights"] == "no" and config.robustness["on_all_weights"] == "yes":
-            random_weights = randomly_sample_all_weights(
-                num_indicators, mc_runs)
-            for weights in random_weights:
-                weights = check_norm_sum_weights(weights)
-                norm_random_weights.append(weights)
-        elif config.robustness["on_single_weights"] == "yes" and config.robustness["on_all_weights"] == "no":
-            i = 0
-            rand_weight_per_indicator = {}
-            while i < num_indicators:
-                random_weights = randomly_sample_ix_weight(
-                    num_indicators, i, mc_runs)
-                norm_random_weight = []
-                for weights in random_weights:
-                    weights = check_norm_sum_weights(weights)
-                    norm_random_weight.append(weights)
-                rand_weight_per_indicator["indicator_{}".format(
-                    i + 1)] = norm_random_weight
-                i = i + 1
+        num_non_exact_and_non_poisson = len(marginal_pdf) - marginal_pdf.count('exact') - marginal_pdf.count('poisson')
+        num_indicators = (input_matrix_no_alternatives.shape[1] - num_non_exact_and_non_poisson)
 
-    # checks on the number of indicators, weights, and polarities
-    if num_indicators != len(polar):
-        logger.error('Error Message', stack_info=True)
-        raise ValueError(
-            'The number of polarities does not correspond to the no. of indicators')
-    if (config.robustness["on_all_weights"] == "no") and (num_indicators != len(config.robustness["given_weights"])):
-        logger.error('Error Message', stack_info=True)
-        raise ValueError(
-            'The no. of fixed weights does not correspond to the no. of indicators')
+    # Process indicators and weights based on input parameters in the configuration
+    process_indicators_and_weights(config, input_matrix_no_alternatives, is_robustness_indicators, is_robustness_weights,
+                                   polar, mc_runs, num_indicators)
+
+    # Check the number of indicators, weights, and polarities
+    try:
+        check_indicator_weights_polarities(num_indicators, polar, config)
+    except ValueError as e:
+        logging.error(str(e), stack_info=True)
+        raise
+
     # ----------------------------
-    # NO UNCERTAINTY OF INDICATORS
+    # NO UNCERTAINTY OF INDICATORS   QUI, refactor!
     # ----------------------------
     if is_robustness_indicators == 0:
         logger.info("Start ProMCDA without robustness of the indicators")

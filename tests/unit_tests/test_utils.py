@@ -4,6 +4,7 @@ from unittest import TestCase
 
 from mcda.utils.utils_for_main import *
 from mcda.configuration.config import Config
+from mcda.utils.utils_for_main import _check_and_rescale_negative_indicators
 
 
 class TestUtils(unittest.TestCase):
@@ -159,8 +160,8 @@ class TestUtils(unittest.TestCase):
         input_matrix_positive = TestUtils.get_input_matrix_1()
 
         # When
-        rescaled_matrix = check_and_rescale_negative_indicators(input_matrix_negative)
-        non_rescaled_matrix = check_and_rescale_negative_indicators(input_matrix_positive)
+        rescaled_matrix = _check_and_rescale_negative_indicators(input_matrix_negative)
+        non_rescaled_matrix = _check_and_rescale_negative_indicators(input_matrix_positive)
 
         # Then
         isinstance(rescaled_matrix, pd.DataFrame)
