@@ -138,8 +138,8 @@ e.g., larger or equal than 1000). The ***number of cores*** used for the paralle
 The user gives the ***path to output file*** (e.g. `path/output_file.csv`). In the output file the scores (normalised or rough) 
 and the ranks relative to the alternatives can be found in the form of CSV tables. If the weights are iteratively sampled, 
 multiple tables are saved in a PICKLE file as an object ```dictionary```. Plots of the scores are saved in PNG images. The configuration.json file
-is saved in the output directory too; the information stored in the configuration settings are useful in case 
-multiple tests are stored and need to be reviewed.
+is saved in the output directory too; the information stored in the configuration settings are useful in case one runs
+multiple tests and needs to review them.
 
 All file names of the output objects are followed by a time stamp that group them with the specific test setting.
 
@@ -194,6 +194,12 @@ where an example of configuration file can be found in `./configuration.json`.
 ```bash
 python3 -m pytest -s tests/unit_tests -vv
 ```
+### Running a toy example
+The directory of ```ProMCDA``` contains a toy example, a simple case to test run the package. In the `toy_example/output` directory you 
+can find three different tests that have been run with the relative configuration and output files. Please modify your configuration file 
+according to the desired experiment. The directory contains also a Jupyter notebook to allow one to modify the input matrix easily. 
+The example chosen is very simple and not suitable for a robustness analysis test. Running the robustness analysis requires an input matrix 
+containing information on the uncertainties of the criteria as described above, and it is not under the scope of the toy example. 
 
 ### Code overview: a high-level summary
 If no robustness analysis is selected, then:
