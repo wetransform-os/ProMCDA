@@ -1,17 +1,20 @@
 import argparse
 import json
-import logging
-import os
 import pickle
 import random
-import sys
-from datetime import datetime
-from typing import List
+import time
+from typing import Union, Any, List
+from typing import Optional
 
-import numpy as np
 import pandas as pd
 from sklearn import preprocessing
 from sklearn.preprocessing import MinMaxScaler
+
+from mcda.configuration.config import Config
+from mcda.utils.utils_for_parallelization import *
+from mcda.utils.utils_for_plotting import *
+from mcda.mcda_without_robustness import MCDAWithoutRobustness
+from mcda.mcda_with_robustness import MCDAWithRobustness
 
 logging.getLogger('PIL').setLevel(logging.WARNING)
 
@@ -32,6 +35,7 @@ def check_config_error(condition: bool, error_message: str):
     - ValueError: If the condition is True, with the specified error message.
 
     :return: None
+    :param error_message: str
     :param condition: bool
     """
 
@@ -52,7 +56,7 @@ def process_indicators_and_weights(config: dict, input_matrix_no_alternatives: p
     Process indicators and weights based on input parameters in the configuration.
 
     Parameters:
-    - input_matrix_no_alternatives (DataFrame): The input matrix.
+    - input_matrix (DataFrame): The input matrix.
     - is_robustness_indicators (int): Flag indicating whether the matrix should include indicator uncertainties
       (0 or 1).
     - is_robustness_weights (int): Flag indicating whether robustness analysis is considered for the weights
@@ -65,6 +69,11 @@ def process_indicators_and_weights(config: dict, input_matrix_no_alternatives: p
     Raises:
     - ValueError: If there are duplicated rows in the input matrix or if there is an issue with the configuration.
 
+    Returns:
+    - a shorter list of polarities if one has been dropped together with the relative indicator,
+      which brings no information. Otherwise, the same list.
+    - the normalised weights (either fixed or random sampled weights, depending on the seetings)
+
     Notes:
     - For is_robustness_indicators == 0:
     - Identifies and removes columns with constant values.
@@ -76,13 +85,14 @@ def process_indicators_and_weights(config: dict, input_matrix_no_alternatives: p
 
     - For is_robustness_weights == 0:
     - Processes fixed weights if given.
-    - Logs weights and normalized weights.
+    - Logs weights and normalised weights.
 
     - For is_robustness_weights == 1:
     - Performs robustness analysis on weights.
     - Logs randomly sampled weights.
 
-    :return: None
+    :return: polar, norm_weights
+    :rtype: List[str], Union[list, dict]
     :param mc_runs: int
     :param polar: List[str]
     :param is_robustness_weights: int
@@ -103,13 +113,20 @@ def process_indicators_and_weights(config: dict, input_matrix_no_alternatives: p
         logger.info("Number of indicators: {}".format(num_indicators))
         # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional
 
-    _handle_polarities_and_weights(is_robustness_indicators, is_robustness_weights, num_unique, col_to_drop_indexes,
-                                   polar, config, mc_runs, num_indicators)
+    polar, norm_weights = _handle_polarities_and_weights(is_robustness_indicators, is_robustness_weights, num_unique,
+                                                         col_to_drop_indexes, polar, config, mc_runs, num_indicators)
+
+    return polar, norm_weights
 
 
 def _handle_polarities_and_weights(is_robustness_indicators: int, is_robustness_weights: int, num_unique,
                                    col_to_drop_indexes: np.ndarray, polar: List[str], config: dict, mc_runs: int,
-                                   num_indicators: int):
+                                   num_indicators: int) \
+        -> Union[tuple[Union[list, list[str]], list, None, None], tuple[Union[list, list[str]], None, Any, Any]]:
+    """
+    Manage polarities and weights based on the specified robustness settings, ensuring that the appropriate adjustments
+    and normalizations are applied before returning the necessary data structures.
+    """
     if is_robustness_indicators == 0:
         if any(value == 1 for value in num_unique):
             polar = pop_indexed_elements(col_to_drop_indexes, polar)
@@ -122,12 +139,21 @@ def _handle_polarities_and_weights(is_robustness_indicators: int, is_robustness_
         norm_fixed_weights = check_norm_sum_weights(fixed_weights)
         logger.info("Weights: {}".format(fixed_weights))
         logger.info("Normalized weights: {}".format(norm_fixed_weights))
+        return polar, norm_fixed_weights, None, None
+        #  Return None for norm_random_weights and rand_weight_per_indicator
     else:
-        _handle_robustness_weights(config, mc_runs, num_indicators)
+        norm_random_weights, rand_weight_per_indicator = _handle_robustness_weights(config, mc_runs, num_indicators)
+        return polar, None, norm_random_weights, rand_weight_per_indicator
+        #  Return None for norm_fixed_weights
 
 
 def _handle_robustness_weights(config: dict, mc_runs: int, num_indicators: int):
+    """
+    Handle the generation and normalization of random weights based on the specified settings.
+    """
     norm_random_weights = []
+    rand_weight_per_indicator = {}
+
     if mc_runs == 0:
         logger.error('Error Message', stack_info=True)
         raise ValueError('The number of MC runs should be larger than 0 for a robustness analysis')
@@ -137,9 +163,9 @@ def _handle_robustness_weights(config: dict, mc_runs: int, num_indicators: int):
         for weights in random_weights:
             weights = check_norm_sum_weights(weights)
             norm_random_weights.append(weights)
+        return norm_random_weights, None  # Return norm_random_weights, and None for rand_weight_per_indicator
     elif config.robustness["on_single_weights"] == "yes" and config.robustness["on_all_weights"] == "no":
         i = 0
-        rand_weight_per_indicator = {}
         while i < num_indicators:
             random_weights = randomly_sample_ix_weight(num_indicators, i, mc_runs)
             norm_random_weight = []
@@ -148,9 +174,13 @@ def _handle_robustness_weights(config: dict, mc_runs: int, num_indicators: int):
                 norm_random_weight.append(weights)
             rand_weight_per_indicator["indicator_{}".format(i + 1)] = norm_random_weight
             i += 1
+        return None, rand_weight_per_indicator  # Return None for norm_random_weights, and rand_weight_per_indicator
 
 
 def _handle_no_robustness_indicators(input_matrix_no_alternatives: pd.DataFrame):
+    """
+    Handle the indicators in case of no robustness analysis required.
+    """
     num_unique = input_matrix_no_alternatives.nunique()
     cols_to_drop = num_unique[num_unique == 1].index
 
@@ -411,7 +441,7 @@ def rescale_minmax(scores: pd.DataFrame) -> pd.DataFrame():
     This will rescale the values in the input DataFrame to a [0, 1] range.
 
     :rtype: pd.DataFrame()
-    :param path: str
+    :param scores: pd.DataFrame
     """
     x = scores.to_numpy()
     min_max_scaler = preprocessing.MinMaxScaler()
@@ -439,6 +469,7 @@ def randomly_sample_all_weights(num_weights: int, num_runs: int) -> List[list]:
     ```
     This will generate 10 lists, each containing 5 randomly sampled weights.
 
+    :param num_runs:
     :rtype: List[list]
     :param num_weights: int
     """
@@ -537,9 +568,10 @@ def pop_indexed_elements(indexes: np.ndarray, original_list: list) -> list:
     return new_list
 
 
-def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict) -> List[bool]:
+def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict) -> None:
     """
-    Check conditions on parameters based on the type of probability distribution function (PDF) for each indicator.
+    Check conditions on parameters based on the type of probability distribution function (PDF) for each indicator and
+    raise logging information in case of any problem.
 
     The function checks if the values of parameter1 are larger or equal to the ones of parameter2
     (or vice-versa for the uniform PDF) in case of an input matrix with uncertainties.
@@ -556,14 +588,14 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict) -> List[bool]
 
     Example:
     ```python
-    conditions_satisfied = check_parameters_pdf(my_input_matrix, my_config)
+    check_parameters_pdf(my_input_matrix, my_config)
     ```
 
     This will check conditions on parameters based on the PDF type
     for each indicator in the input matrix as described above.
     The result is a list of boolean values indicating whether the conditions are satisfied for each indicator.
 
-    :rtype: list
+    :return: None
     :param input_matrix: pd.DataFrame
     :param config: dict
     """
@@ -601,7 +633,13 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict) -> List[bool]
 
         list_of_satisfied_conditions.append(satisfies_condition)
 
-    return list_of_satisfied_conditions
+        if any(not value for value in list_of_satisfied_conditions):
+            logger.info(
+                'There is a problem with the parameters given in the input matrix with uncertainties. Check your data!')
+            logger.info(
+                'Either standard deviation values of normal/lognormal indicators are larger than their means')
+            logger.info('or max. values of uniform distributed indicators are smaller than their min. values.')
+            logger.info('If you continue, the negative values will be rescaled internally to a positive range.')
 
 
 def check_if_pdf_is_exact(marginal_pdf: list) -> list:
@@ -674,3 +712,373 @@ def check_if_pdf_is_uniform(marginal_pdf: list) -> list:
     uniform_pdf_mask = [1 if pdf == 'uniform' else 0 for pdf in marginal_pdf]
 
     return uniform_pdf_mask
+
+
+def run_mcda_without_indicator_uncertainty(input_config: dict, input_matrix: pd.DataFrame,
+                                           weights: Union[List[str], List[pd.DataFrame], dict, None],
+                                           f_norm: str, f_agg: str):
+    """
+    Runs ProMCDA without uncertainty on the indicators, i.e. without performing
+    a robustness analysis.
+
+    This function executes the MCDA process without considering uncertainty
+    in the indicators. It computes scores and weights, saves the results,
+    and logs the completion time.
+
+    Parameters:
+    - input_matrix: The input_matrix without the alternatives.
+    - weights: the normalised weights (either fixed or random sampled weights, depending on the settings)
+
+    :return: None
+    :param input_config: dict
+    :param input_matrix: pd:DataFrame
+    :param weights: Union[List[str], List[pd.DataFrame], dict, None]
+    :param f_norm: str
+    :param f_agg: str
+
+    """
+    t = time.time()
+    scores = pd.DataFrame()
+    normalized_scores = pd.DataFrame()
+    all_weights_score_means = pd.DataFrame()
+    all_weights_score_stds = pd.DataFrame()
+    all_weights_score_means_normalized = pd.DataFrame()
+    iterative_random_weights_statistics = {}
+
+    logger.info("Start ProMCDA without robustness of the indicators")
+    config = Config(input_config)
+    is_sensitivity = config.sensitivity['sensitivity_on']
+    is_robustness = config.robustness['robustness_on']
+    mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
+
+    normalized_indicators = mcda_no_uncert.normalize_indicators() if is_sensitivity == "yes" \
+        else mcda_no_uncert.normalize_indicators(f_norm)
+
+    if is_robustness == "no":
+        scores = mcda_no_uncert.aggregate_indicators(normalized_indicators, weights) \
+            if is_sensitivity == "yes" \
+            else mcda_no_uncert.aggregate_indicators(normalized_indicators, weights, f_agg)
+        normalized_scores = rescale_minmax(scores)
+        normalized_scores.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+    elif config.robustness["on_all_weights"] == "yes" and config.robustness["robustness_on"] == "yes":
+        # ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)
+        all_weights_score_means, all_weights_score_stds, \
+            all_weights_score_means_normalized, all_weights_score_stds_normalized = \
+            _compute_scores_for_all_random_weights(normalized_indicators, is_sensitivity, input_matrix, weights, f_agg)
+    elif (config.robustness["on_single_weights"] == "yes") and (config.robustness["robustness_on"] == "yes"):
+        # ONE RANDOMLY SAMPLED WEIGHT A TIME (MCDA runs (num_samples * num_indicators) times)
+        iterative_random_weights_statistics: dict = _compute_scores_for_single_random_weight(
+            normalized_indicators, weights,
+            is_sensitivity, f_agg, input_matrix)
+
+    iterative_random_w_score_means = iterative_random_weights_statistics.score_means
+    iterative_random_w_score_stds = iterative_random_weights_statistics.score_stds
+    iterative_random_w_score_means_normalized = iterative_random_weights_statistics.score_means_normalized
+
+    ranks = _compute_ranks(scores, all_weights_score_means, iterative_random_w_score_means, input_matrix)
+
+    _save_output_files(scores=scores, normalized_scores=normalized_scores, ranks=ranks,
+                       score_means=all_weights_score_means, score_stds=all_weights_score_stds,
+                       score_means_normalized=all_weights_score_means_normalized,
+                       iterative_random_w_score_means=iterative_random_w_score_means,
+                       iterative_random_w_score_means_normalized=iterative_random_w_score_means_normalized,
+                       iterative_random_w_score_stds=iterative_random_w_score_stds,
+                       input_matrix=input_matrix, input_config=input_config)
+
+    _plot_and_save_charts(scores=scores, normalized_scores=normalized_scores,
+                          score_means=all_weights_score_means, score_stds=all_weights_score_stds,
+                          score_means_normalized=all_weights_score_means_normalized,
+                          iterative_random_w_score_means=iterative_random_w_score_means,
+                          iterative_random_w_score_means_normalized=iterative_random_w_score_means_normalized,
+                          input_matrix=input_matrix, config=input_config)
+
+    elapsed = time.time() - t
+    logger.info("All calculations finished in seconds {}".format(elapsed))
+
+
+def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.DataFrame,
+                                        mc_runs: int, is_sensitivity: str, f_agg: str, f_norm: str,
+                                        weights: Union[List[str], List[pd.DataFrame], dict, None],
+                                        polar: List[str]) -> None:
+    """
+    Runs ProMCDA with uncertainty on the indicators, i.e. with a robustness analysis.
+
+    This function executes the MCDA process with uncertainty in the indicators.
+    It computes scores, saves the results, and logs the completion time.
+
+    Parameters:
+    - input_matrix: The input_matrix without the alternatives.
+    - weights: the normalised weights (either fixed or random sampled weights, depending on the settings)
+      In the context of the robustness analysis, only fixed normalised weights are used, i.e. weights[0]
+
+    :return: None
+    :param input_config: dict
+    :param input_matrix: pd:DataFrame
+    :param mc_runs: int
+    :param is_sensitivity: str
+    :param weights: Union[List[str], List[pd.DataFrame], dict, None]
+    :param f_norm: str
+    :param f_agg: str
+    :param polar: List[str]
+    """
+    logger.info("Start ProMCDA with uncertainty on the indicators")
+    config = Config(input_config)
+    all_indicators_scores_normalized = []
+
+    if mc_runs <= 0:
+        logger.error('Error Message', stack_info=True)
+        raise ValueError('The number of MC runs should be larger than 0 for a robustness analysis')
+
+    if mc_runs < 1000:
+        logger.info("The number of Monte-Carlo runs is only {}".format(mc_runs))
+        logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
+
+    check_parameters_pdf(input_matrix, input_config)
+
+    mcda_with_uncert = MCDAWithRobustness(config, input_matrix)
+    n_random_input_matrices = mcda_with_uncert.create_n_randomly_sampled_matrices()
+
+    if is_sensitivity == "yes":
+        n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar)
+    else:
+        n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar, f_norm)
+
+    args_for_parallel_agg = [(weights[0], normalized_indicators)
+                             for normalized_indicators in n_normalized_input_matrices]
+
+    if is_sensitivity == "yes":
+        all_indicators_scores = parallelize_aggregation(args_for_parallel_agg)
+    else:
+        all_indicators_scores = parallelize_aggregation(args_for_parallel_agg, f_agg)
+
+    for matrix in all_indicators_scores:
+        normalized_matrix = rescale_minmax(matrix)
+        all_indicators_scores_normalized.append(normalized_matrix)
+
+    all_indicators_scores_means, all_indicators_scores_stds = estimate_runs_mean_std(all_indicators_scores)
+    all_indicators_means_scores_normalized, all_indicators_scores_stds_normalized = \
+        estimate_runs_mean_std(all_indicators_scores_normalized)
+
+    ranks = all_indicators_scores_means.rank(pct=True)
+
+    all_indicators_scores_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+    all_indicators_scores_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+    all_indicators_means_scores_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+    all_indicators_scores_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+    ranks.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+
+    _save_output_files(score_means=all_indicators_scores_means,
+                       score_stds=all_indicators_scores_stds,
+                       score_means_normalized=all_indicators_means_scores_normalized,
+                       ranks=ranks, input_matrix=input_matrix, input_config=input_config)
+
+    _plot_and_save_charts(score_means=all_indicators_scores_means, score_stds=all_indicators_scores_stds,
+                          score_means_normalized=all_indicators_means_scores_normalized,
+                          input_matrix=input_matrix, config=input_config)
+
+
+def _compute_scores_for_all_random_weights(indicators: dict, is_sensitivity: str, input_matrix: pd.DataFrame,
+                                           weights: Union[List[str], List[pd.DataFrame], dict, None],
+                                           f_agg: str) -> tuple[Any, Any, Any, Any]:
+    """
+    Computes the normalized mean scores and std of the alternatives in the case of randomly sampled weights.
+    """
+    logger.info("All weights are randomly sampled from a uniform distribution.")
+    all_weights_scores_normalized = []
+
+    random_weights = None
+    try:
+        random_weights = weights[1]
+    except(TypeError, IndexError):
+        logger.error('Error Message', stack_info=True)
+        raise ValueError('Error accessing weights. Setting random_weights to None.')
+
+    args_for_parallel_agg = [(lst, indicators) for lst in random_weights]
+
+    if is_sensitivity == "yes":
+        all_weights_scores = parallelize_aggregation(args_for_parallel_agg)  # rough scores coming from all runs
+    else:
+        all_weights_scores = parallelize_aggregation(args_for_parallel_agg, f_agg)
+
+    for matrix in all_weights_scores:
+        normalized_matrix = rescale_minmax(matrix)  # all score normalization
+        all_weights_scores_normalized.append(normalized_matrix)
+    all_weights_score_means, all_weights_score_stds = estimate_runs_mean_std(
+        all_weights_scores)  # mean and std of rough scores
+    all_weights_score_means_normalized, all_weights_score_stds_normalized = estimate_runs_mean_std(
+        all_weights_scores_normalized)  # mean and std of norm. scores
+    all_weights_score_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+    all_weights_score_means_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+    all_weights_score_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+
+    return all_weights_score_means, all_weights_score_stds, all_weights_score_means_normalized, all_weights_score_stds_normalized
+
+
+def _compute_scores_for_single_random_weight(indicators: dict,
+                                             weights: Union[List[str], List[pd.DataFrame], dict, None],
+                                             is_sensitivity: str, f_agg: str, input_matrix: pd.DataFrame) -> dict:
+    """
+    Computes the mean scores and std of the alternatives in the case of one randomly sampled weight at time.
+    """
+    iterative_random_w_score_means = {}
+    iterative_random_w_score_stds = {}
+    iterative_random_w_score_means_normalized = {}
+    iterative_random_w_score_stds_normalized = {}
+
+    logger.info("One weight at time is randomly sampled from a uniform distribution.")
+    scores_one_random_weight_normalized = {}
+    num_indicators = input_matrix.shape[1]
+
+    rand_weight_per_indicator = None
+    try:
+        rand_weight_per_indicator = weights[2]
+    except(TypeError, IndexError):
+        logger.error('Error Message', stack_info=True)
+        raise ValueError('Error accessing weights. Setting rand_weight_per_indicator to None.')
+
+    for index in range(num_indicators):
+        norm_one_random_weight = rand_weight_per_indicator.get("indicator_{}".format(index + 1), [])
+        args_for_parallel_agg = [(lst, indicators) for lst in norm_one_random_weight]
+        if is_sensitivity == "yes":
+            scores_one_random_weight = parallelize_aggregation(args_for_parallel_agg)
+        else:
+            scores_one_random_weight = parallelize_aggregation(args_for_parallel_agg, f_agg)
+
+        scores_one_random_weight_normalized["indicator_{}".format(index + 1)] = []
+        for matrix in scores_one_random_weight:
+            matrix_normalized = rescale_minmax(matrix)  # normalize scores
+            scores_one_random_weight_normalized["indicator_{}".format(index + 1)].append(matrix_normalized)
+
+        one_random_weight_score_means, one_random_weight_score_stds = estimate_runs_mean_std(scores_one_random_weight)
+        one_random_weight_score_means_normalized, one_random_weight_score_stds_normalized = estimate_runs_mean_std(
+            scores_one_random_weight_normalized["indicator_{}".format(index + 1)])
+
+        one_random_weight_score_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+        one_random_weight_score_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+        one_random_weight_score_means_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+        one_random_weight_score_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+
+        iterative_random_w_score_means["indicator_{}".format(index + 1)] = one_random_weight_score_means
+        iterative_random_w_score_stds["indicator_{}".format(index + 1)] = one_random_weight_score_stds
+        iterative_random_w_score_means_normalized[
+            "indicator_{}".format(index + 1)] = one_random_weight_score_means_normalized
+        iterative_random_w_score_stds_normalized[
+            "indicator_{}".format(index + 1)] = one_random_weight_score_stds_normalized
+
+    return {
+        "score_means": iterative_random_w_score_means,
+        "score_stds": iterative_random_w_score_stds,
+        "score_means_normalized": iterative_random_w_score_means_normalized,
+        "score_stds_normalized": iterative_random_w_score_stds_normalized
+    }
+
+
+def _compute_ranks(scores: pd.DataFrame, all_weights_means: pd.DataFrame, iterative_random_w_means: dict,
+                   input_matrix: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute ranks based on the computed scores, mean scores with random weights, and mean scores for each random weight.
+    """
+    ranks = pd.DataFrame()
+
+    if not scores.empty:
+        ranks = scores.rank(pct=True)
+    elif not all_weights_means.empty:
+        ranks = all_weights_means.rank(pct=True)
+    elif not bool(iterative_random_w_means) is False:
+        pass
+
+    if not ranks.empty:
+        ranks.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+
+    return ranks
+
+
+def _save_output_files(scores: Optional[pd.DataFrame],
+                       normalized_scores: Optional[pd.DataFrame],
+                       ranks: Optional[pd.DataFrame],
+                       score_means: Optional[pd.DataFrame],
+                       score_stds: Optional[pd.DataFrame],
+                       score_means_normalized: Optional[pd.DataFrame],
+                       iterative_random_w_score_means: Optional[dict],
+                       iterative_random_w_score_stds: Optional[dict],
+                       iterative_random_w_score_means_normalized: Optional[dict],
+                       input_config: dict,
+                       input_matrix: pd.DataFrame) -> None:
+    """
+    Save output files based of the computed scores, ranks, and configuration data.
+    """
+    config = Config(input_config)
+    logger.info("Saving results in {}".format(config.output_file_path))
+    check_path_exists(config.output_file_path)
+
+    if not scores.empty:
+        scores.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+        save_df(scores, config.output_file_path, 'scores.csv')
+        save_df(normalized_scores, config.output_file_path, 'normalized_scores.csv')
+        save_df(ranks, config.output_file_path, 'ranks.csv')
+    elif not score_means.empty:
+        score_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+        save_df(score_means, config.output_file_path, 'score_means.csv')
+        save_df(score_stds, config.output_file_path, 'score_stds.csv')
+        save_df(score_means_normalized, config.output_file_path, 'score_means_normalized.csv')
+        save_df(ranks, config.output_file_path, 'ranks.csv')
+    elif iterative_random_w_score_means:
+        save_dict(iterative_random_w_score_means, config.output_file_path, 'score_means.pkl')
+        save_dict(iterative_random_w_score_stds, config.output_file_path, 'score_stds.pkl')
+        save_dict(iterative_random_w_score_means_normalized, config.output_file_path, 'score_means_normalized.pkl')
+
+    save_config(input_config, config.output_file_path, 'configuration.json')
+
+
+def _plot_and_save_charts(scores: Optional[pd.DataFrame],
+                          normalized_scores: Optional[pd.DataFrame],
+                          score_means: Optional[pd.DataFrame],
+                          score_stds: Optional[pd.DataFrame],
+                          score_means_normalized: Optional[pd.DataFrame],
+                          iterative_random_w_score_means: Optional[dict],
+                          iterative_random_w_score_means_normalized: Optional[dict],
+                          input_matrix: pd.DataFrame,
+                          config: dict) -> None:
+    """
+    Generate plots based on the computed scores and save them.
+    """
+    config = Config(config)
+    num_indicators = input_matrix.shape[1]
+
+    if not scores.empty:
+        plot_norm_scores = plot_norm_scores_without_uncert(normalized_scores)
+        save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores.png")
+
+        plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
+        save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores.png")
+
+    elif not score_means.empty:
+        chart_mean_scores = plot_mean_scores(score_means, "plot_std", "weights",
+                                             score_stds)
+        save_figure(chart_mean_scores, config.output_file_path, "MCDA_rough_scores.png")
+
+        chart_mean_scores_norm = plot_mean_scores(score_means_normalized,
+                                                  "not_plot_std", "weights", score_stds)
+        save_figure(chart_mean_scores_norm, config.output_file_path, "MCDA_norm_scores.png")
+
+    elif iterative_random_w_score_means:
+        images = []
+        images_norm = []
+
+        for index in range(num_indicators):
+            one_random_weight_means = iterative_random_w_score_means["indicator_{}".format(index + 1)]
+            one_random_weight_means_normalized = iterative_random_w_score_means_normalized[
+                "indicator_{}".format(index + 1)]
+
+            plot_weight_mean_scores = plot_mean_scores_iterative(one_random_weight_means,
+                                                                 input_matrix.columns, index,
+                                                                 "plot_std")
+            plot_weight_mean_scores_norm = plot_mean_scores_iterative(one_random_weight_means_normalized,
+                                                                      input_matrix.columns, index,
+                                                                      "not_plot_std")
+
+            images.append(plot_weight_mean_scores)
+            images_norm.append(plot_weight_mean_scores_norm)
+
+        combine_images(images, config.output_file_path, "MCDA_one_weight_randomness_rough_scores.png")
+        combine_images(images_norm, config.output_file_path, "MCDA_one_weight_randomness_norm_scores.png")

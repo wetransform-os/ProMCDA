@@ -68,7 +68,7 @@ def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     return fig
 
 
-def plot_mean_scores(all_means: pd.DataFrame, all_stds: pd.DataFrame, plot_std: str, rand_on: str) -> object:
+def plot_mean_scores(all_means: pd.DataFrame, plot_std: str, rand_on: str, all_stds=None) -> object:
     num_of_combinations = all_means.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA average scores and std")
     i = 0
@@ -108,8 +108,8 @@ def plot_mean_scores(all_means: pd.DataFrame, all_stds: pd.DataFrame, plot_std: 
     return fig
 
 
-def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, all_weights_stds: pd.DataFrame, indicators: list,
-                               index: int, plot_std: str) -> object:
+def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, indicators: list,
+                               index: int, plot_std: str, all_weights_stds=None) -> object:
     num_of_combinations = all_weights_means.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA average scores and std")
     i = 0

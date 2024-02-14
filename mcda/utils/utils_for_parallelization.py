@@ -145,6 +145,10 @@ def parallelize_normalization(input_matrices: List[pd.DataFrame], polar: list, m
 
 
 def estimate_runs_mean_std(res: List[pd.DataFrame]) -> List[pd.DataFrame]:
+    """
+
+    :rtype: object
+    """
     all_runs = pd.concat(res, axis=0)
     by_index = all_runs.groupby(all_runs.index)
     df_means = by_index.mean()
