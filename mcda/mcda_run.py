@@ -12,11 +12,11 @@ import time
 import logging
 
 from mcda.configuration.config import Config
-from mcda.mcda_with_robustness import MCDAWithRobustness
-from mcda.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.utils.utils_for_main import *
 from mcda.utils.utils_for_plotting import *
 from mcda.utils.utils_for_parallelization import *
+
+log = logging.getLogger(__name__)
 
 FORMATTER: str = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=FORMATTER)
@@ -47,6 +47,8 @@ def main(input_config: dict):
     is_robustness_weights = 0
     marginal_pdf = []
     num_unique = []
+
+    t = time.time()
 
     # Extracting relevant configuration values
     config = Config(input_config)
@@ -95,23 +97,32 @@ def main(input_config: dict):
                              config.robustness["on_indicators"] == "yes")),
                            'Robustness analysis is requested: but on weights or indicators? Please clarify.')
 
-        check_config_setting(((config.robustness["on_single_weights"] == "yes" and
-                             config.robustness["on_all_weights"] == "no" and
-                             config.robustness["on_indicators"] == "no") or
-                            (config.robustness["on_single_weights"] == "no" and
-                             config.robustness["on_all_weights"] == "yes" and
-                             config.robustness["on_indicators"] == "no")),
-                           'ProMCDA will consider uncertainty on the weights')
-        is_robustness_weights = 1
-        logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
+        condition_robustness_on_weights = ((config.robustness["on_single_weights"] == "yes" and
+                                            config.robustness["on_all_weights"] == "no" and
+                                            config.robustness["on_indicators"] == "no") or
+                                           (config.robustness["on_single_weights"] == "no" and
+                                            config.robustness["on_all_weights"] == "yes" and
+                                            config.robustness["on_indicators"] == "no"))
+        condition_robustness_on_indicators = (config.robustness["on_single_weights"] == "no" and
+                                              config.robustness["on_all_weights"] == "no" and
+                                              config.robustness["on_indicators"] == "yes")
 
-        check_config_setting((config.robustness["on_single_weights"] == "no" and
-                            config.robustness["on_all_weights"] == "no" and
-                            config.robustness["on_indicators"] == "yes"),
-                           'ProMCDA will consider uncertainty on the indicators')
-        is_robustness_indicators = 1
+        condition = condition_robustness_on_weights if condition_robustness_on_weights \
+                                                    else condition_robustness_on_indicators
+
+        is_robustness_weights, is_robustness_indicators = \
+            check_config_setting(condition,
+                                 'ProMCDA will consider uncertainty on the weights',
+                                  str(condition_robustness_on_weights),str(condition_robustness_on_indicators),
+                                  mc_runs)
+
+        is_robustness_weights, is_robustness_indicators = \
+            check_config_setting(condition,
+                                 'ProMCDA will consider uncertainty on the indicators',
+                                 str(condition_robustness_on_weights),str(condition_robustness_on_indicators),
+                                 mc_runs)
+
         marginal_pdf = config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
-        logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
         logger.info("Read input matrix with uncertainty of the indicators at {}".format(
             config.input_matrix_path))
 
@@ -136,10 +147,11 @@ def main(input_config: dict):
 
     # If there is no uncertainty of the indicators:
     if is_robustness_indicators == 0:
-        run_mcda_without_indicator_uncertainty(config, input_matrix_no_alternatives, weights, f_norm, f_agg)
+        run_mcda_without_indicator_uncertainty(input_config, input_matrix_no_alternatives, weights, f_norm, f_agg)
     # else, there is uncertainty:
     else:
-        run_mcda_with_indicator_uncertainty()
+        run_mcda_with_indicator_uncertainty(input_config, input_matrix_no_alternatives, mc_runs, is_sensitivity, f_agg,
+                                            f_norm, weights, polar, marginal_pdf)
 
     logger.info(
             "ProMCDA finished calculations: check the output files")

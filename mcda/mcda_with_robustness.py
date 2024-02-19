@@ -1,9 +1,14 @@
 import copy
-import sys
 import logging
+import sys
+from typing import List
+
+import pandas as pd
+import numpy as np
 
 from mcda.configuration.config import Config
-from mcda.utils.utils_for_main import *
+
+log = logging.getLogger(__name__)
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
@@ -19,9 +24,14 @@ class MCDAWithRobustness:
     All indicator values are randomly sampled by different distributions.
     It's possible to have randomly sampled weights too.
 
+    is_exact_pdf_mask and is_poisson_pdf_mask are part of the class interface to avoid circular import issues.
+    They are None as default because not needed for certain methods.
+
     """
 
-    def __init__(self, config: Config, input_matrix: pd.DataFrame()):
+    def __init__(self, config: Config, input_matrix: pd.DataFrame(), is_exact_pdf_mask=None, is_poisson_pdf_mask=None):
+        self.is_exact_pdf_mask = is_exact_pdf_mask
+        self.is_poisson_pdf_mask = is_poisson_pdf_mask
         self._config = copy.deepcopy(config)
         self._input_matrix = copy.deepcopy(input_matrix)
 
@@ -73,11 +83,10 @@ class MCDAWithRobustness:
         N: number of random samples
         """
         marginal_pdf = self._config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
-        is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
-        is_poisson_pdf_mask = check_if_pdf_is_poisson(marginal_pdf)
-
         num_runs = self._config.monte_carlo_sampling["monte_carlo_runs"]  # N
         input_matrix = self._input_matrix  # (AxnI)
+        is_exact_pdf_mask = self.is_exact_pdf_mask
+        is_poisson_pdf_mask = self.is_poisson_pdf_mask
 
         np.random.seed(42)
 

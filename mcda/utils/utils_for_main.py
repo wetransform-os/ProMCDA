@@ -16,6 +16,8 @@ from mcda.utils.utils_for_plotting import *
 from mcda.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.mcda_with_robustness import MCDAWithRobustness
 
+log = logging.getLogger(__name__)
+
 logging.getLogger('PIL').setLevel(logging.WARNING)
 
 FORMATTER: str = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
@@ -44,14 +46,27 @@ def check_config_error(condition: bool, error_message: str):
         raise ValueError(error_message)
 
 
-def check_config_setting(condition, information_message):
+def check_config_setting(condition: bool, information_message: str,
+                         condition_robustness_on_weights: str, condition_robustness_on_indicators: str, mc_runs: int) \
+                         -> (int, int):
+
+    is_robustness_weights = 0
+    is_robustness_indicators = 0
+
     if condition:
         logger.info(information_message)
+        logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
+    if str(condition) == condition_robustness_on_weights:
+        is_robustness_weights = 1
+    elif str(condition) == condition_robustness_on_indicators:
+        is_robustness_indicators = 1
+
+    return is_robustness_weights, is_robustness_indicators
 
 
 def process_indicators_and_weights(config: dict, input_matrix_no_alternatives: pd.DataFrame,
                                    is_robustness_indicators: int, is_robustness_weights: int, polar: List[str],
-                                   mc_runs: int, num_indicators: int):
+                                   mc_runs: int, num_indicators: int) -> Tuple[List[str], Union[List[list], dict]]:
     """
     Process indicators and weights based on input parameters in the configuration.
 
@@ -72,7 +87,7 @@ def process_indicators_and_weights(config: dict, input_matrix_no_alternatives: p
     Returns:
     - a shorter list of polarities if one has been dropped together with the relative indicator,
       which brings no information. Otherwise, the same list.
-    - the normalised weights (either fixed or random sampled weights, depending on the seetings)
+    - the normalised weights (either fixed or random sampled weights, depending on the settings)
 
     Notes:
     - For is_robustness_indicators == 0:
@@ -92,7 +107,7 @@ def process_indicators_and_weights(config: dict, input_matrix_no_alternatives: p
     - Logs randomly sampled weights.
 
     :return: polar, norm_weights
-    :rtype: List[str], Union[list, dict]
+    :rtype: Tuple[List[str], Union[List[list], dict]]
     :param mc_runs: int
     :param polar: List[str]
     :param is_robustness_weights: int
@@ -113,8 +128,10 @@ def process_indicators_and_weights(config: dict, input_matrix_no_alternatives: p
         logger.info("Number of indicators: {}".format(num_indicators))
         # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional
 
-    polar, norm_weights = _handle_polarities_and_weights(is_robustness_indicators, is_robustness_weights, num_unique,
-                                                         col_to_drop_indexes, polar, config, mc_runs, num_indicators)
+    polarities_and_weights = _handle_polarities_and_weights(is_robustness_indicators, is_robustness_weights, num_unique,
+                                                            col_to_drop_indexes, polar, config, mc_runs, num_indicators)
+
+    polar, norm_weights = tuple(item for item in polarities_and_weights if item is not None)
 
     return polar, norm_weights
 
@@ -122,16 +139,23 @@ def process_indicators_and_weights(config: dict, input_matrix_no_alternatives: p
 def _handle_polarities_and_weights(is_robustness_indicators: int, is_robustness_weights: int, num_unique,
                                    col_to_drop_indexes: np.ndarray, polar: List[str], config: dict, mc_runs: int,
                                    num_indicators: int) \
-        -> Union[tuple[Union[list, list[str]], list, None, None], tuple[Union[list, list[str]], None, Any, Any]]:
+        -> Union[Tuple[List[str], List[str], None, None],
+        Tuple[List[str], None, List[List], None],
+        Tuple[List[str], None, None, dict]]:
     """
     Manage polarities and weights based on the specified robustness settings, ensuring that the appropriate adjustments
     and normalizations are applied before returning the necessary data structures.
     """
+    norm_random_weights = []
+    rand_weight_per_indicator = {}
+
+    # Managing polarities
     if is_robustness_indicators == 0:
         if any(value == 1 for value in num_unique):
             polar = pop_indexed_elements(col_to_drop_indexes, polar)
     logger.info("Polarities: {}".format(polar))
 
+    # Managing weights
     if is_robustness_weights == 0:
         fixed_weights = config.robustness["given_weights"]
         if any(value == 1 for value in num_unique):
@@ -142,14 +166,21 @@ def _handle_polarities_and_weights(is_robustness_indicators: int, is_robustness_
         return polar, norm_fixed_weights, None, None
         #  Return None for norm_random_weights and rand_weight_per_indicator
     else:
-        norm_random_weights, rand_weight_per_indicator = _handle_robustness_weights(config, mc_runs, num_indicators)
-        return polar, None, norm_random_weights, rand_weight_per_indicator
+        output_weights = _handle_robustness_weights(config, mc_runs, num_indicators)
+        if output_weights is not None:
+            norm_random_weights, rand_weight_per_indicator = output_weights
+        if norm_random_weights:
+            return polar, None, norm_random_weights, None
+        else:
+            return polar, None, None, rand_weight_per_indicator
         #  Return None for norm_fixed_weights
 
 
-def _handle_robustness_weights(config: dict, mc_runs: int, num_indicators: int):
+def _handle_robustness_weights(config: dict, mc_runs: int, num_indicators: int) \
+        -> Tuple[Union[List[list], None], Union[dict, None]]:
     """
-    Handle the generation and normalization of random weights based on the specified settings.
+    Handle the generation and normalization of random weights based on the specified settings
+    when a robustness analysis is requested on the weights.
     """
     norm_random_weights = []
     rand_weight_per_indicator = {}
@@ -476,7 +507,7 @@ def randomly_sample_all_weights(num_weights: int, num_runs: int) -> List[list]:
 
     list_of_weights = []
     for _ in range(num_runs):
-        lst = [random.uniform(0, 1) for _ in range(num_weights)]
+        lst = [np.random.uniform(0, 1) for _ in range(num_weights)]
         list_of_weights.append(lst)
 
     return list_of_weights
@@ -568,7 +599,7 @@ def pop_indexed_elements(indexes: np.ndarray, original_list: list) -> list:
     return new_list
 
 
-def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict) -> None:
+def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict, for_testing=False) -> Union[List[bool], None]:
     """
     Check conditions on parameters based on the type of probability distribution function (PDF) for each indicator and
     raise logging information in case of any problem.
@@ -580,11 +611,12 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict) -> None:
     in the second case, they represent min and max values.
 
     Parameters:
-    - input_matrix (pd.DataFrame): The input matrix containing uncertainties for indicators.
+    - input_matrix (pd.DataFrame): The input matrix containing uncertainties for indicators, no alternatives.
     - config (dict): Configuration dictionary containing the Monte Carlo sampling information.
 
     Returns:
-    - List[bool]: A list indicating whether the conditions are satisfied for each indicator.
+    - List[bool]: A list indicating whether the conditions are satisfied for each indicator only for testing.
+    - None: default
 
     Example:
     ```python
@@ -595,10 +627,11 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict) -> None:
     for each indicator in the input matrix as described above.
     The result is a list of boolean values indicating whether the conditions are satisfied for each indicator.
 
-    :return: None
+    :return: Union[list, None]
     :param input_matrix: pd.DataFrame
     :param config: dict
     """
+    config = Config(config)
 
     satisfies_condition = False
 
@@ -640,6 +673,9 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict) -> None:
                 'Either standard deviation values of normal/lognormal indicators are larger than their means')
             logger.info('or max. values of uniform distributed indicators are smaller than their min. values.')
             logger.info('If you continue, the negative values will be rescaled internally to a positive range.')
+
+    if for_testing:
+        return list_of_satisfied_conditions
 
 
 def check_if_pdf_is_exact(marginal_pdf: list) -> list:
@@ -798,8 +834,8 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, input_matrix: pd.
 
 def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.DataFrame,
                                         mc_runs: int, is_sensitivity: str, f_agg: str, f_norm: str,
-                                        weights: Union[List[str], List[pd.DataFrame], dict, None],
-                                        polar: List[str]) -> None:
+                                        weights: Union[List[list], List[pd.DataFrame], dict],
+                                        polar: List[str], marginal_pdf: List[str]) -> None:
     """
     Runs ProMCDA with uncertainty on the indicators, i.e. with a robustness analysis.
 
@@ -820,6 +856,7 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
     :param f_norm: str
     :param f_agg: str
     :param polar: List[str]
+    :param marginal_pdf: List[str]
     """
     logger.info("Start ProMCDA with uncertainty on the indicators")
     config = Config(input_config)
@@ -834,8 +871,10 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
         logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
 
     check_parameters_pdf(input_matrix, input_config)
+    is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
+    is_poisson_pdf_mask = check_if_pdf_is_poisson(marginal_pdf)
 
-    mcda_with_uncert = MCDAWithRobustness(config, input_matrix)
+    mcda_with_uncert = MCDAWithRobustness(config, input_matrix, is_exact_pdf_mask, is_poisson_pdf_mask)
     n_random_input_matrices = mcda_with_uncert.create_n_randomly_sampled_matrices()
 
     if is_sensitivity == "yes":
@@ -843,7 +882,7 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
     else:
         n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar, f_norm)
 
-    args_for_parallel_agg = [(weights[0], normalized_indicators)
+    args_for_parallel_agg = [(weights, normalized_indicators)
                              for normalized_indicators in n_normalized_input_matrices]
 
     if is_sensitivity == "yes":
@@ -867,15 +906,21 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
     all_indicators_scores_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
     ranks.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
 
-    _save_output_files(score_means=all_indicators_scores_means,
+    _save_output_files(scores=None, normalized_scores=None,
+                       iterative_random_w_score_means=None,
+                       iterative_random_w_score_means_normalized=None,
+                       iterative_random_w_score_stds=None,
+                       score_means=all_indicators_scores_means,
                        score_stds=all_indicators_scores_stds,
                        score_means_normalized=all_indicators_means_scores_normalized,
-                       ranks=ranks, input_matrix=input_matrix, input_config=input_config)
+                       ranks=ranks, input_config=input_config, input_matrix=input_matrix)
 
-    _plot_and_save_charts(score_means=all_indicators_scores_means, score_stds=all_indicators_scores_stds,
+    _plot_and_save_charts(scores=None, normalized_scores=None,
+                          iterative_random_w_score_means=None,
+                          iterative_random_w_score_means_normalized=None,
+                          score_means=all_indicators_scores_means, score_stds=all_indicators_scores_stds,
                           score_means_normalized=all_indicators_means_scores_normalized,
                           input_matrix=input_matrix, config=input_config)
-
 
 def _compute_scores_for_all_random_weights(indicators: dict, is_sensitivity: str, input_matrix: pd.DataFrame,
                                            weights: Union[List[str], List[pd.DataFrame], dict, None],
@@ -1011,18 +1056,17 @@ def _save_output_files(scores: Optional[pd.DataFrame],
     logger.info("Saving results in {}".format(config.output_file_path))
     check_path_exists(config.output_file_path)
 
-    if not scores.empty:
+    if scores is not None and not scores.empty:
         scores.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
         save_df(scores, config.output_file_path, 'scores.csv')
         save_df(normalized_scores, config.output_file_path, 'normalized_scores.csv')
         save_df(ranks, config.output_file_path, 'ranks.csv')
-    elif not score_means.empty:
-        score_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+    elif score_means is not None and not score_means.empty:
         save_df(score_means, config.output_file_path, 'score_means.csv')
         save_df(score_stds, config.output_file_path, 'score_stds.csv')
         save_df(score_means_normalized, config.output_file_path, 'score_means_normalized.csv')
         save_df(ranks, config.output_file_path, 'ranks.csv')
-    elif iterative_random_w_score_means:
+    elif iterative_random_w_score_means is not None:
         save_dict(iterative_random_w_score_means, config.output_file_path, 'score_means.pkl')
         save_dict(iterative_random_w_score_stds, config.output_file_path, 'score_stds.pkl')
         save_dict(iterative_random_w_score_means_normalized, config.output_file_path, 'score_means_normalized.pkl')
@@ -1045,14 +1089,15 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
     config = Config(config)
     num_indicators = input_matrix.shape[1]
 
-    if not scores.empty:
+    if scores is not None and not scores.empty:
         plot_norm_scores = plot_norm_scores_without_uncert(normalized_scores)
         save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores.png")
 
         plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
         save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores.png")
 
-    elif not score_means.empty:
+
+    elif score_means is not None and not score_means.empty:
         chart_mean_scores = plot_mean_scores(score_means, "plot_std", "weights",
                                              score_stds)
         save_figure(chart_mean_scores, config.output_file_path, "MCDA_rough_scores.png")
@@ -1061,7 +1106,7 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
                                                   "not_plot_std", "weights", score_stds)
         save_figure(chart_mean_scores_norm, config.output_file_path, "MCDA_norm_scores.png")
 
-    elif iterative_random_w_score_means:
+    elif iterative_random_w_score_means is not None:
         images = []
         images_norm = []
 

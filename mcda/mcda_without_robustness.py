@@ -7,6 +7,8 @@ from mcda.configuration.config import Config
 from mcda.mcda_functions.normalization import Normalization
 from mcda.mcda_functions.aggregation import Aggregation
 
+log = logging.getLogger(__name__)
+
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("ProMCDA aggregation")
