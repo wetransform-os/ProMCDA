@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 
 """
-This script serves as the main entry point for running all pieces of functionality in a consequential way
-following the settings given in the configuration file configuration.json.
+This script serves as the main entry point for running all pieces of functionality in a consequential way by
+following the settings given in the configuration file 'configuration.json'.
 
 Usage (from root directory):
     $ python3 -m mcda.mcda_run -c configuration.json
@@ -97,6 +97,7 @@ def main(input_config: dict):
                              config.robustness["on_indicators"] == "yes")),
                            'Robustness analysis is requested: but on weights or indicators? Please clarify.')
 
+        # Check seetings for robustness analysis on weights or indicators
         condition_robustness_on_weights = ((config.robustness["on_single_weights"] == "yes" and
                                             config.robustness["on_all_weights"] == "no" and
                                             config.robustness["on_indicators"] == "no") or
@@ -148,7 +149,7 @@ def main(input_config: dict):
     # If there is no uncertainty of the indicators:
     if is_robustness_indicators == 0:
         run_mcda_without_indicator_uncertainty(input_config, input_matrix_no_alternatives, weights, f_norm, f_agg)
-    # else, there is uncertainty:
+    # else (i.e. there is uncertainty):
     else:
         run_mcda_with_indicator_uncertainty(input_config, input_matrix_no_alternatives, mc_runs, is_sensitivity, f_agg,
                                             f_norm, weights, polar, marginal_pdf)

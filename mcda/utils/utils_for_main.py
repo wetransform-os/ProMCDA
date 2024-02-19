@@ -48,8 +48,7 @@ def check_config_error(condition: bool, error_message: str):
 
 def check_config_setting(condition: bool, information_message: str,
                          condition_robustness_on_weights: str, condition_robustness_on_indicators: str, mc_runs: int) \
-                         -> (int, int):
-
+        -> (int, int):
     is_robustness_weights = 0
     is_robustness_indicators = 0
 
@@ -613,6 +612,7 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict, for_testing=F
     Parameters:
     - input_matrix (pd.DataFrame): The input matrix containing uncertainties for indicators, no alternatives.
     - config (dict): Configuration dictionary containing the Monte Carlo sampling information.
+    - for_testing (bool): True only for unit testing
 
     Returns:
     - List[bool]: A list indicating whether the conditions are satisfied for each indicator only for testing.
@@ -630,6 +630,7 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict, for_testing=F
     :return: Union[list, None]
     :param input_matrix: pd.DataFrame
     :param config: dict
+    :param for_testing: bool
     """
     config = Config(config)
 
@@ -921,6 +922,7 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
                           score_means=all_indicators_scores_means, score_stds=all_indicators_scores_stds,
                           score_means_normalized=all_indicators_means_scores_normalized,
                           input_matrix=input_matrix, config=input_config)
+
 
 def _compute_scores_for_all_random_weights(indicators: dict, is_sensitivity: str, input_matrix: pd.DataFrame,
                                            weights: Union[List[str], List[pd.DataFrame], dict, None],
