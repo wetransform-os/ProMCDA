@@ -1,10 +1,6 @@
 import unittest
 from pathlib import Path
 from unittest import TestCase
-
-from mcda.mcda_without_robustness import MCDAWithoutRobustness
-from mcda.configuration.config import Config
-from mcda.utils.utils_for_parallelization import *
 from mcda.utils.utils_for_main import *
 from mcda.mcda_functions.aggregation import Aggregation
 
@@ -105,9 +101,8 @@ class TestMCDA_without_robustness(unittest.TestCase):
         file_path = test_data_directory / "input_matrix_without_uncert.csv"
 
         input_matrix = read_matrix(file_path)
-        input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0], axis=1)
 
-        return input_matrix_no_alternatives
+        return input_matrix
 
     @staticmethod
     def get_list_of_df():

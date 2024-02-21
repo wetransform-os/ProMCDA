@@ -74,10 +74,8 @@ You find a configuration.json file as an example in this directory: please modif
 the entries of the configuration file are described.
 
 ***Path to the input matrix***, a table where rows represent the alternatives and columns represent the indicators.
-Be sure that the column containing the names of the alternatives is set as the index column, e.g. by:
-```bash
-input_matrix = input_matrix.set_index('Alternatives').
-```
+Be sure that the first column of the input matrix contains the names of the alternatives.
+
 Be sure that there are no duplicates among the rows. If the values of one or more indicators are all the same, 
 the indicators are dropped from the input matrix because they contain no information.
 Examples of input matrix:

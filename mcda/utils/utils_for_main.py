@@ -49,6 +49,25 @@ def check_config_error(condition: bool, error_message: str):
 def check_config_setting(condition: bool, information_message: str,
                          condition_robustness_on_weights: str, condition_robustness_on_indicators: str, mc_runs: int) \
         -> (int, int):
+    """
+        Checks configuration settings and logs information messages.
+
+        Parameters:
+        - condition (bool): The condition to check.
+        - information_message (str): The information message to log.
+
+        Returns:
+        :rtype: Tuple[int, int]
+        :return: is_robustness_weights, is_robustness_indicators, a tuple containing flags indicating robustness
+                 on weights and indicators.
+
+        Example:
+        ```python
+        is_robustness_weights, is_robustness_indicators = check_config_setting(True, "Some information message",
+                                                                               "True", "False", 1000)
+        ```
+        """
+
     is_robustness_weights = 0
     is_robustness_indicators = 0
 
@@ -257,27 +276,29 @@ def check_indicator_weights_polarities(num_indicators: int, polar: List[str], co
 
 def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
     """
-    Check the input matrix for duplicated rows in the alternatives column
-    and rescale negative indicator values.
+    Check the input matrix for duplicated rows in the alternatives column, rescale negative indicator values
+    and drop the index column 'Alternatives'.
 
     Parameters:
-    - input_matrix: The input matrix containing alternatives and indicators.
+    - input_matrix: The input matrix containing the alternatives (as index column) and indicators.
 
     Raises:
     - ValueError: If duplicated rows are found in the alternative column.
     - UserStoppedInfo: If the user chooses to stop when duplicates are found.
 
      :rtype: pd.DataFrame
+     :return: input_matrix_no_alternatives
      :param input_matrix: pd.DataFrame
     """
-
     if input_matrix.duplicated().any():
         raise ValueError('Error: Duplicated rows in the alternatives column.')
     elif input_matrix.iloc[:, 0].duplicated().any():
         logger.info('Duplicated rows in the alternatives column.')
-    logger.info("Alternatives are {}".format(input_matrix.iloc[:, 0].tolist()))
-    input_matrix_no_alternatives = input_matrix.drop(
-        input_matrix.columns[0], axis=1)  # drop the first column with alternatives
+
+    index_column_values = input_matrix.index.tolist()
+    logger.info("Alternatives are {}".format(index_column_values))
+    input_matrix_no_alternatives = input_matrix.reset_index(drop=True)  # drop the alternative
+
     input_matrix_no_alternatives = _check_and_rescale_negative_indicators(
         input_matrix_no_alternatives)
 
@@ -287,6 +308,7 @@ def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
 def read_matrix(input_matrix_path: str) -> pd.DataFrame():
     """
     Read an input matrix from a CSV file and return it as a DataFrame.
+    Set the 'Alternatives' column as index column.
 
     Parameters:
     - input_matrix_path (str): Path to the CSV file containing the input matrix.
@@ -304,9 +326,30 @@ def read_matrix(input_matrix_path: str) -> pd.DataFrame():
             matrix = pd.read_csv(fp, sep="[,;:]", decimal='.', engine='python')
             data_types = {col: 'float64' for col in matrix.columns[1:]}
             matrix = matrix.astype(data_types)
+            alternatives_column_name = matrix.columns[0]
+            matrix = matrix.set_index(alternatives_column_name)
             return matrix
     except Exception as e:
         print(e)
+
+
+def reset_index_if_needed(series):
+    """
+    Reset the index of a pandas Series if it's not a RangeIndex.
+
+    Parameters:
+    - series (pd.Series): The input pandas Series.
+
+    Returns:
+    - pd.Series: The series with the index reset if needed.
+
+    # Usage example:
+    res = reset_index_if_needed(res)
+    """
+    if not isinstance(series.index, pd.RangeIndex):
+        series = series.reset_index(drop=True)
+    return series
+
 
 
 def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame():
@@ -751,7 +794,8 @@ def check_if_pdf_is_uniform(marginal_pdf: list) -> list:
     return uniform_pdf_mask
 
 
-def run_mcda_without_indicator_uncertainty(input_config: dict, input_matrix: pd.DataFrame,
+def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name: str, index_column_values: list,
+                                           input_matrix: pd.DataFrame,
                                            weights: Union[List[str], List[pd.DataFrame], dict, None],
                                            f_norm: str, f_agg: str):
     """
@@ -764,10 +808,14 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, input_matrix: pd.
 
     Parameters:
     - input_matrix: The input_matrix without the alternatives.
-    - weights: the normalised weights (either fixed or random sampled weights, depending on the settings)
+    - index_column_name: the name of the index column of the original input matrix.
+    - index_column_values: the values of the index column of the original input matrix.
+    - weights: the normalised weights (either fixed or random sampled weights, depending on the settings).
 
     :return: None
     :param input_config: dict
+    :param index_column_name: str
+    :param index_column_values: list
     :param input_matrix: pd:DataFrame
     :param weights: Union[List[str], List[pd.DataFrame], dict, None]
     :param f_norm: str
@@ -780,7 +828,10 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, input_matrix: pd.
     all_weights_score_means = pd.DataFrame()
     all_weights_score_stds = pd.DataFrame()
     all_weights_score_means_normalized = pd.DataFrame()
+    iterative_random_w_score_means_normalized = {}
     iterative_random_weights_statistics = {}
+    iterative_random_w_score_means = {}
+    iterative_random_w_score_stds = {}
 
     logger.info("Start ProMCDA without robustness of the indicators")
     config = Config(input_config)
@@ -796,23 +847,23 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, input_matrix: pd.
             if is_sensitivity == "yes" \
             else mcda_no_uncert.aggregate_indicators(normalized_indicators, weights, f_agg)
         normalized_scores = rescale_minmax(scores)
-        normalized_scores.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+        normalized_scores.insert(0, index_column_name, index_column_values)
     elif config.robustness["on_all_weights"] == "yes" and config.robustness["robustness_on"] == "yes":
         # ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)
         all_weights_score_means, all_weights_score_stds, \
             all_weights_score_means_normalized, all_weights_score_stds_normalized = \
-            _compute_scores_for_all_random_weights(normalized_indicators, is_sensitivity, input_matrix, weights, f_agg)
+            _compute_scores_for_all_random_weights(normalized_indicators, is_sensitivity, index_column_name,
+                                                   index_column_values, input_matrix, weights, f_agg)
     elif (config.robustness["on_single_weights"] == "yes") and (config.robustness["robustness_on"] == "yes"):
         # ONE RANDOMLY SAMPLED WEIGHT A TIME (MCDA runs (num_samples * num_indicators) times)
         iterative_random_weights_statistics: dict = _compute_scores_for_single_random_weight(
-            normalized_indicators, weights,
-            is_sensitivity, f_agg, input_matrix)
+            normalized_indicators, weights, is_sensitivity, index_column_name, index_column_values, f_agg, input_matrix)
+        iterative_random_w_score_means = iterative_random_weights_statistics.score_means
+        iterative_random_w_score_stds = iterative_random_weights_statistics.score_stds
+        iterative_random_w_score_means_normalized = iterative_random_weights_statistics.score_means_normalized
 
-    iterative_random_w_score_means = iterative_random_weights_statistics.score_means
-    iterative_random_w_score_stds = iterative_random_weights_statistics.score_stds
-    iterative_random_w_score_means_normalized = iterative_random_weights_statistics.score_means_normalized
-
-    ranks = _compute_ranks(scores, all_weights_score_means, iterative_random_w_score_means, input_matrix)
+    ranks = _compute_ranks(scores, index_column_name, index_column_values,
+                           all_weights_score_means, iterative_random_w_score_means)
 
     _save_output_files(scores=scores, normalized_scores=normalized_scores, ranks=ranks,
                        score_means=all_weights_score_means, score_stds=all_weights_score_stds,
@@ -820,7 +871,8 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, input_matrix: pd.
                        iterative_random_w_score_means=iterative_random_w_score_means,
                        iterative_random_w_score_means_normalized=iterative_random_w_score_means_normalized,
                        iterative_random_w_score_stds=iterative_random_w_score_stds,
-                       input_matrix=input_matrix, input_config=input_config)
+                       index_column_name=index_column_name, index_column_values=index_column_values,
+                       input_config=input_config)
 
     _plot_and_save_charts(scores=scores, normalized_scores=normalized_scores,
                           score_means=all_weights_score_means, score_stds=all_weights_score_stds,
@@ -834,6 +886,7 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, input_matrix: pd.
 
 
 def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.DataFrame,
+                                        index_column_name: str, index_column_values: list,
                                         mc_runs: int, is_sensitivity: str, f_agg: str, f_norm: str,
                                         weights: Union[List[list], List[pd.DataFrame], dict],
                                         polar: List[str], marginal_pdf: List[str]) -> None:
@@ -845,11 +898,15 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
 
     Parameters:
     - input_matrix: The input_matrix without the alternatives.
-    - weights: the normalised weights (either fixed or random sampled weights, depending on the settings)
-      In the context of the robustness analysis, only fixed normalised weights are used, i.e. weights[0]
+    - index_column_name: the name of the index column of the original input matrix.
+    - index_column_values: the values of the index column of the original input matrix.
+    - weights: the normalised weights (either fixed or random sampled weights, depending on the settings).
+      In the context of the robustness analysis, only fixed normalised weights are used, i.e. weights[0].
 
     :return: None
     :param input_config: dict
+    :param index_column_name: str
+    :param index_column_values: list
     :param input_matrix: pd:DataFrame
     :param mc_runs: int
     :param is_sensitivity: str
@@ -901,11 +958,11 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
 
     ranks = all_indicators_scores_means.rank(pct=True)
 
-    all_indicators_scores_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-    all_indicators_scores_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-    all_indicators_means_scores_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-    all_indicators_scores_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-    ranks.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+    all_indicators_scores_means.insert(0, index_column_name, index_column_values)
+    all_indicators_scores_stds.insert(0, index_column_name, index_column_values)
+    all_indicators_means_scores_normalized.insert(0, index_column_name, index_column_values)
+    all_indicators_scores_stds_normalized.insert(0, index_column_name, index_column_values)
+    ranks.insert(0, index_column_name, index_column_values)
 
     _save_output_files(scores=None, normalized_scores=None,
                        iterative_random_w_score_means=None,
@@ -914,7 +971,8 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
                        score_means=all_indicators_scores_means,
                        score_stds=all_indicators_scores_stds,
                        score_means_normalized=all_indicators_means_scores_normalized,
-                       ranks=ranks, input_config=input_config, input_matrix=input_matrix)
+                       ranks=ranks, input_config=input_config,
+                       index_column_names=index_column_name, index_column_values= index_column_values)
 
     _plot_and_save_charts(scores=None, normalized_scores=None,
                           iterative_random_w_score_means=None,
@@ -925,6 +983,7 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
 
 
 def _compute_scores_for_all_random_weights(indicators: dict, is_sensitivity: str, input_matrix: pd.DataFrame,
+                                           index_column_name: str, index_column_values: list,
                                            weights: Union[List[str], List[pd.DataFrame], dict, None],
                                            f_agg: str) -> tuple[Any, Any, Any, Any]:
     """
@@ -954,16 +1013,17 @@ def _compute_scores_for_all_random_weights(indicators: dict, is_sensitivity: str
         all_weights_scores)  # mean and std of rough scores
     all_weights_score_means_normalized, all_weights_score_stds_normalized = estimate_runs_mean_std(
         all_weights_scores_normalized)  # mean and std of norm. scores
-    all_weights_score_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-    all_weights_score_means_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-    all_weights_score_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+    all_weights_score_stds.insert(0, index_column_name, index_column_values)
+    all_weights_score_means_normalized.insert(0, index_column_name, index_column_values)
+    all_weights_score_stds_normalized.insert(0, index_column_name, index_column_values)
 
     return all_weights_score_means, all_weights_score_stds, all_weights_score_means_normalized, all_weights_score_stds_normalized
 
 
 def _compute_scores_for_single_random_weight(indicators: dict,
                                              weights: Union[List[str], List[pd.DataFrame], dict, None],
-                                             is_sensitivity: str, f_agg: str, input_matrix: pd.DataFrame) -> dict:
+                                             is_sensitivity: str, index_column_name: str, index_column_values: list,
+                                             f_agg: str, input_matrix: pd.DataFrame) -> dict:
     """
     Computes the mean scores and std of the alternatives in the case of one randomly sampled weight at time.
     """
@@ -1000,10 +1060,10 @@ def _compute_scores_for_single_random_weight(indicators: dict,
         one_random_weight_score_means_normalized, one_random_weight_score_stds_normalized = estimate_runs_mean_std(
             scores_one_random_weight_normalized["indicator_{}".format(index + 1)])
 
-        one_random_weight_score_means.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-        one_random_weight_score_stds.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-        one_random_weight_score_means_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
-        one_random_weight_score_stds_normalized.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+        one_random_weight_score_means.insert(0, index_column_name, index_column_values)
+        one_random_weight_score_stds.insert(0, index_column_name, index_column_values)
+        one_random_weight_score_means_normalized.insert(0, index_column_name, index_column_values)
+        one_random_weight_score_stds_normalized.insert(0, index_column_name, index_column_values)
 
         iterative_random_w_score_means["indicator_{}".format(index + 1)] = one_random_weight_score_means
         iterative_random_w_score_stds["indicator_{}".format(index + 1)] = one_random_weight_score_stds
@@ -1020,8 +1080,8 @@ def _compute_scores_for_single_random_weight(indicators: dict,
     }
 
 
-def _compute_ranks(scores: pd.DataFrame, all_weights_means: pd.DataFrame, iterative_random_w_means: dict,
-                   input_matrix: pd.DataFrame) -> pd.DataFrame:
+def _compute_ranks(scores: Optional[pd.DataFrame], index_column_name: str, index_column_values: list,
+                   all_weights_means: Optional[pd.DataFrame], iterative_random_w_means: Optional[dict]) -> pd.DataFrame:
     """
     Compute ranks based on the computed scores, mean scores with random weights, and mean scores for each random weight.
     """
@@ -1035,7 +1095,7 @@ def _compute_ranks(scores: pd.DataFrame, all_weights_means: pd.DataFrame, iterat
         pass
 
     if not ranks.empty:
-        ranks.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+        ranks.insert(0, index_column_name, index_column_values)
 
     return ranks
 
@@ -1050,7 +1110,8 @@ def _save_output_files(scores: Optional[pd.DataFrame],
                        iterative_random_w_score_stds: Optional[dict],
                        iterative_random_w_score_means_normalized: Optional[dict],
                        input_config: dict,
-                       input_matrix: pd.DataFrame) -> None:
+                       index_column_name: str,
+                       index_column_values: list) -> None:
     """
     Save output files based of the computed scores, ranks, and configuration data.
     """
@@ -1059,7 +1120,7 @@ def _save_output_files(scores: Optional[pd.DataFrame],
     check_path_exists(config.output_file_path)
 
     if scores is not None and not scores.empty:
-        scores.insert(0, 'Alternatives', input_matrix.iloc[:, 0])
+        scores.insert(0, index_column_name, index_column_values)
         save_df(scores, config.output_file_path, 'scores.csv')
         save_df(normalized_scores, config.output_file_path, 'normalized_scores.csv')
         save_df(ranks, config.output_file_path, 'ranks.csv')
@@ -1097,7 +1158,6 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
 
         plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
         save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores.png")
-
 
     elif score_means is not None and not score_means.empty:
         chart_mean_scores = plot_mean_scores(score_means, "plot_std", "weights",

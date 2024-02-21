@@ -45,6 +45,8 @@ def main(input_config: dict):
     is_robustness = None
     is_robustness_indicators = 0
     is_robustness_weights = 0
+    f_norm = None
+    f_agg = None
     marginal_pdf = []
     num_unique = []
 
@@ -53,6 +55,8 @@ def main(input_config: dict):
     # Extracting relevant configuration values
     config = Config(input_config)
     input_matrix = read_matrix(config.input_matrix_path)
+    index_column_name = input_matrix.index.name
+    index_column_values = input_matrix.index.tolist()
     polar = config.polarity_for_each_indicator
     is_sensitivity = config.sensitivity['sensitivity_on']
     is_robustness = config.robustness['robustness_on']
@@ -127,7 +131,8 @@ def main(input_config: dict):
         logger.info("Read input matrix with uncertainty of the indicators at {}".format(
             config.input_matrix_path))
 
-    # Check the input matrix for duplicated rows in the alternatives and rescale negative indicator values
+    # Check the input matrix for duplicated rows in the alternatives, rescale negative indicator values and
+    # drop the column containing the alternatives
     input_matrix_no_alternatives = check_input_matrix(input_matrix)
     if is_robustness_indicators == 0:
         num_indicators = input_matrix_no_alternatives.shape[1]
@@ -148,11 +153,12 @@ def main(input_config: dict):
 
     # If there is no uncertainty of the indicators:
     if is_robustness_indicators == 0:
-        run_mcda_without_indicator_uncertainty(input_config, input_matrix_no_alternatives, weights, f_norm, f_agg)
+        run_mcda_without_indicator_uncertainty(input_config, index_column_name, index_column_values,
+                                               input_matrix_no_alternatives, weights, f_norm, f_agg)
     # else (i.e. there is uncertainty):
     else:
-        run_mcda_with_indicator_uncertainty(input_config, input_matrix_no_alternatives, mc_runs, is_sensitivity, f_agg,
-                                            f_norm, weights, polar, marginal_pdf)
+        run_mcda_with_indicator_uncertainty(input_config, input_matrix, index_column_name, index_column_values,
+                                            mc_runs, is_sensitivity, f_agg, f_norm, weights, polar, marginal_pdf)
 
     logger.info(
             "ProMCDA finished calculations: check the output files")

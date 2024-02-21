@@ -11,13 +11,15 @@ class TestAggregation(unittest.TestCase):
 
     @staticmethod
     def get_normalized_input_matrix():
-        input_matrix = read_matrix("tests/resources/normalization/res_minmax_no0.csv")
+        input_matrix_path = "tests/resources/normalization/res_minmax_no0.csv"
+        input_matrix = read_matrix(input_matrix_path)
 
         return input_matrix
 
     @staticmethod
     def get_normalized_input_matrix_w_0():
-        input_matrix = read_matrix("tests/resources/normalization/res_minmax_01.csv")
+        input_matrix_path = "tests/resources/normalization/res_minmax_01.csv"
+        input_matrix = read_matrix(input_matrix_path)
 
         return input_matrix
 
@@ -63,9 +65,14 @@ class TestAggregation(unittest.TestCase):
         agg = Aggregation(weights)
         res = agg.geometric(normalized_matrix)
 
+        result = pd.Series(res)
+        # Assure that the indexes are the same
+        result = reset_index_if_needed(result)
+        expected_res = reset_index_if_needed(expected_res)
+
         # Then
         assert isinstance(res, np.ndarray)
-        assert_series_equal(pd.Series(res), expected_res, check_like=True)
+        assert_series_equal(result, expected_res, check_like=True)
         with pytest.raises(ValueError):
             agg.geometric(wrong_normalized_matrix)
 
@@ -80,9 +87,14 @@ class TestAggregation(unittest.TestCase):
         agg = Aggregation(weights)
         res = agg.harmonic(normalized_matrix)
 
+        result = pd.Series(res)
+        # Assure that the indexes are the same
+        result = reset_index_if_needed(result)
+        expected_res = reset_index_if_needed(expected_res)
+
         # Then
         assert isinstance(res, np.ndarray)
-        assert_series_equal(pd.Series(res), expected_res, check_like=True)
+        assert_series_equal(result, expected_res, check_like=True)
         with pytest.raises(ValueError):
             agg.harmonic(wrong_normalized_matrix)
 

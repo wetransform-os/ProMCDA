@@ -8,11 +8,12 @@ from mcda.mcda_run import main
 
 
 class TestMCDA(unittest.TestCase):
+    input_matrix_path = "tests/resources/input_matrix_with_uncert.csv"
 
     @staticmethod
     def get_incorrect_config_1():
         return {
-            "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
+            "input_matrix_path": TestMCDA.input_matrix_path,
             "polarity_for_each_indicator": ["+", "+", "+", "+", "+", "-"],
 
             "sensitivity": {
@@ -39,7 +40,7 @@ class TestMCDA(unittest.TestCase):
     @staticmethod
     def get_incorrect_config_2():
         return {
-            "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
+            "input_matrix_path": TestMCDA.input_matrix_path,
             "polarity_for_each_indicator": ["+", "+", "+", "+", "+", "-"],
 
             "sensitivity": {
@@ -65,7 +66,7 @@ class TestMCDA(unittest.TestCase):
     @staticmethod
     def get_incorrect_config_3():
         return {
-            "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
+            "input_matrix_path": TestMCDA.input_matrix_path,
             "polarity_for_each_indicator": ["+", "+", "+", "+", "+", "-"],
 
             "sensitivity": {
@@ -91,7 +92,7 @@ class TestMCDA(unittest.TestCase):
     @staticmethod
     def get_correct_config():
         return {
-            "input_matrix_path": "tests/resources/input_matrix_with_uncert.csv",
+            "input_matrix_path": TestMCDA.input_matrix_path,
             "polarity_for_each_indicator": ["-", "-", "+", "+", "-", "+"],
             "sensitivity": {
                 "sensitivity_on": "no",
@@ -142,11 +143,11 @@ class TestMCDA(unittest.TestCase):
 
         # When, Then
         with pytest.raises(ValueError):
-           main(input_config_1)
+            main(input_config_1)
         with pytest.raises(ValueError):
-          main(input_config_2)
+            main(input_config_2)
         with pytest.raises(ValueError):
-           main(input_config_3)
+            main(input_config_3)
         with self.assertLogs(level="INFO") as cm:
             main(input_config_correct)
             expected_message = 'INFO:ProMCDA:There is a problem with the parameters given in the input matrix with ' \

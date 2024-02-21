@@ -1,8 +1,8 @@
 import unittest
+from pathlib import Path
 
 from pandas.testing import assert_frame_equal
 from numpy.testing import assert_almost_equal
-
 from mcda.utils.utils_for_main import *
 from mcda.mcda_functions.normalization import Normalization
 
@@ -11,11 +11,11 @@ class TestNormalization(unittest.TestCase):
 
     @staticmethod
     def get_input_matrix():
-        input_matrix = read_matrix("tests/resources/input_matrix_without_uncert.csv")
-        input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0],
-                                                         axis=1)  # drop first column with alternatives
-        # in the code this is happening in mcda_run
-        return input_matrix_no_alternatives
+        test_data_directory = Path(__file__).resolve().parent.parent / "resources"
+        input_matrix_file_path = test_data_directory / "input_matrix_without_uncert.csv"
+        input_matrix = read_matrix(input_matrix_file_path)
+
+        return input_matrix
 
     @staticmethod
     def get_input_polarities():
@@ -26,16 +26,25 @@ class TestNormalization(unittest.TestCase):
     def test_minmax(self):
         # Given
         polarities = TestNormalization.get_input_polarities()
-        input_matrix_no_alternatives = TestNormalization.get_input_matrix()
+        input_matrix = TestNormalization.get_input_matrix()
 
         # When
-        expected_res_01 = read_matrix('tests/resources/normalization/res_minmax_01.csv')
-        expected_res_no0 = read_matrix('tests/resources/normalization/res_minmax_no0.csv')
-        norm = Normalization(input_matrix_no_alternatives, polarities)
+        test_data_directory = Path(__file__).resolve().parent.parent / "resources/normalization"
+        expected_res01_file_path = test_data_directory / "res_minmax_01.csv"
+        expected_res_no0_file_path = test_data_directory / "res_minmax_no0.csv"
+        expected_res_01 = read_matrix(expected_res01_file_path)
+        expected_res_no0 = read_matrix(expected_res_no0_file_path)
+        norm = Normalization(input_matrix, polarities)
         res_01 = norm.minmax(feature_range=(0, 1))
         res_01.columns = res_01.columns.astype('str')  # to match the type of columns in the two dfs
         res_no0 = norm.minmax(feature_range=(0.1, 1))
         res_no0.columns = res_no0.columns.astype('str')  # to match the type of columns in the two dfs
+
+        # Assure that the indexes are the same
+        res_01 = reset_index_if_needed(res_01)
+        res_no0 = reset_index_if_needed(res_no0)
+        expected_res_01 = reset_index_if_needed(expected_res_01)
+        expected_res_no0 = reset_index_if_needed(expected_res_no0)
 
         # Then
         assert isinstance(res_01, pd.DataFrame)
@@ -61,6 +70,12 @@ class TestNormalization(unittest.TestCase):
         res_no0 = norm.target(feature_range=(0.1, 1))
         res_no0.columns = res_no0.columns.astype('str')  # to match the type of columns in the two dfs
 
+        # Assure that the indexes are the same
+        res_01 = reset_index_if_needed(res_01)
+        res_no0 = reset_index_if_needed(res_no0)
+        expected_res_01 = reset_index_if_needed(expected_res_01)
+        expected_res_no0 = reset_index_if_needed(expected_res_no0)
+
         # Then
         assert isinstance(res_01, pd.DataFrame)
         assert isinstance(res_no0, pd.DataFrame)
@@ -85,6 +100,12 @@ class TestNormalization(unittest.TestCase):
         res_any.columns = res_any.columns.astype('str')  # to match the type of columns in the two dfs
         res_no0.columns = res_no0.columns.astype('str')
 
+        # Assure that the indexes are the same
+        res_any = reset_index_if_needed(res_any)
+        res_no0 = reset_index_if_needed(res_no0)
+        expected_res_any = reset_index_if_needed(expected_res_any)
+        expected_res_no0 = reset_index_if_needed(expected_res_no0)
+
         # Then
         assert isinstance(res_any, pd.DataFrame)
         assert isinstance(res_no0, pd.DataFrame)
@@ -105,6 +126,10 @@ class TestNormalization(unittest.TestCase):
         norm = Normalization(input_matrix_no_alternatives, polarities)
         res = norm.rank()
         res.columns = res.columns.astype('str')  # to match the type of columns in the two dfs
+
+        # Assure that the indexes are the same
+        res = reset_index_if_needed(res)
+        expected_res = reset_index_if_needed(expected_res)
 
         # Then
         assert isinstance(res, pd.DataFrame)

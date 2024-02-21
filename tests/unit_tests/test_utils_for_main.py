@@ -1,5 +1,6 @@
 import unittest
 from unittest import TestCase
+from unittest.mock import patch
 
 from mcda.utils.utils_for_main import *
 from mcda.utils.utils_for_main import _check_and_rescale_negative_indicators
@@ -48,6 +49,14 @@ class TestUtils(unittest.TestCase):
     @staticmethod
     def get_input_matrix_3() -> pd.DataFrame:
         data = {'ind1': [1, 2, 3], 'ind2_min': [6, -6, -7], 'ind2_max': [5, 6, 7],
+                'ind3': [9, 10, 11], 'std3': [0.1, 0.1, 11], 'ind4_rate': [9, 10, 11]}
+        df = pd.DataFrame(data=data)
+
+        return df
+
+    @staticmethod
+    def get_input_matrix_alternatives() -> pd.DataFrame:
+        data = {'Anyname': [1,2,3],'ind1': [1, 2, 3], 'ind2_min': [6, -6, -7], 'ind2_max': [5, 6, 7],
                 'ind3': [9, 10, 11], 'std3': [0.1, 0.1, 11], 'ind4_rate': [9, 10, 11]}
         df = pd.DataFrame(data=data)
 
@@ -178,3 +187,22 @@ class TestUtils(unittest.TestCase):
         isinstance(output_mask, list)
         assert (len(output_mask) == len(expected_mask))
         self.assertListEqual(output_mask, expected_mask)
+
+
+    def test_read_matrix(self):
+        # Given
+        input_matrix = TestUtils.get_input_matrix_alternatives()
+
+        # When
+        with patch('builtins.open') as mocked_open, \
+                patch('pandas.read_csv', return_value=input_matrix) as mocked_read_csv:
+            output = read_matrix('dummy_path')
+            index_column_name = output.index.name
+            index_column_values = output.index.tolist()
+
+        # Then
+        self.assertIsInstance(output, pd.DataFrame)
+        assert index_column_name == "Anyname"
+        isinstance(index_column_name, str)
+        assert index_column_values == [1, 2, 3]
+        isinstance(index_column_values, list)
