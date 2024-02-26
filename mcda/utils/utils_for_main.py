@@ -860,9 +860,9 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
         # ONE RANDOMLY SAMPLED WEIGHT A TIME (MCDA runs (num_samples * num_indicators) times)
         iterative_random_weights_statistics: dict = _compute_scores_for_single_random_weight(
             normalized_indicators, weights, is_sensitivity, index_column_name, index_column_values, f_agg, input_matrix)
-        iterative_random_w_score_means = iterative_random_weights_statistics.score_means
-        iterative_random_w_score_stds = iterative_random_weights_statistics.score_stds
-        iterative_random_w_score_means_normalized = iterative_random_weights_statistics.score_means_normalized
+        iterative_random_w_score_means = iterative_random_weights_statistics['score_means']
+        iterative_random_w_score_stds = iterative_random_weights_statistics['score_stds']
+        iterative_random_w_score_means_normalized = iterative_random_weights_statistics['score_means_normalized']
 
     ranks = _compute_ranks(scores, index_column_name, index_column_values,
                            all_weights_score_means, iterative_random_w_score_means)
@@ -880,6 +880,7 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
                           score_means=all_weights_score_means, score_stds=all_weights_score_stds,
                           score_means_normalized=all_weights_score_means_normalized,
                           iterative_random_w_score_means=iterative_random_w_score_means,
+                          iterative_random_w_score_stds=iterative_random_w_score_stds,
                           iterative_random_w_score_means_normalized=iterative_random_w_score_means_normalized,
                           input_matrix=input_matrix, config=input_config,
                           is_robustness_weights=is_robustness_weights)
@@ -977,6 +978,7 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
                           score_means=all_indicators_scores_means, score_stds=all_indicators_scores_stds,
                           score_means_normalized=all_indicators_means_scores_normalized,
                           iterative_random_w_score_means=None,
+                          iterative_random_w_score_stds=None,
                           iterative_random_w_score_means_normalized=None,
                           input_matrix=input_matrix, config=input_config,
                           is_robustness_indicators=is_robustness_indicators)
@@ -1035,7 +1037,7 @@ def _compute_scores_for_single_random_weight(indicators: dict,
 
     rand_weight_per_indicator = None
     try:
-        rand_weight_per_indicator = weights[2]
+        rand_weight_per_indicator = weights
     except(TypeError, IndexError):
         logger.error('Error Message', stack_info=True)
         raise ValueError('Error accessing weights. Setting rand_weight_per_indicator to None.')
@@ -1101,7 +1103,7 @@ def _save_output_files(scores: Optional[pd.DataFrame],
                        score_stds: Optional[pd.DataFrame],
                        score_means_normalized: Optional[pd.DataFrame],
                        iterative_random_w_score_means: Optional[dict],
-                       iterative_random_w_score_stds: Optional[dict],
+                       iterative_random_w_score_stds: Optional[pd.DataFrame],
                        iterative_random_w_score_means_normalized: Optional[dict],
                        input_config: dict,
                        index_column_name: str,
@@ -1143,6 +1145,7 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
                           score_stds: Optional[pd.DataFrame],
                           score_means_normalized: Optional[pd.DataFrame],
                           iterative_random_w_score_means: Optional[dict],
+                          iterative_random_w_score_stds: Optional[dict],
                           iterative_random_w_score_means_normalized: Optional[dict],
                           input_matrix: pd.DataFrame,
                           config: dict,
@@ -1178,12 +1181,14 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
 
         for index in range(num_indicators):
             one_random_weight_means = iterative_random_w_score_means["indicator_{}".format(index + 1)]
+            one_random_weight_stds = iterative_random_w_score_stds["indicator_{}".format(index + 1)]
             one_random_weight_means_normalized = iterative_random_w_score_means_normalized[
                 "indicator_{}".format(index + 1)]
 
             plot_weight_mean_scores = plot_mean_scores_iterative(one_random_weight_means,
                                                                  input_matrix.columns, index,
-                                                                 "plot_std")
+                                                                 "plot_std",
+                                                                 one_random_weight_stds)
             plot_weight_mean_scores_norm = plot_mean_scores_iterative(one_random_weight_means_normalized,
                                                                       input_matrix.columns, index,
                                                                       "not_plot_std")
