@@ -78,7 +78,7 @@ def plot_mean_scores(all_means: pd.DataFrame, plot_std: str, rand_on: str, all_s
                 name=all_means.columns[i + 1],
                 x=all_means['Alternatives'].values.tolist(),
                 y=all_means.iloc[:, i + 1],
-                error_y=dict(type='data', array=all_stds.iloc[:, i + 1])
+                error_y=dict(type='data', array=all_stds.iloc[:, i+1])
             ))
             fig.update_layout(title=f'<b>MCDA analysis with added randomness on the {rand_on}<b> (rough scores)',
                               title_font_size=22)
