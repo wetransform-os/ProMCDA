@@ -4,7 +4,6 @@
 
 # Probabilistic Multi Criteria Decision Analysis
 
-
 <!-- [![PyPi version](https://img.shields.io/pypi/v/promcda?color=blue)](https://pypi.org/project/promcda) -->
 
 ![PyPI](https://img.shields.io/pypi/v/ProMCDA?label=pypi%20package)
@@ -16,6 +15,24 @@
 
 
 A tool to estimate scores of alternatives and their uncertainties based on a Multi Criteria Decision Analysis (MCDA) approach.
+
+### Table of Contents
+- [Contributing](#contributing)
+- [MCDA quick overview and applications](#MCDAoverview)
+- [Input information needed in the configuration file](#configuration)
+- [Output](#output)
+- [Requirements](#requirements)
+- [Running the code](#running)
+- [Running the tests](#testing)
+- [Toy example](#toyexample)
+- [Code overview: a high-level summary](#overview)
+- [General information and references](#references)
+
+### Contributing
+We welcome contributions from the community! Before contributing, please read our 
+[Contribution Guidelines](./CONTRIBUTING.md) to learn about our development process, coding standards, and how to submit 
+pull requests.
+
 
 ### MCDA quick overview and applications
 A MCDA approach is a systematic framework for making decisions in situations where multiple criteria or objectives need to be 
@@ -134,7 +151,6 @@ e.g., larger or equal than 1000). The ***number of cores*** used for the paralle
   - Poisson distribution, **"poisson"**
 
 ### Output
-
 The user gives the ***path to output file*** (e.g. `path/output_file.csv`). In the output file the scores (normalised or rough) 
 and the ranks relative to the alternatives can be found in the form of CSV tables. If the weights are iteratively sampled, 
 multiple tables are saved in a PICKLE file as an object ```dictionary```. Plots of the scores are saved in PNG images. The configuration.json file
@@ -177,13 +193,14 @@ source activate <choose-a-name-like-Promcda>
 pip install -r requirements.txt
 ```
 
-### Running the code (from root dir)
-On Windows:
+### Running the code 
+From the root dir, 
+- on Windows:
 ```bash
 activate.bat <your-env>
 python3 -m mcda.mcda_run -c configuration.json
 ```
-On Mac and Linux:
+- on Mac and Linux:
 ```bash
 source activate <your-env>
 python3 -m mcda.mcda_run -c configuration.json
@@ -194,7 +211,7 @@ where an example of configuration file can be found in `./configuration.json`.
 ```bash
 python3 -m pytest -s tests/unit_tests -vv
 ```
-### Running a toy example
+### Toy example
 The directory of ```ProMCDA``` contains a toy example, a simple case to test run the package. In the `toy_example/output` directory you 
 can find three different tests that have been run with the relative configuration and output files. Please modify your configuration file 
 according to the desired experiment. The directory contains also a Jupyter notebook to allow one to modify the input matrix easily. 
