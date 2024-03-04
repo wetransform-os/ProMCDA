@@ -3,7 +3,7 @@
   "polarity_for_each_indicator": ["+","+","-","+","+","+"],
 
   "sensitivity": {
-    "sensitivity_on": "yes",
+    "sensitivity_on": "no",
     "normalization": "minmax",
     "aggregation": "weighted_sum"},
 
@@ -20,5 +20,5 @@
       "marginal_distribution_for_each_indicator": ["normal", "normal", "normal", "normal", "normal", "normal"]},
 
 
-  "output_path": "toy_example/output/robustness_on_weights"
+  "output_path": "toy_example/output/test_robustness_on_weights_no_sensitivity"
 }

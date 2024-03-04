@@ -850,7 +850,6 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
             if is_sensitivity == "yes" \
             else mcda_no_uncert.aggregate_indicators(normalized_indicators, weights, f_agg)
         normalized_scores = rescale_minmax(scores)
-        normalized_scores.insert(0, index_column_name, index_column_values)
     elif config.robustness["on_all_weights"] == "yes" and config.robustness["robustness_on"] == "yes":
         # ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)
         all_weights_score_means, all_weights_score_stds, \

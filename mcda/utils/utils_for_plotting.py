@@ -10,6 +10,7 @@ from PIL import Image
 
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
+    alternatives_column_name = scores.columns[0]
     num_of_combinations = scores.shape[1] - 1
     fig = go.Figure(layout_yaxis_range=[scores.iloc[:, 1:].values.min() - 0.5, scores.iloc[:, 1:].values.max() + 0.5],
                     layout_yaxis_title="MCDA normalized score")
@@ -17,7 +18,7 @@ def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
     while i <= num_of_combinations - 1:
         fig.add_trace(go.Bar(
             name=scores.columns[i + 1],
-            x=scores['Alternatives'].values.tolist(),
+            x=scores[alternatives_column_name].values.tolist(),
             y=scores.iloc[:, i + 1],
             showlegend=True
         ))
@@ -30,8 +31,8 @@ def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
                       xaxis=dict(
                           tickmode="array",
                           tickvals=np.arange(
-                              0, len(scores['Alternatives'][:])),
-                          ticktext=scores['Alternatives'][:],
+                              0, len(scores[alternatives_column_name][:])),
+                          ticktext=scores[alternatives_column_name][:],
                           tickangle=45),
                       yaxis=dict(
                           range=[scores.iloc[:, 1:].values.min() - 0.5, scores.iloc[:, 1:].values.max() + 0.5])
@@ -41,13 +42,14 @@ def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
 
 
 def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
+    alternatives_column_name = scores.columns[0]
     num_of_combinations = scores.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA rough score")
     i = 0
     while i <= num_of_combinations - 1:
         fig.add_trace(go.Bar(
             name=scores.columns[i + 1],
-            x=scores['Alternatives'].values.tolist(),
+            x=scores[alternatives_column_name].values.tolist(),
             y=scores.iloc[:, i + 1],
             showlegend=True
         ))
@@ -60,8 +62,8 @@ def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
                       xaxis=dict(
                           tickmode="array",
                           tickvals=np.arange(
-                              0, len(scores['Alternatives'][:])),
-                          ticktext=scores['Alternatives'][:],
+                              0, len(scores[alternatives_column_name][:])),
+                          ticktext=scores[alternatives_column_name][:],
                           tickangle=45)
                       )
     fig.show()
@@ -69,6 +71,7 @@ def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
 
 
 def plot_mean_scores(all_means: pd.DataFrame, plot_std: str, rand_on: str, all_stds=None) -> object:
+    alternatives_column_name = all_means.columns[0]
     num_of_combinations = all_means.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA average scores and std")
     i = 0
@@ -76,7 +79,7 @@ def plot_mean_scores(all_means: pd.DataFrame, plot_std: str, rand_on: str, all_s
         if plot_std == "plot_std":
             fig.add_trace(go.Bar(
                 name=all_means.columns[i + 1],
-                x=all_means['Alternatives'].values.tolist(),
+                x=all_means[alternatives_column_name].values.tolist(),
                 y=all_means.iloc[:, i + 1],
                 error_y=dict(type='data', array=all_stds.iloc[:, i+1])
             ))
@@ -85,7 +88,7 @@ def plot_mean_scores(all_means: pd.DataFrame, plot_std: str, rand_on: str, all_s
         else:
             fig.add_trace(go.Bar(
                 name=all_means.columns[i + 1],
-                x=all_means['Alternatives'].values.tolist(),
+                x=all_means[alternatives_column_name].values.tolist(),
                 y=all_means.iloc[:, i + 1],
                 showlegend=True
             ))
@@ -100,8 +103,8 @@ def plot_mean_scores(all_means: pd.DataFrame, plot_std: str, rand_on: str, all_s
                       xaxis=dict(
                           tickmode="array",
                           tickvals=np.arange(
-                              0, len(all_means['Alternatives'][:])),
-                          ticktext=all_means['Alternatives'][:],
+                              0, len(all_means[alternatives_column_name][:])),
+                          ticktext=all_means[alternatives_column_name][:],
                           tickangle=45)
                       )
     fig.show()
@@ -110,6 +113,7 @@ def plot_mean_scores(all_means: pd.DataFrame, plot_std: str, rand_on: str, all_s
 
 def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, indicators: list,
                                index: int, plot_std: str, all_weights_stds=None) -> object:
+    alternatives_column_name = all_weights_means.columns[0]
     num_of_combinations = all_weights_means.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA average scores and std")
     i = 0
@@ -117,7 +121,7 @@ def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, indicators: list
         if plot_std == "plot_std":
             fig.add_trace(go.Bar(
                 name=all_weights_means.columns[i + 1],
-                x=all_weights_means['Alternatives'][:].values.tolist(),
+                x=all_weights_means[alternatives_column_name][:].values.tolist(),
                 y=all_weights_means.iloc[:, i + 1],
                 error_y=dict(
                     type='data', array=all_weights_stds.iloc[:, i + 1])
@@ -125,7 +129,7 @@ def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, indicators: list
         else:
             fig.add_trace(go.Bar(
                 name=all_weights_means.columns[i + 1],
-                x=all_weights_means['Alternatives'][:].values.tolist(),
+                x=all_weights_means[alternatives_column_name][:].values.tolist(),
                 y=all_weights_means.iloc[:, i + 1],
                 showlegend=True
             ))
@@ -139,8 +143,8 @@ def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, indicators: list
                       xaxis=dict(
                           tickmode="array",
                           tickvals=np.arange(
-                              0, len(all_weights_means['Alternatives'][:])),
-                          ticktext=all_weights_means['Alternatives'][:],
+                              0, len(all_weights_means[alternatives_column_name][:])),
+                          ticktext=all_weights_means[alternatives_column_name][:],
                           tickangle=45)
                       )
     return fig
