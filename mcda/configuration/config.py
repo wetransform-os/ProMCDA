@@ -1,8 +1,14 @@
+"""
+This module serves as a configuration object for ProMCDA.
+It is designed to store and manage configuration settings in a structured way.
+"""
+
 import copy
 from typing import List, Dict, Any
 
 
-class Config(object):
+# noinspection PyMethodMayBeStatic
+class Config():
     """
     Class Configuration
 
@@ -17,32 +23,33 @@ class Config(object):
 
     """
 
-    _valid_keys = ['input_matrix_path',
-                   'polarity_for_each_indicator',
-                   'sensitivity',
-                   'robustness',
-                   'monte_carlo_sampling',
-                   'output_path']
+    _valid_keys: List[str] = ['input_matrix_path',
+                              'polarity_for_each_indicator',
+                              'sensitivity',
+                              'robustness',
+                              'monte_carlo_sampling',
+                              'output_path']
 
-    _list_values: list[str] = ['marginal_distribution_for_each_indicator', 'polarity_for_each_indicator']
+    _list_values: List[str] = [
+        'marginal_distribution_for_each_indicator', 'polarity_for_each_indicator']
 
-    _str_values = ['input_matrix_path', 'output_path', 'sensitivity_on', 'normalization', 'aggregation',
-                   'robustness_on', 'on_single_weights', 'on_all_weights','given_weights', 'on_indicators']
+    _str_values: List[str] = ['input_matrix_path', 'output_path', 'sensitivity_on', 'normalization', 'aggregation',
+                   'robustness_on', 'on_single_weights', 'on_all_weights', 'given_weights', 'on_indicators']
 
-    _int_values = ['monte_carlo_runs', 'num_cores']
+    _int_values: List[str] = ['monte_carlo_runs', 'num_cores']
 
-    _dict_values = ['sensitivity', 'robustness', 'monte_carlo_sampling']
+    _dict_values: List[str] = ['sensitivity', 'robustness', 'monte_carlo_sampling']
 
     _keys_of_dict_values = {'sensitivity': ['sensitivity_on', 'normalization', 'aggregation'],
                             'robustness': ['robustness_on', 'on_single_weights', 'on_all_weights',
-                                            'given_weights', 'on_indicators'],
+                                           'given_weights', 'on_indicators'],
                             'monte_carlo_sampling': ['monte_carlo_runs', 'num_cores',
                                                      'marginal_distribution_for_each_indicator']}
 
     def __init__(self, input_config: dict):
         """
         Instantiate a configuration object
-        :param input_config: dict
+        :param input_config: dictionary
         """
 
         valid_keys = self._valid_keys
@@ -50,9 +57,10 @@ class Config(object):
         int_values = self._int_values
         list_values = self._list_values
         dict_values = self._dict_values
-        #keys_of_dict_values = self._keys_of_dict_values
+        # keys_of_dict_values = self._keys_of_dict_values
 
-        self._validate(input_config, valid_keys, str_values, int_values, list_values, dict_values)
+        self._validate(input_config, valid_keys, str_values,
+                       int_values, list_values, dict_values)
         self._config = copy.deepcopy(input_config)
 
     def _validate(self, input_config, valid_keys, str_values, int_values, list_values, dict_values):
@@ -65,21 +73,25 @@ class Config(object):
 
             if key in str_values:
                 if not isinstance(input_config[key], str):
-                    raise TypeError("value of {} in the input config is not a string".format(key))
+                    raise TypeError(
+                        "value of {} in the input config is not a string".format(key))
 
             if key in int_values:
                 if not isinstance(input_config[key], int):
-                    raise TypeError("value of {} in the input config is not an integer".format(key))
+                    raise TypeError(
+                        "value of {} in the input config is not an integer".format(key))
 
             if key in list_values:
                 if not isinstance(input_config[key], list):
-                    raise TypeError("value of {} in the input config is not a list".format(key))
+                    raise TypeError(
+                        "value of {} in the input config is not a list".format(key))
 
             if key in dict_values:
                 if not isinstance(input_config[key], dict):
-                    raise TypeError("value of {} in the input config is not a dictionary".format(key))
-                Config.check_dict_keys(input_config[key], Config._keys_of_dict_values[key])
-
+                    raise TypeError(
+                        "value of {} in the input config is not a dictionary".format(key))
+                Config.check_dict_keys(
+                    input_config[key], Config._keys_of_dict_values[key])
 
     def get_property(self, property_name: str):
         return self._config[property_name]
@@ -110,12 +122,13 @@ class Config(object):
 
     @staticmethod
     def check_dict_keys(dic: Dict[str, Any], keys: List[str]):
-        """Check if a specific key is in a dict"""
+        """Check if a specific key is in a dictionary"""
         for key in keys:
             Config.check_key(dic, key)
 
     @staticmethod
     def check_key(dic: dict, key: str):
-        """Check if a key is in a dict"""
+        """Check if a key is in a dictionary"""
         if key not in dic.keys():
-            raise KeyError("The key = {} is not present in dictionary: {}".format(key, dic))
+            raise KeyError(
+                "The key = {} is not present in dictionary: {}".format(key, dic))

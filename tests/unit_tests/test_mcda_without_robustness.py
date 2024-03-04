@@ -1,12 +1,9 @@
 import unittest
 from pathlib import Path
 from unittest import TestCase
+from mcda.utils.utils_for_main import *
+from mcda.mcda_functions.aggregation import Aggregation
 
-from mcda.mcda_without_robustness import MCDAWithoutRobustness
-from mcda.configuration.config import Config
-from mcda.utils import *
-from mcda.utils_for_parallelization import *
-from mcda.utility_functions.aggregation import Aggregation
 
 class TestMCDA_without_robustness(unittest.TestCase):
 
@@ -14,7 +11,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
     def get_test_config():
         return {
             "input_matrix_path": "/path/to/input_matrix.csv",
-            "polarity_for_each_indicator": ['-','-','+','+','+','+'],
+            "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
             "sensitivity": {
                 "sensitivity_on": "yes",
                 "normalization": "minmax",
@@ -104,9 +101,8 @@ class TestMCDA_without_robustness(unittest.TestCase):
         file_path = test_data_directory / "input_matrix_without_uncert.csv"
 
         input_matrix = read_matrix(file_path)
-        input_matrix_no_alternatives = input_matrix.drop(input_matrix.columns[0], axis=1)
 
-        return input_matrix_no_alternatives
+        return input_matrix
 
     @staticmethod
     def get_list_of_df():
@@ -166,15 +162,18 @@ class TestMCDA_without_robustness(unittest.TestCase):
         mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
         normalized_indicators = mcda_no_uncert.normalize_indicators()
         mcda_no_uncert_simple_mcdaa = MCDAWithoutRobustness(config_simple_mcda, input_matrix)
-        normalized_indicators_simple_mcda = mcda_no_uncert_simple_mcdaa.normalize_indicators(config_simple_mcda.sensitivity['normalization'])
+        normalized_indicators_simple_mcda = mcda_no_uncert_simple_mcdaa.normalize_indicators(
+            config_simple_mcda.sensitivity['normalization'])
 
         res = mcda_no_uncert.aggregate_indicators(normalized_indicators, weights)
-        res_simple_mcda = mcda_no_uncert_simple_mcdaa.aggregate_indicators(normalized_indicators_simple_mcda, weights, config_simple_mcda.sensitivity['aggregation'])
+        res_simple_mcda = mcda_no_uncert_simple_mcdaa.aggregate_indicators(normalized_indicators_simple_mcda, weights,
+                                                                           config_simple_mcda.sensitivity[
+                                                                               'aggregation'])
 
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                    'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
-                    'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
-                    'min-standardized_any']
+                     'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
+                     'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
+                     'min-standardized_any']
 
         simple_mcda_col_names = ['ws-minmax_01']
 
@@ -190,42 +189,44 @@ class TestMCDA_without_robustness(unittest.TestCase):
         assert res_simple_mcda.shape[1] == len(simple_mcda_col_names)
 
     def test_aggregate_indicators_in_parallel(self):
-            # Given
-            config = TestMCDA_without_robustness.get_test_config_randomness()
-            config = Config(config)
-            input_matrix = TestMCDA_without_robustness.get_input_matrix()
-            weights = config.robustness["given_weights"]
-            agg =  Aggregation(weights)
+        # Given
+        config = TestMCDA_without_robustness.get_test_config_randomness()
+        config = Config(config)
+        input_matrix = TestMCDA_without_robustness.get_input_matrix()
+        weights = config.robustness["given_weights"]
+        agg = Aggregation(weights)
 
-            config_randomness_simple_mcda = TestMCDA_without_robustness.get_test_config_randomness_simple_mcda()
-            config_randomness_simple_mcda = Config(config_randomness_simple_mcda)
+        config_randomness_simple_mcda = TestMCDA_without_robustness.get_test_config_randomness_simple_mcda()
+        config_randomness_simple_mcda = Config(config_randomness_simple_mcda)
 
-            # When
-            mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
-            normalized_indicators = mcda_no_uncert.normalize_indicators()
-            res = aggregate_indicators_in_parallel(agg, normalized_indicators)
+        # When
+        mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
+        normalized_indicators = mcda_no_uncert.normalize_indicators()
+        res = aggregate_indicators_in_parallel(agg, normalized_indicators)
 
-            mcda_no_uncert_simple_mcda = MCDAWithoutRobustness(config_randomness_simple_mcda, input_matrix)
-            normalized_indicators = mcda_no_uncert_simple_mcda.normalize_indicators(config_randomness_simple_mcda.sensitivity['normalization'])
-            res_simple_mcda = aggregate_indicators_in_parallel(agg, normalized_indicators, config_randomness_simple_mcda.sensitivity['aggregation'])
+        mcda_no_uncert_simple_mcda = MCDAWithoutRobustness(config_randomness_simple_mcda, input_matrix)
+        normalized_indicators = mcda_no_uncert_simple_mcda.normalize_indicators(
+            config_randomness_simple_mcda.sensitivity['normalization'])
+        res_simple_mcda = aggregate_indicators_in_parallel(agg, normalized_indicators,
+                                                           config_randomness_simple_mcda.sensitivity['aggregation'])
 
-            col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                         'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
-                         'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
-                         'min-standardized_any']
+        col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
+                     'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
+                     'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
+                     'min-standardized_any']
 
-            simple_mcda_col_names = ['ws-minmax_01']
+        simple_mcda_col_names = ['ws-minmax_01']
 
-            # Then
-            assert isinstance(res, pd.DataFrame)
-            TestCase.assertListEqual(self, list1=res.columns.tolist(), list2=col_names)
-            assert res.shape[0] == input_matrix.shape[0]
-            assert res.shape[1] == len(col_names)
+        # Then
+        assert isinstance(res, pd.DataFrame)
+        TestCase.assertListEqual(self, list1=res.columns.tolist(), list2=col_names)
+        assert res.shape[0] == input_matrix.shape[0]
+        assert res.shape[1] == len(col_names)
 
-            assert isinstance(res_simple_mcda, pd.DataFrame)
-            TestCase.assertListEqual(self, list1=res_simple_mcda.columns.tolist(), list2=simple_mcda_col_names)
-            assert res_simple_mcda.shape[0] == input_matrix.shape[0]
-            assert res_simple_mcda.shape[1] == len(simple_mcda_col_names)
+        assert isinstance(res_simple_mcda, pd.DataFrame)
+        TestCase.assertListEqual(self, list1=res_simple_mcda.columns.tolist(), list2=simple_mcda_col_names)
+        assert res_simple_mcda.shape[0] == input_matrix.shape[0]
+        assert res_simple_mcda.shape[1] == len(simple_mcda_col_names)
 
     def test_estimate_runs_mean_std(self):
         # Given
@@ -233,11 +234,12 @@ class TestMCDA_without_robustness(unittest.TestCase):
 
         # When
         res = estimate_runs_mean_std(list_of_df)
-        std = {'col1': [0,0,0,0,0,0], 'col2': [0,0,0,0,0,0], 'col3': [0,0,0,0,0,0], 'col4': [0,0,0,0,0,0]}
+        std = {'col1': [0, 0, 0, 0, 0, 0], 'col2': [0, 0, 0, 0, 0, 0], 'col3': [0, 0, 0, 0, 0, 0],
+               'col4': [0, 0, 0, 0, 0, 0]}
         df_std = pd.DataFrame(data=std)
 
         # Then
-        assert len(res) ==2
+        assert len(res) == 2
         assert isinstance(res, list)
         assert isinstance(res[0], pd.DataFrame)
         assert res[0].to_numpy().all() == TestMCDA_without_robustness.get_input_matrix().to_numpy().all()

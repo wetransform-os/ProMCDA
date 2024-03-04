@@ -13,6 +13,7 @@ def clean_line(line: str) -> str:
     else:
         return new_line
 
+
 def get_requirements(filename: str) -> list:
     """
     Reads a requirement file and returns the list of requirements.
