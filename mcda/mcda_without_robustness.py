@@ -55,7 +55,7 @@ class MCDAWithoutRobustness:
         if method is None or method == 'target':
             indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
             indicators_scaled_target_no0 = norm.target(
-                feature_range=(0.1, 1))  # for aggregation "geometric" and "harmonic" that accept no 0
+                feature_range=(0.1, 1))  # for aggregation "geometric" and "harmonic" that do not accept 0
             normalized_indicators["target_no0"] = indicators_scaled_target_no0
             normalized_indicators["target_01"] = indicators_scaled_target_01
         if method is None or method == 'standardized':
