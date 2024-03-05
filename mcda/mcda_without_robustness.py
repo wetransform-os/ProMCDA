@@ -48,23 +48,23 @@ class MCDAWithoutRobustness:
 
         if method is None or method == 'minmax':
             indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
-            # for aggregation "geometric" and "harmonic" that accept no 0
-            indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1))
-            normalized_indicators["minmax_no0"] = indicators_scaled_minmax_no0
+            # for aggregation "geometric" and "harmonic" that do not accept 0
+            indicators_scaled_minmax_without_zero = norm.minmax(feature_range=(0.1, 1))
+            normalized_indicators["minmax_no0"] = indicators_scaled_minmax_without_zero
             normalized_indicators["minmax_01"] = indicators_scaled_minmax_01
         if method is None or method == 'target':
             indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
-            indicators_scaled_target_no0 = norm.target(
+            indicators_scaled_target_without_zero = norm.target(
                 feature_range=(0.1, 1))  # for aggregation "geometric" and "harmonic" that do not accept 0
-            normalized_indicators["target_no0"] = indicators_scaled_target_no0
+            normalized_indicators["target_no0"] = indicators_scaled_target_without_zero
             normalized_indicators["target_01"] = indicators_scaled_target_01
         if method is None or method == 'standardized':
             indicators_scaled_standardized_any = norm.standardized(
                 feature_range=('-inf', '+inf'))
-            indicators_scaled_standardized_no0 = norm.standardized(
+            indicators_scaled_standardized_without_zero = norm.standardized(
                 feature_range=(0.1, '+inf'))
             normalized_indicators["standardized_any"] = indicators_scaled_standardized_any
-            normalized_indicators["standardized_no0"] = indicators_scaled_standardized_no0
+            normalized_indicators["standardized_no0"] = indicators_scaled_standardized_without_zero
         if method is None or method == 'rank':
             indicators_scaled_rank = norm.rank()
             normalized_indicators["rank"] = indicators_scaled_rank
