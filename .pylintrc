@@ -5,6 +5,7 @@ max-line-length = 129
 disable = too-many-arguments, W0401, E0611, E0401, W0621, W1202
 # Disable: wildcard, no-name import warning, redefining name from outer scope,
 # lazy formatting
+disable = F405 # module undefined
 
 [MASTER]
 init-hook = 'import sys; sys.path.append("/mcda")'
