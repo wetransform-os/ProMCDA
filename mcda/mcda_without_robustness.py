@@ -50,13 +50,13 @@ class MCDAWithoutRobustness:
             indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
             # for aggregation "geometric" and "harmonic" that do not accept 0
             indicators_scaled_minmax_without_zero = norm.minmax(feature_range=(0.1, 1))
-            normalized_indicators["minmax_no0"] = indicators_scaled_minmax_without_zero
+            normalized_indicators["minmax_without_zero"] = indicators_scaled_minmax_without_zero
             normalized_indicators["minmax_01"] = indicators_scaled_minmax_01
         if method is None or method == 'target':
             indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
             indicators_scaled_target_without_zero = norm.target(
                 feature_range=(0.1, 1))  # for aggregation "geometric" and "harmonic" that do not accept 0
-            normalized_indicators["target_no0"] = indicators_scaled_target_without_zero
+            normalized_indicators["target_without_zero"] = indicators_scaled_target_without_zero
             normalized_indicators["target_01"] = indicators_scaled_target_01
         if method is None or method == 'standardized':
             indicators_scaled_standardized_any = norm.standardized(
@@ -64,7 +64,7 @@ class MCDAWithoutRobustness:
             indicators_scaled_standardized_without_zero = norm.standardized(
                 feature_range=(0.1, '+inf'))
             normalized_indicators["standardized_any"] = indicators_scaled_standardized_any
-            normalized_indicators["standardized_no0"] = indicators_scaled_standardized_without_zero
+            normalized_indicators["standardized_without_zero"] = indicators_scaled_standardized_without_zero
         if method is None or method == 'rank':
             indicators_scaled_rank = norm.rank()
             normalized_indicators["rank"] = indicators_scaled_rank
@@ -96,8 +96,8 @@ class MCDAWithoutRobustness:
         scores = pd.DataFrame()
         col_names_method = []
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                     'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
-                     'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
+                     'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
+                     'harm-minmax_without_zero', 'harm-target_without_zero', 'harm-standardized_without_zero', 'harm-rank',
                      'min-standardized_any']  # same order as in the following loop
 
         for key, values in self.normalized_indicators.items():
@@ -107,12 +107,12 @@ class MCDAWithoutRobustness:
                     scores_weighted_sum[key] = agg.weighted_sum(values)
                     col_names_method.append("ws-" + key)
             if method is None or method == 'geometric':
-                if key in ["standardized_no0", "minmax_no0", "target_no0",
+                if key in ["standardized_without_zero", "minmax_without_zero", "target_without_zero",
                            "rank"]:  # geom goes only with some specific normalizations
                     scores_geometric[key] = pd.Series(agg.geometric(values))
                     col_names_method.append("geom-" + key)
             if method is None or method == 'harmonic':
-                if key in ["standardized_no0", "minmax_no0", "target_no0",
+                if key in ["standardized_without_zero", "minmax_without_zero", "target_without_zero",
                            "rank"]:  # harm goes only with some specific normalizations
                     scores_harmonic[key] = pd.Series(agg.harmonic(values))
                     col_names_method.append("harm-" + key)
