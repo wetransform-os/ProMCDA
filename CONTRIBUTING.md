@@ -38,12 +38,17 @@ pip install -r requirements.txt
 ```
 
 ### Getting Started
-First, you'll need to clone the project repository to your local machine. You can do this by running the following 
-command in your terminal:
+First, you'll need to fork the project repository and clone it to your local machine. Go to the 
+[GitHub repository of the project] (https://github.com/wetransform-os/ProMCDA) and click the "Fork" button 
+in the top-right corner to create a copy of the repository in your GitHub account. Clone your forked repository from 
+your GitHub account to your local machine using the following command:
 
 ```bash
-git clone https://github.com/wetransform-os/ProMCDA
+Copy code
+git clone https://github.com/your-username/project.git
 ```
+
+Replace "your-username" with your GitHub username.
 
 Then, navigate to the project directory and install the required dependencies using pip as described above in 
 [Prerequisites](#prerequisites).
@@ -69,19 +74,24 @@ We use GitHub Issues to track bugs, feature requests, and other tasks related to
 issues or have suggestions for improvements, please open a new issue on the 
 [GitHub repository](https://github.com/wetransform-os/ProMCDA).
 
-Before opening a new issue, search existing issues to see if the problem or feature request has already been reported.
+Before opening a new issue, search [existing issues](https://github.com/wetransform-os/ProMCDA/issues) to see if the 
+problem or feature request has already been reported. You can also search the 
+[closed issues](https://github.com/wetransform-os/ProMCDA/issues?q=is%3Aissue+is%3Aclosed) to see if the issue have been
+already closed without implementation for any reason.
 
-Navigate to the repository of the project. In the repository menu, click on the "Issues" tab and create a new issue.
-Fill out the issue title and description. Be as descriptive as possible, including steps to reproduce the issue 
-if applicable. Provide detailed information about the issue, including what you expected to happen and what actually 
+Navigate to the repository of the project. In the repository menu, click on the 
+["Issues"](https://github.com/wetransform-os/ProMCDA/issues) tab and create a new issue.
+Fill out the issue title and description. When you create a new issue for a new feature, be as descriptive as possible, 
+and provide detailed information on your expectations. When you open a bug-fix, include steps to reproduce the issue 
+if applicable. Provide detailed information about the problem, including what you expected to happen and what actually 
 happened. If applicable, include code snippets, error messages, or steps to reproduce the issue. 
 
 Optionally, you can assign labels to categorize the issue (e.g., new feature, bug, enhancement, documentation).
-We use the following labels to categorize issues:
 
-*Bug*: Indicates a problem with the current implementation that needs to be fixed.
-*Feature Request*: Suggests a new feature or enhancement to be added to the project.
-*Documentation*: Relates to improvements or issues with project documentation.
+We use the following labels to categorize issues:
+- *Bug*: Indicates a problem with the current implementation that needs to be fixed.
+- *Feature Request*: Suggests a new feature or enhancement to be added to the project.
+- *Documentation*: Relates to improvements or issues with project documentation.
 
 Click the green "Submit new issue" button to create the issue when you are ready.
 
@@ -89,16 +99,7 @@ Click the green "Submit new issue" button to create the issue when you are ready
 Contributing to the project is easy! Follow these steps to make changes and submit them for review:
 
 #### Fork the repository
-Go to the [GitHub repository of the project] (https://github.com/wetransform-os/ProMCDA) and click the "Fork" button 
-in the top-right corner to create a copy of the repository in your GitHub account. Clone your forked repository from 
-your GitHub account to your local machine using the following command:
-
-```bash
-Copy code
-git clone https://github.com/your-username/project.git
-```
-
-Replace "your-username" with your GitHub username. 
+If you still did not fork the repository, follow the instruction in [Getting Started](#getting-started).
 
 #### Create a branch
 Create a new branch to work on your changes using the following command:
@@ -128,8 +129,8 @@ git push origin my-feature
 ```
 
 #### Submit a pull request
-Go to your fork of the repository on GitHub (or to the original repository if you did not fork it) and click the 
-"New Pull Request" button. Compare the changes you made in your branch with the main branch of the original repository.
+Go to your fork of the repository on GitHub and click the "New Pull Request" button. Compare the changes you made in 
+your branch with the main branch of the original repository.
 Provide a title and description for your pull request, detailing the changes you made. Submit your changes for review.
 
 #### Review and iterate
@@ -143,12 +144,21 @@ Once your pull request is approved, a project maintainer will merge your changes
 This code adheres to the [PEP 8 style guide](https://peps.python.org/pep-0008/), which promotes readability and 
 consistency in Python code:
 
-- Functions are defined using snake_case.
+- Functions are defined using snake_case convention, where lowercase words are separated by an underscore.
+- Function names should be descriptive and reflect the purpose or functionality of the function.
 - Comments start with # and are used to explain code functionality.
 - Docstrings (multiline strings enclosed in triple quotes) are used to document non-private functions or methods.
 - Indentation is consistent and consists of four spaces per level.
 - if `__name__ == "__main__":` block is used to allow the script to be executed directly as well as imported as a module.
-- private functions are defined using `_name_of_private_function`.
+- Private functions are defined using `_name_of_private_function`.
+- Classes are named using CamelCase convention, starting with an uppercase letter, with subsequent words capitalized.
+- Class names should be descriptive and reflect the purpose or functionality of the class.
+- Docstrings should be provided for classes to describe their purpose, attributes, and methods.
+- Static methods are defined using the `@staticmethod` decorator and do not receive a reference to the instance or the class.
+- Test classes are named using a descriptive name with prefix "Test", and test methods are named using snake_case also with a prefix "test_".
+- Test classes should inherit from a test framework-specific base class, such as unittest.TestCase for the built-in unittest framework or pytest for pytest.
+
+
 
 ### Testing
 The project uses the unittest framework in Python. We define a function e.g., `add(a, b)` that adds two numbers.
