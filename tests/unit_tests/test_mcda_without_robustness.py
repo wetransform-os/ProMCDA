@@ -25,6 +25,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 10,
                 "num_cores": 4,
+                "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
             "output_path": "/path/to/output"
         }
@@ -47,6 +48,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 10,
                 "num_cores": 4,
+                "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
             "output_path": "/path/to/output"
         }
@@ -69,6 +71,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 10,
                 "num_cores": 4,
+                "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
             "output_path": "/path/to/output"
         }
@@ -91,6 +94,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 10,
                 "num_cores": 4,
+                "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
             "output_path": "/path/to/output"
         }

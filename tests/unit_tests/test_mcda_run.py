@@ -1,14 +1,17 @@
 import unittest
 import logging
 import pytest
+import os
 
 from unittest.mock import patch
 
 from mcda.mcda_run import main
 
+tests_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))  # Get the tests root directory
+
 
 class TestMCDA(unittest.TestCase):
-    input_matrix_path = "tests/resources/input_matrix_with_uncert.csv"
+    input_matrix_path = os.path.join(tests_directory, "resources", "input_matrix_with_uncert.csv")
 
     @staticmethod
     def get_incorrect_config_1():
@@ -31,6 +34,7 @@ class TestMCDA(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 10,
                 "num_cores": 4,
+                "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ["exact", "exact", "exact", "exact", "exact", "exact"]},
 
             "output_path": "/path/to/output"
@@ -58,6 +62,7 @@ class TestMCDA(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 0,
                 "num_cores": 4,
+                "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ["norm", "exact", "lnorm", "exact", "poisson", "exact"]},
 
             "output_path": "/path/to/output"
@@ -84,6 +89,7 @@ class TestMCDA(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 10000,
                 "num_cores": 4,
+                "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ["exact", "exact", "exact", "exact", "exact", "exact"]},
 
             "output_path": "/path/to/output"
@@ -107,6 +113,7 @@ class TestMCDA(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 1000,
                 "num_cores": 1,
+                "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['uniform', 'exact', 'normal', 'normal', 'exact',
                                                              'lnorm']},
             "output_path": "/path/to/output"
