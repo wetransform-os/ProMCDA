@@ -28,7 +28,7 @@ def main(input_config: dict):
     Execute the ProMCDA (Probabilistic Multi-Criteria Decision Analysis) process.
 
     Parameters:
-    - input_config (dictionary): Configuration parameters for the ProMCDA process.
+    - input_config : Configuration parameters for the ProMCDA process.
 
     Raises:
     - ValueError: If there are issues with the input matrix, weights, or indicators.
@@ -39,6 +39,9 @@ def main(input_config: dict):
 
     Note: Ensure that the input matrix, weights, polarities and indicators (with or without uncertainty)
     are correctly specified in the input configuration.
+
+    :return: None
+    :param input_config: dict
     """
 
     is_sensitivity = None
