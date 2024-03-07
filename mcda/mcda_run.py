@@ -158,11 +158,9 @@ def main(input_config: dict):
         run_mcda_with_indicator_uncertainty(input_config, input_matrix_no_alternatives, index_column_name, index_column_values,
                                             mc_runs, is_sensitivity, f_agg, f_norm, weights, polar, marginal_pdf)
 
-    logger.info(
-            "ProMCDA finished calculations: check the output files")
+    logger.info("ProMCDA finished calculations: check the output files")
     elapsed = time.time() - t
-    logger.info(
-            "All calculations finished in seconds {}".format(elapsed))
+    logger.info("All calculations finished in seconds {}".format(elapsed))
 
 if __name__ == '__main__':
     config_path = parse_args()
