@@ -11,7 +11,7 @@ class TestAggregation(unittest.TestCase):
 
     @staticmethod
     def get_normalized_input_matrix():
-        input_matrix_path = "tests/resources/normalization/res_minmax_no0.csv"
+        input_matrix_path = "tests/resources/normalization/res_minmax_without_zero.csv"
         input_matrix = read_matrix(input_matrix_path)
 
         return input_matrix
