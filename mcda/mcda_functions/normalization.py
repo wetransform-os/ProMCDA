@@ -6,19 +6,14 @@ from sklearn import preprocessing
 
 class Normalization(object):
     """
-    Class Normalization
-
-    This class normalizes the values of each indicator in the input_matrix
-    by mean of different normalization functions.
-    Each function rescales the values by considering their initial polarity.
-    If the polarity is negative (i.e. the scale is reversed), then the
-    smallest the value the better.
+    This class normalizes the values of each indicator in the input_matrix by mean of different normalization functions.
+    Each function rescales the values by considering their initial polarity. If the polarity is negative (i.e. the scale
+    is reversed), then the smallest the value the better.
 
     Type of normalization functions
-    Ordinal: rank
-    Interval: standardized; min-max
-    Ratio: target
-
+    Ordinal: rank.
+    Interval: standardized; min-max.
+    Ratio: target.
     """
 
     def __init__(self, input_matrix: pd.DataFrame(), polarities: list):
@@ -28,12 +23,7 @@ class Normalization(object):
 
     def _cast_polarities(self) -> tuple[list[int], list[int], pd.DataFrame, pd.DataFrame]:
         """
-        Identifies indicators with positive
-        or negative polarity (by indexes) and
-        cast them into two separate dfs
-
-        :data: input matrix
-        :returns: list of 2 lists for pos and neg indexes, and 2 dfs
+        Identifies indicators with positive or negative polarity (by indexes) and cast them into two separate dfs.
         """
 
         ind_plus = [i for i, e in enumerate(self.polarities) if e == "+"]
@@ -46,12 +36,27 @@ class Normalization(object):
     @staticmethod
     def reversed_minmax_scaler(data, feature_range: tuple):
         """
-        Rescales the indicators in a reversed scale
-        where the smallest the value the better,
-        by using the scaling method min-max.
+        Rescales the indicators in a reversed scale where the smallest the value the better, by using the scaling method
+        min-max. The feature_range defines if the feature range is (0,1) or (0.1,1).
 
-        :param: range defines if the feature range is (0,1) or (0.1,1)
-        :returns: numpy array
+        Example:
+        ```python
+        data = pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        feature_range = (0, 1)
+        scaled_data = reversed_minmax_scaler(data, feature_range)
+        ```
+        This will rescale the input data using the reversed min-max scaling method with the specified feature range:
+
+        ```
+        scaled_data:
+        [[1.  0.  0. ]
+        [0.5 0.5 0.5]
+        [0.  1.  1. ]]
+        ```
+
+        :param data: pd.DataFrame()
+        :param feature_range: tuple
+        :returns scaled_data: np.array
         """
 
         data = np.array(data)
@@ -69,9 +74,27 @@ class Normalization(object):
 
     def minmax(self, feature_range: tuple) -> pd.DataFrame():
         """
-        Normalizes the indicators by using the scaling method min-max.
-        Different feature ranges are possible.
-        :returns: pd.DataFrame() of same shape as the input
+        Normalizes the indicators by using the scaling method min-max. Different feature ranges are possible.
+        The returned indicators_scaled_minmax is of same shape as the input data.
+
+        Example:
+        ```python
+        input_data = pd.DataFrame([[10, 20, 30], [40, 50, 60], [70, 80, 90]])
+        normalization_instance = Normalization(input_data)
+        feature_range = (0, 1)
+        normalized_data = normalization_instance.minmax(feature_range)
+        ```
+        This will normalize the input data using the min-max scaling method with the specified feature range:
+
+        ```
+        min-max normalized_data:
+           0    1    2
+        0  0.0  0.0  0.0
+        1  0.5  0.5  0.5
+        2  1.0  1.0  1.0
+        ```
+
+        :return indicators_scaled_minmax: pd.DataFrame()
         """
 
         original_shape = self._input_matrix.shape
@@ -108,8 +131,27 @@ class Normalization(object):
 
     def target(self, feature_range: tuple) -> pd.DataFrame():
         """
-        Normalizes indicators using the scaling method target.
-        :return: pd.DataFrame() of same shape as the input
+        Normalizes the indicators using the scaling method target.
+        The returned indicators_scaled_target is of same shape as the input data.
+
+        Example:
+        ```python
+        input_data = pd.DataFrame([[10, 20, 30], [40, 50, 60], [70, 80, 90]])
+        normalization_instance = Normalization(input_data)
+        feature_range = (0, 1)
+        normalized_data = normalization_instance.target(feature_range)
+        ```
+        This will normalize the input data using the target scaling method with the specified feature range:
+
+        ```
+        target normalized_data:
+           0     1     2
+        0  0.14  0.25  0.33
+        1  0.57  0.52  0.66
+        2  1.0   1.0    1.0
+        ```
+
+        :return indicators_scaled_target: pd.DataFrame()
         """
 
         original_shape = self._input_matrix.shape
@@ -145,8 +187,27 @@ class Normalization(object):
 
     def standardized(self, feature_range: tuple) -> pd.DataFrame():
         """
-        Normalizes indicators using the scaling method standardized (i.e. Z-score).
-        :return: pd.DataFrame() of same shape as the input
+        Normalizes the indicators using the scaling method standardized (i.e. Z-score).
+        The returned indicators_scaled_standardized is of same shape as the input data.
+
+        Example:
+        ```python
+        input_data = pd.DataFrame([[10, 20, 30], [40, 50, 60], [70, 80, 90]])
+        normalization_instance = Normalization(input_data)
+        feature_range = (0, 1)
+        normalized_data = normalization_instance.standardized(feature_range)
+        ```
+        This will normalize the input data using the standardized scaling method with the specified feature range:
+
+        ```
+        Z-score normalized_data:
+           0     1     2
+        0 -1.22 -1.22 -1.22
+        1  0.00  0.00  0.00
+        2  1.22  1.22  1.22
+        ```
+
+        :return indicators_scaled_standardized: pd.DataFrame()
         """
 
         original_shape = self._input_matrix.shape
@@ -183,7 +244,26 @@ class Normalization(object):
     def rank(self) -> pd.DataFrame():
         """
         Normalizes indicators using the scaling method rank.
-        :return: pd.DataFrame() of same shape as the input
+        The returned indicators_scaled_rank is of same shape as the input data.
+
+        Example:
+        ```python
+        input_data = pd.DataFrame([[10, 20, 30], [40, 50, 60], [70, 80, 90]])
+        normalization_instance = Normalization(input_data)
+        feature_range = (0, 1)
+        normalized_data = normalization_instance.rank(feature_range)
+        ```
+        This will normalize the input data using the rank scaling method with the specified feature range:
+
+        ```
+        rank normalized_data:
+            0  1  2
+        0  -1  2  3
+        1   4  5  6
+        2   7  8  9
+        ```
+
+        :return indicators_scaled_rank: pd.DataFrame()
         """
         original_shape = self._input_matrix.shape
 

@@ -8,19 +8,33 @@ from typing import List, Dict, Any
 
 
 # noinspection PyMethodMayBeStatic
-class Config():
+class Config:
     """
-    Class Configuration
+    Class representing configuration settings.
 
-    keys expected in the input dictionary are
-    input_matrix_path: path to the input matrix
-    marginal_distribution_for_each indicator: list of marginal distributions, one for each indicator
-    polarity_for_each_indicator: list of polarities, one for each indicator
-    monte_carlo_runs: number of MC runs
-    num_cores: number of cores used in the parallelization
-    monte_carlo_runs: list of weights, one for each indicator
-    output_path: path to the output file
+    This class encapsulates the configuration settings.
+    It expects the following keys in the input dictionary:
+    - input_matrix_path: path to the input matrix file.
+    - polarity_for_each_indicator: list of polarities, one for each indicator.
+    - sensitivity: sensitivity configuration.
+    - robustness: robustness configuration.
+    - monte_carlo_sampling: Monte Carlo sampling configuration.
+    - output_path: path to the output file.
 
+    Attributes:
+    _valid_keys (List[str]): list of valid keys expected in the input dictionary.
+    _list_values (List[str]): list of keys corresponding to list values.
+    _str_values (List[str]): list of keys corresponding to string values.
+    _int_values (List[str]): list of keys corresponding to integer values.
+    _dict_values (List[str]): list of keys corresponding to dictionary values.
+    _keys_of_dict_values (Dict[str, List[str]]): dictionary containing keys and their corresponding sub-keys.
+
+    Methods:
+    __init__(input_config: dict): instantiate a configuration object.
+    _validate(input_config, valid_keys, str_values, int_values, list_values, dict_values): validate the input configuration.
+    get_property(property_name: str): retrieve a property from the configuration.
+    check_dict_keys(dic: Dict[str, Any], keys: List[str]): check if a specific key is in a dictionary.
+    check_key(dic: dict, key: str): check if a key is in a dictionary.
     """
 
     _valid_keys: List[str] = ['input_matrix_path',
@@ -34,7 +48,7 @@ class Config():
         'marginal_distribution_for_each_indicator', 'polarity_for_each_indicator']
 
     _str_values: List[str] = ['input_matrix_path', 'output_path', 'sensitivity_on', 'normalization', 'aggregation',
-                   'robustness_on', 'on_single_weights', 'on_all_weights', 'given_weights', 'on_indicators']
+                              'robustness_on', 'on_single_weights', 'on_all_weights', 'given_weights', 'on_indicators']
 
     _int_values: List[str] = ['monte_carlo_runs', 'num_cores']
 
@@ -47,10 +61,6 @@ class Config():
                                                      'marginal_distribution_for_each_indicator']}
 
     def __init__(self, input_config: dict):
-        """
-        Instantiate a configuration object
-        :param input_config: dictionary
-        """
 
         valid_keys = self._valid_keys
         str_values = self._str_values
@@ -122,13 +132,11 @@ class Config():
 
     @staticmethod
     def check_dict_keys(dic: Dict[str, Any], keys: List[str]):
-        """Check if a specific key is in a dictionary"""
         for key in keys:
             Config.check_key(dic, key)
 
     @staticmethod
     def check_key(dic: dict, key: str):
-        """Check if a key is in a dictionary"""
         if key not in dic.keys():
             raise KeyError(
                 "The key = {} is not present in dictionary: {}".format(key, dic))
