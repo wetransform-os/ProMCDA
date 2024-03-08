@@ -32,25 +32,25 @@ def initialize_and_call_normalization(args: Tuple[pd.DataFrame, list, str]) -> L
 
 def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
     indicators_scaled_standardized_any = None
-    indicators_scaled_standardized_no0 = None
+    indicators_scaled_standardized_without_zero = None
     indicators_scaled_minmax_01 = None
-    indicators_scaled_minmax_no0 = None
+    indicators_scaled_minmax_without_zero = None
     indicators_scaled_target_01 = None
-    indicators_scaled_target_no0 = None
+    indicators_scaled_target_without_zero = None
     indicators_scaled_rank = None
 
     if method is None or method == 'minmax':
         indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
         # for aggregation "geometric" and "harmonic" that accept no 0
-        indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1))
+        indicators_scaled_minmax_without_zero = norm.minmax(feature_range=(0.1, 1))
     if method is None or method == 'target':
         indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
         # for aggregation "geometric" and "harmonic" that accept no 0
-        indicators_scaled_target_no0 = norm.target(feature_range=(0.1, 1))
+        indicators_scaled_target_without_zero = norm.target(feature_range=(0.1, 1))
     if method is None or method == 'standardized':
         indicators_scaled_standardized_any = norm.standardized(
             feature_range=('-inf', '+inf'))
-        indicators_scaled_standardized_no0 = norm.standardized(
+        indicators_scaled_standardized_without_zero = norm.standardized(
             feature_range=(0.1, '+inf'))
     if method is None or method == 'rank':
         indicators_scaled_rank = norm.rank()
@@ -59,11 +59,11 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
         raise ValueError('The selected normalization method is not supported')
 
     normalized_indicators = {"standardized_any": indicators_scaled_standardized_any,
-                             "standardized_no0": indicators_scaled_standardized_no0,
+                             "standardized_without_zero": indicators_scaled_standardized_without_zero,
                              "minmax_01": indicators_scaled_minmax_01,
-                             "minmax_no0": indicators_scaled_minmax_no0,
+                             "minmax_without_zero": indicators_scaled_minmax_without_zero,
                              "target_01": indicators_scaled_target_01,
-                             "target_no0": indicators_scaled_target_no0,
+                             "target_without_zero": indicators_scaled_target_without_zero,
                              "rank": indicators_scaled_rank
                              }
 
@@ -82,8 +82,8 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, m
     scores = pd.DataFrame()
     col_names_method = []
     col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                 'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
-                 'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
+                 'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
+                 'harm-minmax_without_zero', 'harm-target_without_zero', 'harm-standardized_without_zero', 'harm-rank',
                  'min-standardized_any']  # same order as in the following loop
     for key, values in normalized_indicators.items():
         if method is None or method == 'weighted_sum':
@@ -93,12 +93,12 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, m
                 col_names_method.append("ws-" + key)
         if method is None or method == 'geometric':
             # geom goes only with some specific normalizations
-            if key in ["standardized_no0", "minmax_no0", "target_no0", "rank"]:
+            if key in ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]:
                 scores_geometric[key] = pd.Series(agg.geometric(values))
                 col_names_method.append("geom-" + key)
         if method is None or method == 'harmonic':
             # harm goes only with some specific normalizations
-            if key in ["standardized_no0", "minmax_no0", "target_no0", "rank"]:
+            if key in ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]:
                 scores_harmonic[key] = pd.Series(agg.harmonic(values))
                 col_names_method.append("harm-" + key)
         if method is None or method == 'minimum':

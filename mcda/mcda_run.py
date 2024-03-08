@@ -25,21 +25,24 @@ logger = logging.getLogger("ProMCDA")
 # noinspection PyTypeChecker
 def main(input_config: dict):
     """
-        Execute the ProMCDA (Probabilistic Multi-Criteria Decision Analysis) process.
+    Execute the ProMCDA (Probabilistic Multi-Criteria Decision Analysis) process.
 
-        Parameters:
-        - input_config (dictionary): Configuration parameters for the ProMCDA process.
+    Parameters:
+    - input_config : Configuration parameters for the ProMCDA process.
 
-        Raises:
-        - ValueError: If there are issues with the input matrix, weights, or indicators.
+    Raises:
+    - ValueError: If there are issues with the input matrix, weights, or indicators.
 
-        This function performs the ProMCDA process based on the provided configuration.
-        It handles various aspects such as the sensitivity analysis and the robustness analysis.
-        The results are saved in output files, and plots are generated to visualize the scores and rankings.
+    This function performs the ProMCDA process based on the provided configuration.
+    It handles various aspects such as the sensitivity analysis and the robustness analysis.
+    The results are saved in output files, and plots are generated to visualize the scores and rankings.
 
-        Note: Ensure that the input matrix, weights, polarities and indicators (with or without uncertainty)
-        are correctly specified in the input configuration.
-        """
+    Note: Ensure that the input matrix, weights, polarities and indicators (with or without uncertainty)
+    are correctly specified in the input configuration.
+
+    :return: None
+    :param input_config: dict
+    """
 
     is_sensitivity = None
     is_robustness = None
@@ -155,11 +158,9 @@ def main(input_config: dict):
         run_mcda_with_indicator_uncertainty(input_config, input_matrix_no_alternatives, index_column_name, index_column_values,
                                             mc_runs, is_sensitivity, f_agg, f_norm, weights, polar, marginal_pdf)
 
-    logger.info(
-            "ProMCDA finished calculations: check the output files")
+    logger.info("ProMCDA finished calculations: check the output files")
     elapsed = time.time() - t
-    logger.info(
-            "All calculations finished in seconds {}".format(elapsed))
+    logger.info("All calculations finished in seconds {}".format(elapsed))
 
 if __name__ == '__main__':
     config_path = parse_args()

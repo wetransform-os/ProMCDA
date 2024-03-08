@@ -2,7 +2,6 @@ import argparse
 import json
 import pickle
 import random
-import time
 from typing import Union, Any, List
 from typing import Optional
 
@@ -680,6 +679,7 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict, for_testing=F
     config = Config(config)
 
     satisfies_condition = False
+    problem_logged = False
 
     marginal_pdf = config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
     is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
@@ -712,13 +712,14 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict, for_testing=F
 
         list_of_satisfied_conditions.append(satisfies_condition)
 
-        if any(not value for value in list_of_satisfied_conditions):
+        if any(not value for value in list_of_satisfied_conditions) and not problem_logged:
             logger.info(
                 'There is a problem with the parameters given in the input matrix with uncertainties. Check your data!')
             logger.info(
                 'Either standard deviation values of normal/lognormal indicators are larger than their means')
             logger.info('or max. values of uniform distributed indicators are smaller than their min. values.')
             logger.info('If you continue, the negative values will be rescaled internally to a positive range.')
+            problem_logged = True  # Set a flag to True after logging the problem message the first time
 
     if for_testing:
         return list_of_satisfied_conditions
@@ -825,7 +826,6 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
     :param is_robustness_weights: int
 
     """
-    t = time.time()
     scores = pd.DataFrame()
     normalized_scores = pd.DataFrame()
     all_weights_score_means = pd.DataFrame()
@@ -884,8 +884,6 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
                           input_matrix=input_matrix, config=input_config,
                           is_robustness_weights=is_robustness_weights)
 
-    elapsed = time.time() - t
-    logger.info("All calculations finished in seconds {}".format(elapsed))
 
 
 def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.DataFrame,

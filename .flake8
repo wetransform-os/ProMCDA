@@ -1,3 +1,9 @@
 [flake8]
-max-line-length = 120
+
+# Set the maximum allowed line length to 129 characters.
+max-line-length = 129
+
+# Ignore specific flake8 errors and warnings:
+# - F403: Disables "import *" unused import error.
 ignore = F403
+
