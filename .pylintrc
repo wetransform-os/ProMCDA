@@ -2,11 +2,20 @@
 max-line-length = 129
 
 [MESSAGES CONTROL]
-disable = too-many-arguments, W0401, E0611, E0401, W0621, W1202
-# Disable: wildcard, no-name import warning, redefining name from outer scope,
-# lazy formatting
-disable = F405 # module undefined
+# Disable specific warnings and error messages:
+# - too-many-arguments: Avoids warnings for functions/methods with too many arguments.
+# - W0401: Disables wildcard import warnings.
+# - E0611: Disables "no-name in module" import warnings.
+# - E0401: Disables "unable to import" errors.
+# - W0621: Disables "redefining name from outer scope" warnings.
+# - W1202: Disables "logging format string" warnings.
+# - F405: Disables module undefined warnings.
+disable = too-many-arguments, W0401, E0611, E0401, W0621, W1202, F405
 
 [MASTER]
+# Execute this Python code before the analysis.
 init-hook = 'import sys; sys.path.append("/mcda")'
-ignored-modules = mcda_with_robustness, mcda_without_robustness, utils, utils_for_parallelization
+
+# Ignore specific modules during the analysis.
+# Modules listed here won't be checked by pylint.
+# ignored-modules = mcda_with_robustness, mcda_without_robustness, utils, utils_for_parallelization
