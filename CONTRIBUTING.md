@@ -147,13 +147,13 @@ consistency in Python code:
 - Functions are defined using snake_case convention, where lowercase words are separated by an underscore.
 - Function names should be descriptive and reflect the purpose or functionality of the function.
 - Comments start with # and are used to explain code functionality.
-- Docstrings (multiline strings enclosed in triple quotes) are used to document non-private functions or methods.
+- Docstrings (multiline strings enclosed in triple quotes) are used to document non-private functions (optionally also private ones).
 - Indentation is consistent and consists of four spaces per level.
 - if `__name__ == "__main__":` block is used to allow the script to be executed directly as well as imported as a module.
 - Private functions are defined using `_name_of_private_function`.
 - Classes are named using CamelCase convention, starting with an uppercase letter, with subsequent words capitalized.
 - Class names should be descriptive and reflect the purpose or functionality of the class.
-- Docstrings should be provided for classes to describe their purpose, attributes, and methods.
+- Docstrings should be provided for classes to describe their purpose, attributes, and methods (optional for static methods).
 - Static methods are defined using the `@staticmethod` decorator and do not receive a reference to the instance or the class.
 - Test classes are named using a descriptive name with prefix "Test", and test methods are named using snake_case also with a prefix "test_".
 - Test classes should inherit from a test framework-specific base class, such as unittest.TestCase for the built-in unittest framework or pytest for pytest.
