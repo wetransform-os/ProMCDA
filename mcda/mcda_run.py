@@ -40,10 +40,9 @@ def main(input_config: dict):
     Note: Ensure that the input matrix, weights, polarities and indicators (with or without uncertainty)
     are correctly specified in the input configuration.
 
-    :return: None
     :param input_config: dict
+    :return: None
     """
-
     is_sensitivity = None
     is_robustness = None
     is_robustness_indicators = 0

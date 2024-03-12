@@ -19,16 +19,11 @@ class MCDAWithoutRobustness:
     Class MCDA without indicators' uncertainty
 
     This class allows one to run MCDA without considering the uncertainties related to the indicators.
-    All indicators are associated to the exact type of marginal distribution.
+    All indicators are described by the exact marginal distribution.
     However, it's possible to have randomly sampled weights.
-
-    :input:  configuration dictionary
-             input_matrix with no alternatives column
-    :output: write csv files with the scores, normalized scores and ranks; log file
-
     """
 
-    def __init__(self, config: Config, input_matrix: pd.DataFrame()):
+    def __init__(self, config: Config, input_matrix: pd.DataFrame):
         self.normalized_indicators = None
         self.weights = None
         self._config = copy.deepcopy(config)
@@ -36,10 +31,23 @@ class MCDAWithoutRobustness:
 
     def normalize_indicators(self, method=None) -> dict:
         """
-        Get the input matrix.
-        :param method: The normalization method to use (None for all methods).
-        :return: a dictionary that contains the normalized values of each indicator per normalization method.
-        Normalization functions implemented: minmax; target; standardized; rank
+        Normalize the input matrix using the specified normalization method.
+
+        Parameters:
+        - method (optional): the normalization method to use. If None, all available methods will be applied.
+          Supported methods: 'minmax', 'target', 'standardized', 'rank'.
+
+        Returns:
+        - a dictionary containing the normalized values of each indicator per normalization method.
+
+        Notes:
+        Some aggregation methods do not work with indicator values equal or smaller than zero. For that reason:
+        - for the 'minmax' method, two sets of normalized indicators are returned: one with the range (0, 1) and
+          another with the range (0.1, 1).
+        - for the 'target' method, two sets of normalized indicators are returned: one with the range (0, 1) and
+          another with the range (0.1, 1).
+        - for the 'standardized' method, two sets of normalized indicators are returned: one with the range (-inf, +inf)
+          and another with the range (0.1, +inf).
         """
         norm = Normalization(self._input_matrix,
                              self._config.polarity_for_each_indicator)
@@ -75,14 +83,24 @@ class MCDAWithoutRobustness:
 
         return normalized_indicators
 
-    def aggregate_indicators(self, normalized_indicators: dict, weights: list, method=None) -> pd.DataFrame():
-        #     """
-        #     Get the normalized indicators per normalization methods in a dictionary.
-        #     :param: method The normalization method to use (None for all methods).
-        #     :return: aggregated scores per each alternative, and per each normalization method.
-        #     Aggregation functions implemented: weighted-sum; geometric; harmonic; minimum
-        #     """
+    def aggregate_indicators(self, normalized_indicators: dict, weights: list, method=None) -> pd.DataFrame:
+        """
+        Aggregate the normalized indicators using the specified aggregation method.
 
+        Parameters:
+        - normalized_indicators: a dictionary containing the normalized values of each indicator per normalization method.
+        - weights: the weights to be applied during aggregation.
+        - method (optional): The aggregation method to use. If None, all available methods will be applied.
+        Supported methods: 'weighted_sum', 'geometric', 'harmonic', 'minimum'.
+
+        Returns:
+        - a DataFrame containing the aggregated scores per each alternative, and per each normalization method.
+
+        :param normalized_indicators: dict
+        :param weights: list
+        :param method: str
+        :return scores: pd.DataFrame
+        """
         self.normalized_indicators = normalized_indicators
         self.weights = weights
 
@@ -93,7 +111,7 @@ class MCDAWithoutRobustness:
         scores_harmonic = {}
         scores_minimum = {}
 
-        scores = pd.DataFrame()
+        scores = pd.DataFrame
         col_names_method = []
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
                      'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',

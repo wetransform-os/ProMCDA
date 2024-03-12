@@ -16,7 +16,7 @@ class Normalization(object):
     Ratio: target.
     """
 
-    def __init__(self, input_matrix: pd.DataFrame(), polarities: list):
+    def __init__(self, input_matrix: pd.DataFrame, polarities: list):
 
         self._input_matrix = copy.deepcopy(input_matrix)
         self.polarities = polarities
@@ -25,7 +25,6 @@ class Normalization(object):
         """
         Identifies indicators with positive or negative polarity (by indexes) and cast them into two separate dfs.
         """
-
         ind_plus = [i for i, e in enumerate(self.polarities) if e == "+"]
         ind_minus = [i for i, e in enumerate(self.polarities) if e == "-"]
         indicators_plus = self._input_matrix.iloc[:, ind_plus]
@@ -54,11 +53,10 @@ class Normalization(object):
         [0.  1.  1. ]]
         ```
 
-        :param data: pd.DataFrame()
+        :param data: pd.DataFrame
         :param feature_range: tuple
         :returns scaled_data: np.array
         """
-
         data = np.array(data)
 
         max_val = np.max(data, axis=0)
@@ -72,7 +70,7 @@ class Normalization(object):
 
         return scaled_data
 
-    def minmax(self, feature_range: tuple) -> pd.DataFrame():
+    def minmax(self, feature_range: tuple) -> pd.DataFrame:
         """
         Normalizes the indicators by using the scaling method min-max. Different feature ranges are possible.
         The returned indicators_scaled_minmax is of same shape as the input data.
@@ -94,9 +92,8 @@ class Normalization(object):
         2  1.0  1.0  1.0
         ```
 
-        :return indicators_scaled_minmax: pd.DataFrame()
+        :return indicators_scaled_minmax: pd.DataFrame
         """
-
         original_shape = self._input_matrix.shape
 
         pol = Normalization._cast_polarities(self)
@@ -129,7 +126,7 @@ class Normalization(object):
 
         return indicators_scaled_minmax
 
-    def target(self, feature_range: tuple) -> pd.DataFrame():
+    def target(self, feature_range: tuple) -> pd.DataFrame:
         """
         Normalizes the indicators using the scaling method target.
         The returned indicators_scaled_target is of same shape as the input data.
@@ -151,9 +148,8 @@ class Normalization(object):
         2  1.0   1.0    1.0
         ```
 
-        :return indicators_scaled_target: pd.DataFrame()
+        :return indicators_scaled_target: pd.DataFrame
         """
-
         original_shape = self._input_matrix.shape
 
         pol = Normalization._cast_polarities(self)
@@ -185,7 +181,7 @@ class Normalization(object):
 
         return indicators_scaled_target
 
-    def standardized(self, feature_range: tuple) -> pd.DataFrame():
+    def standardized(self, feature_range: tuple) -> pd.DataFrame:
         """
         Normalizes the indicators using the scaling method standardized (i.e. Z-score).
         The returned indicators_scaled_standardized is of same shape as the input data.
@@ -207,9 +203,8 @@ class Normalization(object):
         2  1.22  1.22  1.22
         ```
 
-        :return indicators_scaled_standardized: pd.DataFrame()
+        :return indicators_scaled_standardized: pd.DataFrame
         """
-
         original_shape = self._input_matrix.shape
 
         pol = Normalization._cast_polarities(self)
@@ -241,7 +236,7 @@ class Normalization(object):
 
         return indicators_scaled_standardized
 
-    def rank(self) -> pd.DataFrame():
+    def rank(self) -> pd.DataFrame:
         """
         Normalizes indicators using the scaling method rank.
         The returned indicators_scaled_rank is of same shape as the input data.
@@ -263,7 +258,7 @@ class Normalization(object):
         2   7  8  9
         ```
 
-        :return indicators_scaled_rank: pd.DataFrame()
+        :return indicators_scaled_rank: pd.DataFrame
         """
         original_shape = self._input_matrix.shape
 

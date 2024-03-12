@@ -42,9 +42,8 @@ def initialize_and_call_aggregation(args: Tuple[list, dict], method=None) -> pd.
 
     :param args: Tuple[list, dict]
     :param method: str
-    :return scores_one_run: pd.DataFrame()
+    :return scores_one_run: pd.DataFrame
     """
-
     weights, data = args
     agg = Aggregation(weights)
 
@@ -85,7 +84,7 @@ def initialize_and_call_normalization(args: Tuple[pd.DataFrame, list, str]) -> d
     normalization method to calculate normalized indicators. The resulting normalized indicators are returned
     as a dictionary.
 
-    :param args: Tuple[pd.DataFrame(), List[str], str]
+    :param args: Tuple[pd.DataFrame, List[str], str]
     :return dict_normalized_matrix: dict
     """
 
@@ -121,10 +120,9 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
         used and values represent the corresponding normalized indicators.
 
         :param norm: object
-        :param method: string
+        :param method: str
         :return normalized_indicators: dict
         """
-
     indicators_scaled_standardized_any = None
     indicators_scaled_standardized_without_zero = None
     indicators_scaled_minmax_01 = None
@@ -167,7 +165,7 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
     return normalized_indicators
 
 
-def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, method=None) -> pd.DataFrame():
+def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, method=None) -> pd.DataFrame:
     """
     Aggregate normalized indicators in parallel using different aggregation methods.
 
@@ -193,16 +191,15 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, m
 
     :param agg: object
     :param normalized_indicators: dict
-    :param method: string
-    :return scores: pd.DataFrame()
+    :param method: str
+    :return scores: pd.DataFrame
     """
-
     scores_weighted_sum = {}
     scores_geometric = {}
     scores_harmonic = {}
     scores_minimum = {}
 
-    scores = pd.DataFrame()
+    scores = pd.DataFrame
     col_names_method = []
     col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
                  'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
@@ -284,11 +281,10 @@ def parallelize_normalization(input_matrices: List[pd.DataFrame], polar: list, m
     normalized indicators for each input matrix.
 
     :param input_matrices: List[pd.DataFrame]
-    :param polar: List[string]
-    :param method: string
+    :param polar: List[str]
+    :param method: str
     :return res: List[dict]
     """
-
     pool = multiprocessing.Pool()
     args_for_parallel_norm = [(df, polar, method) for df in input_matrices]
     res = pool.map(initialize_and_call_normalization, args_for_parallel_norm)
@@ -311,7 +307,6 @@ def estimate_runs_mean_std(res: List[pd.DataFrame]) -> List[pd.DataFrame]:
     :param res: List[pd.DataFrame]
     :return all_scores_mean_std: List[pd.DataFrame]
     """
-
     all_runs = pd.concat(res, axis=0)
     by_index = all_runs.groupby(all_runs.index)
     df_means = by_index.mean()

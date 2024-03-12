@@ -26,13 +26,13 @@ class Aggregation(object):
         if sum(self.weights) != 1:
             self.weights = [val / sum(self.weights) for val in self.weights]
 
-    def weighted_sum(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
+    def weighted_sum(self, norm_indicators: pd.DataFrame) -> pd.Series(dtype='object'):
         """
         Weighted-sum or additive aggregation function gets as input the normalized values of the indicators in a matrix
         and estimates the scores over the indicators, per alternative. The norm_indicators has
         shape = (no.alternatives x num. indicators) and the returned scores has length = num. of alternatives.
 
-        :param norm_indicators: pd.DataFrame()
+        :param norm_indicators: pd.DataFrame
         :returns scores: pd.Series
         """
 
@@ -40,7 +40,7 @@ class Aggregation(object):
 
         return scores
 
-    def geometric(self, norm_indicators: pd.DataFrame()) -> np.ndarray:
+    def geometric(self, norm_indicators: pd.DataFrame) -> np.ndarray:
         """
         The weighted geometric mean works only with strictly positive normalized indicator values
         (i.e. not with minmax and target with feature range (0,1); and not with standardized with feature range
@@ -48,10 +48,9 @@ class Aggregation(object):
         scores over the indicators, per alternative. The norm_indicators has shape = (no.alternatives x num. indicators)
         and the returned scores has length = num. of alternatives.
 
-        :param norm_indicators: pd.DataFrame()
+        :param norm_indicators: pd.DataFrame
         :returns scores: pd.Series
         """
-
         if (norm_indicators <= 0).any().any():
             logger.error('Error Message', stack_info=True)
             raise ValueError(
@@ -62,7 +61,7 @@ class Aggregation(object):
 
         return scores
 
-    def harmonic(self, norm_indicators: pd.DataFrame()) -> np.ndarray:
+    def harmonic(self, norm_indicators: pd.DataFrame) -> np.ndarray:
         """
         The weighted harmonic mean works only with strictly positive normalized indicator values
         (i.e. not with minmax, and target with feature range (0,1); and not with standardized with feature range
@@ -70,7 +69,7 @@ class Aggregation(object):
         scores over the indicators, per alternative. The norm_indicators has shape = (no.alternatives x num. indicators)
         and the returned scores has length = num. of alternatives.
 
-        :param norm_indicators: pd.DataFrame()
+        :param norm_indicators: pd.DataFrame
         :returns scores: pd.Series
         """
 
@@ -83,17 +82,16 @@ class Aggregation(object):
 
         return scores
 
-    def minimum(self, norm_indicators: pd.DataFrame()) -> pd.Series(dtype='object'):
+    def minimum(self, norm_indicators: pd.DataFrame) -> pd.Series(dtype='object'):
         """
         Minimum aggregation function. It does not consider the weights.
         It gets as input the normalized values of the indicators in a matrix and estimates the scores over the
         indicators, per alternative. The norm_indicators has shape = (no.alternatives x num. indicators) and the
         returned scores has length = num. of alternatives.
 
-        :param norm_indicators: pd.DataFrame()
+        :param norm_indicators: pd.DataFrame
         :returns scores: pd.Series
         """
-
         scores = norm_indicators.min(axis=1)
 
         return scores

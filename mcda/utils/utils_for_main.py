@@ -302,7 +302,7 @@ def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
     return input_matrix_no_alternatives
 
 
-def read_matrix(input_matrix_path: str) -> pd.DataFrame():
+def read_matrix(input_matrix_path: str) -> pd.DataFrame:
     """
     Read an input matrix from a CSV file and return it as a DataFrame.
     Set the 'Alternatives' column as index column.
@@ -348,7 +348,7 @@ def reset_index_if_needed(series):
     return series
 
 
-def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame():
+def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame:
     """
     Rescale indicators of the input matrix if negative into [0-1].
     """
@@ -500,7 +500,7 @@ def check_path_exists(path: str):
         print("The new output directory is created: {}".format(path))
 
 
-def rescale_minmax(scores: pd.DataFrame) -> pd.DataFrame():
+def rescale_minmax(scores: pd.DataFrame) -> pd.DataFrame:
     """
     Rescale the values in a DataFrame to a [0,1] range using Min-Max scaling.
 
@@ -522,8 +522,8 @@ def rescale_minmax(scores: pd.DataFrame) -> pd.DataFrame():
     1   0.5  0.5  0.5
     2   1.0  1.0  1.0
     ```
-    :param scores: pd.DataFrame()
-    :rtype: pd.DataFrame()
+    :param scores: pd.DataFrame
+    :rtype: pd.DataFrame
     """
     x = scores.to_numpy()
     min_max_scaler = preprocessing.MinMaxScaler()
@@ -819,11 +819,11 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
     :param is_robustness_weights: int
     :return: None
     """
-    scores = pd.DataFrame()
-    normalized_scores = pd.DataFrame()
-    all_weights_score_means = pd.DataFrame()
-    all_weights_score_stds = pd.DataFrame()
-    all_weights_score_means_normalized = pd.DataFrame()
+    scores = pd.DataFrame
+    normalized_scores = pd.DataFrame
+    all_weights_score_means = pd.DataFrame
+    all_weights_score_stds = pd.DataFrame
+    all_weights_score_means_normalized = pd.DataFrame
     iterative_random_w_score_means_normalized = {}
     iterative_random_weights_statistics = {}
     iterative_random_w_score_means = {}
@@ -1073,7 +1073,7 @@ def _compute_ranks(scores: Optional[pd.DataFrame], index_column_name: str, index
     """
     Compute ranks based on the computed scores, mean scores with random weights, and mean scores for each random weight.
     """
-    ranks = pd.DataFrame()
+    ranks = pd.DataFrame
 
     if not scores.empty:
         ranks = scores.rank(pct=True)
