@@ -199,7 +199,7 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, m
     scores_harmonic = {}
     scores_minimum = {}
 
-    scores = pd.DataFrame
+    scores = pd.DataFrame()
     col_names_method = []
     col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
                  'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
