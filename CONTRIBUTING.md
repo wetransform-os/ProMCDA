@@ -39,12 +39,11 @@ pip install -r requirements.txt
 
 ### Getting Started
 First, you'll need to fork the project repository and clone it to your local machine. Go to the 
-[GitHub repository of the project] (https://github.com/wetransform-os/ProMCDA) and click the "Fork" button 
+[GitHub repository of the project](https://github.com/wetransform-os/ProMCDA) and click the "Fork" button 
 in the top-right corner to create a copy of the repository in your GitHub account. Clone your forked repository from 
 your GitHub account to your local machine using the following command:
 
 ```bash
-Copy code
 git clone https://github.com/your-username/project.git
 ```
 
@@ -99,10 +98,10 @@ Click the green "Submit new issue" button to create the issue when you are ready
 Contributing to the project is easy! Follow these steps to make changes and submit them for review:
 
 #### Fork the repository
-If you still did not fork the repository, follow the instruction in [Getting Started](#getting-started).
+If you still did not fork the repository, follow the instructions in [Getting Started](#getting-started).
 
 #### Create a branch
-Create a new branch to work on your changes using the following command:
+Create a new branch on your forked directory to work on your changes using the following command:
 
 ```bash
 git checkout -b my-feature
@@ -118,7 +117,7 @@ Once you've made your changes, commit them to your local repository using the fo
 
 ```bash
 git add . # or be explicit and add only the changes you really want to push
-git commit -m "Add new feature"  # Replace with a descriptive commit message
+git commit -m <descriptive commit message> 
 ```
 
 #### Push changes
@@ -149,16 +148,14 @@ consistency in Python code:
 - Comments start with # and are used to explain code functionality.
 - Docstrings (multiline strings enclosed in triple quotes) are used to document non-private functions (optionally also private ones).
 - Indentation is consistent and consists of four spaces per level.
-- if `__name__ == "__main__":` block is used to allow the script to be executed directly as well as imported as a module.
-- Private functions are defined using `_name_of_private_function`.
+- If `__name__ == "__main__":` block is used to allow the script to be executed directly as well as imported as a module.
+- Private functions are defined starting with an underscore "_", .e.g., _name_of_private_function.
 - Classes are named using CamelCase convention, starting with an uppercase letter, with subsequent words capitalized.
 - Class names should be descriptive and reflect the purpose or functionality of the class.
 - Docstrings should be provided for classes to describe their purpose, attributes, and methods (optional for static methods).
 - Static methods are defined using the `@staticmethod` decorator and do not receive a reference to the instance or the class.
 - Test classes are named using a descriptive name with prefix "Test", and test methods are named using snake_case also with a prefix "test_".
 - Test classes should inherit from a test framework-specific base class, such as unittest.TestCase for the built-in unittest framework or pytest for pytest.
-
-
 
 ### Testing
 The project uses the unittest framework in Python. We define a function e.g., `add(a, b)` that adds two numbers.
