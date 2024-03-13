@@ -45,13 +45,12 @@ def check_config_error(condition: bool, error_message: str):
         raise ValueError(error_message)
 
 
-def check_config_setting(condition_robustness_on_weights: bool,
-                         condition_robustness_on_indicators: bool,
-                         mc_runs: int, random_seed: int) -> (int, int):
+def check_config_setting(condition_robustness_on_weights: bool, condition_robustness_on_indicators: bool, mc_runs: int,
+                         random_seed: int) -> (int, int):
     """
     Checks configuration settings and logs information messages.
 
-    Parameters:
+    Returns:
     - is_robustness_weights, is_robustness_indicators, booleans indicating if robustness is considered
     on weights or indicators.
 
@@ -60,13 +59,12 @@ def check_config_setting(condition_robustness_on_weights: bool,
     is_robustness_weights, is_robustness_indicators = check_config_setting(True, False, 1000, 42)
     ```
 
-    :rtype: Tuple[int, int]
-    :return: (is_robustness_weights, is_robustness_indicators)
     :param condition_robustness_on_weights: bool
     :param condition_robustness_on_indicators: bool
     :param mc_runs: int
     :param random_seed: int
-
+    :return: (is_robustness_weights, is_robustness_indicators)
+    :rtype: Tuple[int, int]
     """
 
     is_robustness_weights = 0

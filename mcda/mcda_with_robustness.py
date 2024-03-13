@@ -91,11 +91,13 @@ class MCDAWithRobustness:
         is_poisson_pdf_mask = self.is_poisson_pdf_mask
         random_seed = self.random_seed
 
-        default_random_seed = 42
-
         if random_seed is not None:
             np.random.seed(random_seed)
         else:
+            # TODO: the default_random_seed cannot be used while reading the settings from a JSON file, where None
+            #  cannot be given as an option; it will be implemented when the congiguration settings will be passed as a
+            #  stream or handle.
+            default_random_seed = 42
             np.random.seed(default_random_seed)
 
         sampled_matrices = []  # list long I
