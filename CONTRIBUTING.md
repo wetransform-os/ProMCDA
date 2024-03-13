@@ -92,7 +92,7 @@ We use the following labels to categorize issues:
 - *Feature Request*: Suggests a new feature or enhancement to be added to the project.
 - *Documentation*: Relates to improvements or issues with project documentation.
 
-Click the green "Submit new issue" button to create the issue when you are ready.
+Click the green "Submit new issue" button to create the issue when ready.
 
 ### Making changes
 Contributing to the project is easy! Follow these steps to make changes and submit them for review:
@@ -101,7 +101,7 @@ Contributing to the project is easy! Follow these steps to make changes and subm
 If you still did not fork the repository, follow the instructions in [Getting Started](#getting-started).
 
 #### Create a branch
-Create a new branch on your forked directory to work on your changes using the following command:
+Create a new branch on your forked repository to work on your changes using the following command:
 
 ```bash
 git checkout -b my-feature
