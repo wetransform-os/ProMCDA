@@ -30,7 +30,7 @@ class Aggregation(object):
         """
         Weighted-sum or additive aggregation function gets as input the normalized values of the indicators in a matrix
         and estimates the scores over the indicators, per alternative. The norm_indicators has
-        shape = (no.alternatives x num. indicators) and the returned scores has length = num. of alternatives.
+        shape = (num. alternatives x num. indicators) and the returned scores has length = num. of alternatives.
 
         :param norm_indicators: pd.DataFrame
         :returns scores: pd.Series

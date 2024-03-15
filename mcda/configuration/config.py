@@ -31,7 +31,8 @@ class Config:
 
     Methods:
     __init__(input_config: dict): instantiate a configuration object.
-    _validate(input_config, valid_keys, str_values, int_values, list_values, dict_values): validate the input configuration.
+    _validate(input_config, valid_keys, str_values, int_values, list_values, dict_values): validate the input
+    configuration.
     get_property(property_name: str): retrieve a property from the configuration.
     check_dict_keys(dic: Dict[str, Any], keys: List[str]): check if a specific key is in a dictionary.
     check_key(dic: dict, key: str): check if a key is in a dictionary.

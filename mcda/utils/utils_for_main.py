@@ -45,9 +45,7 @@ def check_config_error(condition: bool, error_message: str):
         raise ValueError(error_message)
 
 
-def check_config_setting(condition_robustness_on_weights: bool,
-                         condition_robustness_on_indicators: bool,
-                         mc_runs: int) \
+def check_config_setting(condition_robustness_on_weights: bool, condition_robustness_on_indicators: bool, mc_runs: int)\
         -> (int, int):
     """
     Checks configuration settings and logs information messages.
@@ -552,7 +550,7 @@ def randomly_sample_all_weights(num_weights: int, num_runs: int) -> List[list]:
     This will generate 10 lists, each containing 5 randomly sampled weights.
 
     :param num_weights: int
-    :param num_runs:
+    :param num_runs: int
     :return list_of_weights: List[list]
     """
 

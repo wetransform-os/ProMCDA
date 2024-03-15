@@ -88,7 +88,8 @@ class MCDAWithoutRobustness:
         Aggregate the normalized indicators using the specified aggregation method.
 
         Parameters:
-        - normalized_indicators: a dictionary containing the normalized values of each indicator per normalization method.
+        - normalized_indicators: a dictionary containing the normalized values of each indicator per normalization
+          method.
         - weights: the weights to be applied during aggregation.
         - method (optional): The aggregation method to use. If None, all available methods will be applied.
         Supported methods: 'weighted_sum', 'geometric', 'harmonic', 'minimum'.
@@ -114,9 +115,10 @@ class MCDAWithoutRobustness:
         scores = pd.DataFrame()
         col_names_method = []
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                     'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
-                     'harm-minmax_without_zero', 'harm-target_without_zero', 'harm-standardized_without_zero', 'harm-rank',
-                     'min-standardized_any']  # same order as in the following loop
+                     'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero',
+                     'geom-rank', 'harm-minmax_without_zero', 'harm-target_without_zero',
+                     'harm-standardized_without_zero', 'harm-rank', 'min-standardized_any']
+        # column names has the same order as in the following loop
 
         for key, values in self.normalized_indicators.items():
             if method is None or method == 'weighted_sum':
