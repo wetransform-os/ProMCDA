@@ -10,6 +10,18 @@ from PIL import Image
 
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
+    """
+    Plot the normalized scores without uncertainty as a histogram.
+
+    Parameters:
+    - scores: DataFrame containing the normalized scores.
+
+    Returns:
+    - Plotly figure object.
+
+    :param scores: pd.DataFrame
+    :return fig: object
+    """
     alternatives_column_name = scores.columns[0]
     num_of_combinations = scores.shape[1] - 1
     fig = go.Figure(layout_yaxis_range=[scores.iloc[:, 1:].values.min() - 0.5, scores.iloc[:, 1:].values.max() + 0.5],
@@ -42,6 +54,18 @@ def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
 
 
 def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
+    """
+        Plot the non-normalized scores without uncertainty as a histogram.
+
+        Parameters:
+        - scores: DataFrame containing the non-normalized scores.
+
+        Returns:
+        - Plotly figure object.
+
+        :param scores: pd.DataFrame
+        :return fig: object
+        """
     alternatives_column_name = scores.columns[0]
     num_of_combinations = scores.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA rough score")
@@ -71,6 +95,24 @@ def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
 
 
 def plot_mean_scores(all_means: pd.DataFrame, plot_std: str, rand_on: str, all_stds=None) -> object:
+    """
+    Plot the mean scores with optional standard deviation as a histogram.
+
+    Parameters:
+    - all_means: DataFrame containing the mean scores.
+    - plot_std: string indicating whether to plot standard deviation or not.
+    - rand_on: string specifying the randomness added on which parameter for the title.
+    - all_stds (optional): DataFrame containing the standard deviations.
+
+    Returns:
+    - object: Plotly figure object.
+
+    :param all_means: pd.DataFrame
+    :parameter plot_std: str
+    :parameter rand_on: str
+    :param all_stds: pd.DataFrame
+    :return fig: object
+    """
     alternatives_column_name = all_means.columns[0]
     num_of_combinations = all_means.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA average scores and std")
@@ -113,6 +155,26 @@ def plot_mean_scores(all_means: pd.DataFrame, plot_std: str, rand_on: str, all_s
 
 def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, indicators: list,
                                index: int, plot_std: str, all_weights_stds=None) -> object:
+    """
+    Plot the mean scores with optional standard deviation for iterative weight sampling as a histogram.
+
+    Parameters:
+    - all_weights_means: DataFrame containing the mean scores.
+    - indicators: list of indicator names.
+    - index : index of the indicator for which weights are sampled.
+    - plot_std: string indicating whether to plot standard deviation or not.
+    - all_weights_stds (optional): DataFrame containing the standard deviations.
+
+    Returns:
+    - object: Plotly figure object.
+
+    :param all_weights_means: pd.DataFrame
+    :parameter indicators: list
+    :parameter index: int
+    :parameter plot_std: str
+    :param all_weights_stds: pd.DataFrame
+    :return fig: object
+    """
     alternatives_column_name = all_weights_means.columns[0]
     num_of_combinations = all_weights_means.shape[1] - 1
     fig = go.Figure(layout_yaxis_title="MCDA average scores and std")
@@ -151,6 +213,19 @@ def plot_mean_scores_iterative(all_weights_means: pd.DataFrame, indicators: list
 
 
 def save_figure(figure: object, folder_path: str, filename: str):
+    """
+    Save a Plotly figure as an image.
+
+    Parameters:
+    - figure: Plotly figure object to be saved.
+    - folder_path: path to the folder where the image will be saved.
+    - filename: name of the image file.
+
+    :param figure: object
+    :param folder_path: str
+    :param filename: str
+    :return: None
+    """
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
 
@@ -158,7 +233,20 @@ def save_figure(figure: object, folder_path: str, filename: str):
     figure.write_image(result_path)
 
 
-def combine_images(figures, folder_path: str, filename: str):
+def combine_images(figures: list, folder_path: str, filename: str):
+    """
+    Combine multiple Plotly figures into a single image.
+
+    Parameters:
+    - figures: list of Plotly figure objects to be combined.
+    - folder_path: path to the folder where the combined image will be saved.
+    - filename: name of the combined image file.
+
+    :param figures: list
+    :param folder_path: str
+    :param filename: str
+    :return: None
+    """
     images = []
     result_path = os.path.join(folder_path, filename)
     for fig in figures:

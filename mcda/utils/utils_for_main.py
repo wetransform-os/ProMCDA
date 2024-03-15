@@ -35,9 +35,9 @@ def check_config_error(condition: bool, error_message: str):
     Raises:
     - ValueError: If the condition is True, with the specified error message.
 
-    :return: None
     :param error_message: str
     :param condition: bool
+    :return: None
     """
 
     if condition:
@@ -45,6 +45,7 @@ def check_config_error(condition: bool, error_message: str):
         raise ValueError(error_message)
 
 
+        
 def check_config_setting(condition_robustness_on_weights: bool, condition_robustness_on_indicators: bool, mc_runs: int,
                          random_seed: int) -> (int, int):
     """
@@ -66,7 +67,6 @@ def check_config_setting(condition_robustness_on_weights: bool, condition_robust
     :return: (is_robustness_weights, is_robustness_indicators)
     :rtype: Tuple[int, int]
     """
-
     is_robustness_weights = 0
     is_robustness_indicators = 0
 
@@ -87,21 +87,20 @@ def check_config_setting(condition_robustness_on_weights: bool, condition_robust
 
 def process_indicators_and_weights(config: dict, input_matrix: pd.DataFrame,
                                    is_robustness_indicators: int, is_robustness_weights: int, polar: List[str],
-                                   mc_runs: int, num_indicators: int) -> Tuple[
-    List[str], Union[list, List[list], dict]]:
+                                   mc_runs: int, num_indicators: int) \
+        -> Tuple[List[str], Union[list, List[list], dict]]:
     """
     Process indicators and weights based on input parameters in the configuration.
 
     Parameters:
-    - input_matrix (DataFrame): The input matrix without alternatives.
-    - is_robustness_indicators (int): Flag indicating whether the matrix should include indicator uncertainties
-      (0 or 1).
-    - is_robustness_weights (int): Flag indicating whether robustness analysis is considered for the weights
-      (0 or 1).
-    - marginal_pdf (list): List of marginal probability density functions for indicators.
-    - mc_runs (int): Number of Monte Carlo runs for robustness analysis.
-    - num_indicators: the number of indicators in the input matrix.
     - config: the configuration dictionary.
+    - input_matrix: the input matrix without alternatives.
+    - is_robustness_indicators: a flag indicating whether the matrix should include indicator uncertainties
+      (0 or 1).
+    - is_robustness_weights: a flag indicating whether robustness analysis is considered for the weights (0 or 1).
+    - marginal_pdf: a list of marginal probability density functions for indicators.
+    - mc_runs: number of Monte Carlo runs for robustness analysis.
+    - num_indicators: the number of indicators in the input matrix.
 
     Raises:
     - ValueError: If there are duplicated rows in the input matrix or if there is an issue with the configuration.
@@ -128,8 +127,6 @@ def process_indicators_and_weights(config: dict, input_matrix: pd.DataFrame,
     - Performs robustness analysis on weights.
     - Logs randomly sampled weights.
 
-    :return: polar, norm_weights
-    :rtype: Tuple[List[str], Union[List[list], dict]]
     :param mc_runs: int
     :param polar: List[str]
     :param is_robustness_weights: int
@@ -137,6 +134,8 @@ def process_indicators_and_weights(config: dict, input_matrix: pd.DataFrame,
     :param input_matrix: pd.DataFrame
     :param config: dict
     :param num_indicators: int
+    :return: polar, norm_weights
+    :rtype: Tuple[List[str], Union[List[list], dict]]
     """
 
     num_unique = input_matrix.nunique()
@@ -233,7 +232,7 @@ def _handle_robustness_weights(config: dict, mc_runs: int, num_indicators: int) 
 def _handle_no_robustness_indicators(input_matrix: pd.DataFrame):
     """
     Handle the indicators in case of no robustness analysis required.
-    (The input matrix is without the Alternatives)
+    (The input matrix is without the alternative column)
     """
     num_unique = input_matrix.nunique()
     cols_to_drop = num_unique[num_unique == 1].index
@@ -262,14 +261,13 @@ def check_indicator_weights_polarities(num_indicators: int, polar: List[str], co
         does not correspond to the number of indicators.
 
     Raises:
-    - ValueError: If the conditions for indicator-polarity and fixed weights consistency are not met.
+    - ValueError: if the conditions for indicator-polarity and fixed weights consistency are not met.
 
-    :return: None
     :param num_indicators: int
     :param polar: List[str]
     :param config: dict
+    :return: None
     """
-
     if num_indicators != len(polar):
         raise ValueError('The number of polarities does not correspond to the no. of indicators')
 
@@ -282,18 +280,18 @@ def check_indicator_weights_polarities(num_indicators: int, polar: List[str], co
 def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
     """
     Check the input matrix for duplicated rows in the alternatives column, rescale negative indicator values
-    and drop the index column 'Alternatives'.
+    and drop the index column of alternatives.
 
     Parameters:
-    - input_matrix: The input matrix containing the alternatives (as index column) and indicators.
+    - input_matrix: The input matrix containing the alternatives and indicators.
 
     Raises:
     - ValueError: If duplicated rows are found in the alternative column.
     - UserStoppedInfo: If the user chooses to stop when duplicates are found.
 
+     :param input_matrix: pd.DataFrame
      :rtype: pd.DataFrame
      :return: input_matrix
-     :param input_matrix: pd.DataFrame
     """
     if input_matrix.duplicated().any():
         raise ValueError('Error: Duplicated rows in the alternatives column.')
@@ -310,19 +308,19 @@ def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
     return input_matrix_no_alternatives
 
 
-def read_matrix(input_matrix_path: str) -> pd.DataFrame():
+def read_matrix(input_matrix_path: str) -> pd.DataFrame:
     """
     Read an input matrix from a CSV file and return it as a DataFrame.
     Set the 'Alternatives' column as index column.
 
     Parameters:
-    - input_matrix_path (str): Path to the CSV file containing the input matrix.
+    - input_matrix_path (str): path to the CSV file containing the input matrix.
 
     Raises:
     - Exception: If an error occurs during the file reading or DataFrame creation.
 
-    :rtype: pd.DataFrame
     :param input_matrix_path: str
+    :rtype: pd.DataFrame
     """
 
     try:
@@ -348,16 +346,18 @@ def reset_index_if_needed(series):
     Returns:
     - pd.Series: The series with the index reset if needed.
 
-    # Usage example:
-    res = reset_index_if_needed(res)
+    :param series: pd.Series
+    :return series: pd.Series
     """
     if not isinstance(series.index, pd.RangeIndex):
         series = series.reset_index(drop=True)
     return series
 
 
-def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame():
-    """If some indicators in the input matrix are negative, they are rescaled into [0-1]"""
+def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame:
+    """
+    Rescale indicators of the input matrix if negative into [0-1].
+    """
 
     if (input_matrix < 0).any().any():
         scaler = MinMaxScaler()
@@ -393,8 +393,8 @@ def get_config(config_path: str) -> dict:
     Raises:
     - Exception: If an error occurs during file reading or JSON decoding.
 
-    :rtype: dict
     :param config_path: str
+    :rtype: dict
     """
 
     try:
@@ -421,10 +421,10 @@ def save_df(df: pd.DataFrame, folder_path: str, filename: str):
     save_df(my_dataframe, '/path/to/folder', 'data.csv')
     ```
 
-    :return: None
     :param df: pd.DataFrame
     :param folder_path: str
     :param filename: str
+    :return: None
     """
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
@@ -447,10 +447,10 @@ def save_dict(dictionary: dict, folder_path: str, filename: str):
     save_dict(my_dict, '/path/to/folder', 'data.pkl')
     ```
 
-    :return: None
     :param dictionary: dict
     :param folder_path: str
     :param filename: str
+    :return: None
     """
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
@@ -473,10 +473,11 @@ def save_config(config: dict, folder_path: str, filename: str):
     ```python
     save_config(my_config, '/path/to/folder', 'config.json')
     ```
-    :return: None
+
     :param config: dict
     :param folder_path: str
     :param filename: str
+    :return: None
     """
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -495,8 +496,9 @@ def check_path_exists(path: str):
     ```python
     check_path_exists('/path/to/directory')
     ```
-    :return: None
+
     :param path: str
+    :return: None
     """
     is_exist = os.path.exists(path)
     if not is_exist:
@@ -504,21 +506,30 @@ def check_path_exists(path: str):
         print("The new output directory is created: {}".format(path))
 
 
-def rescale_minmax(scores: pd.DataFrame) -> pd.DataFrame():
+def rescale_minmax(scores: pd.DataFrame) -> pd.DataFrame:
     """
-    Rescale the values in a DataFrame to a [0, 1] range using Min-Max scaling.
+    Rescale the values in a DataFrame to a [0,1] range using Min-Max scaling.
 
     Parameters:
     - scores (pd.DataFrame): The DataFrame containing numerical values to be rescaled.
 
     Example:
     ```python
+    my_dataframe = pd.DataFrame({
+    'A': [10, 40, 70],
+    'B': [20, 50, 80],
+    'C': [30, 60, 90]
+     })
     rescaled_df = rescale_minmax(my_dataframe)
-    ```
-    This will rescale the values in the input DataFrame to a [0, 1] range.
 
-    :rtype: pd.DataFrame()
+    rescaled_df:
+         A    B    C
+    0   0.0  0.0  0.0
+    1   0.5  0.5  0.5
+    2   1.0  1.0  1.0
+    ```
     :param scores: pd.DataFrame
+    :rtype: pd.DataFrame
     """
     x = scores.to_numpy()
     min_max_scaler = preprocessing.MinMaxScaler()
@@ -534,8 +545,8 @@ def randomly_sample_all_weights(num_weights: int, num_runs: int) -> List[list]:
     Generate multiple lists of random weights for simulations.
 
     Parameters:
-    - num_weights (int): The number of weights in each list.
-    - num_runs (int): The number of lists to be generated.
+    - num_weights: the number of weights in each list.
+    - num_runs: the number of lists to be generated.
 
     Returns:
     - List[list]: A list containing 'num_runs' lists, each with 'num_weights' randomly sampled elements.
@@ -546,9 +557,9 @@ def randomly_sample_all_weights(num_weights: int, num_runs: int) -> List[list]:
     ```
     This will generate 10 lists, each containing 5 randomly sampled weights.
 
-    :param num_runs:
-    :rtype: List[list]
     :param num_weights: int
+    :param num_runs: int
+    :return list_of_weights: List[list]
     """
 
     list_of_weights = []
@@ -564,12 +575,12 @@ def randomly_sample_ix_weight(num_weights: int, index: int, num_runs: int) -> Li
     Generate multiple lists of weights with one randomly sampled element at a specified index.
 
     Parameters:
-    - num_weights (int): The total number of weights in each list.
-    - index (int): The index at which a weight will be randomly sampled in each list.
-    - num_runs (int): The number of lists to be generated.
+    - num_weights: the total number of weights in each list.
+    - index: the index at which a weight will be randomly sampled in each list.
+    - num_runs: the number of lists to be generated.
 
     Returns:
-    - List[list]: A list containing 'num_runs' lists, each with 'num_weights' elements
+    - a list containing 'num_runs' lists, each with 'num_weights' elements
       and one randomly sampled at the specified index.
 
     Example:
@@ -578,10 +589,10 @@ def randomly_sample_ix_weight(num_weights: int, index: int, num_runs: int) -> Li
     ```
     This will generate 10 lists, each containing 5 weights, with one randomly sampled at index 2.
 
-    :rtype: List[list]
     :param num_weights: int
     :param index: int
     :param num_runs: int
+    :return list_of_weights: List[list]
     """
 
     list_of_weights = []
@@ -598,15 +609,10 @@ def check_norm_sum_weights(weights: list) -> list:
     Check if the sum of weights is equal to 1, and normalize the weights if needed.
 
     Returns:
-    - list: The original weights if the sum is already 1, or normalized weights if the sum is not 1.
+    - list: the original weights if the sum is already 1, or normalized weights if the sum is not 1.
 
-    Example:
-    ```python
-    normalized_weights = check_norm_sum_weights([0.2, 0.3, 0.5])
-    ```
-
-    :rtype: list
     :param weights: list
+    :return weights: list
     """
 
     if sum(weights) != 1:
@@ -621,8 +627,8 @@ def pop_indexed_elements(indexes: np.ndarray, original_list: list) -> list:
     Eliminate elements from a list at specified indexes.
 
     Parameters:
-    - indexes (np.ndarray): An array of indexes indicating elements to be removed.
-    - original_list (list): The original list from which elements will be removed.
+    - indexes: an array of indexes indicating elements to be removed.
+    - original_list: the original list from which elements will be removed.
 
     Example:
     ```python
@@ -630,9 +636,9 @@ def pop_indexed_elements(indexes: np.ndarray, original_list: list) -> list:
     ```
     This will remove elements at indexes 1 and 3 from the original list and return the new list [10, 30, 50].
 
-    :rtype: list
     :param indexes: np.ndarray
     :param original_list: list
+    :return new_list: list
     """
     for i in range(len(indexes)):
         index = indexes[i]
@@ -654,30 +660,21 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict, for_testing=F
     (or vice-versa for the uniform PDF) in case of an input matrix with uncertainties.
     The check runs only in the case of indicators with a PDF of the type normal/lognormal, and uniform.
     In the first case, the parameters represent the (log)mean and (log)std;
-    in the second case, they represent min and max values.
+    in the second case, they represent the min and max values.
 
     Parameters:
-    - input_matrix (pd.DataFrame): The input matrix containing uncertainties for indicators, no alternatives.
-    - config (dict): Configuration dictionary containing the Monte Carlo sampling information.
-    - for_testing (bool): True only for unit testing
+    - input_matrix: the input matrix containing uncertainties for indicators, no alternatives.
+    - config: configuration dictionary containing the Monte Carlo sampling information.
+    - for_testing: true only for unit testing
 
     Returns:
-    - List[bool]: A list indicating whether the conditions are satisfied for each indicator only for testing.
+    - List: a list indicating whether the conditions are satisfied for each indicator (only for unit tests).
     - None: default
 
-    Example:
-    ```python
-    check_parameters_pdf(my_input_matrix, my_config)
-    ```
-
-    This will check conditions on parameters based on the PDF type
-    for each indicator in the input matrix as described above.
-    The result is a list of boolean values indicating whether the conditions are satisfied for each indicator.
-
-    :return: Union[list, None]
     :param input_matrix: pd.DataFrame
     :param config: dict
     :param for_testing: bool
+    :return: Union[list, None]
     """
     config = Config(config)
 
@@ -733,10 +730,10 @@ def check_if_pdf_is_exact(marginal_pdf: list) -> list:
     Check if each indicator's probability distribution function (PDF) is of type 'exact'.
 
     Parameters:
-    - marginal_pdf (list): A list containing the type of PDF for each indicator.
+    - marginal_pdf: a list containing the type of PDF for each indicator.
 
     Returns:
-    - list: A binary mask indicating whether the PDF for each indicator is 'exact' (1) or not (0).
+    - list: a binary mask indicating whether the PDF for each indicator is 'exact' (1) or not (0).
 
     Example:
     ```python
@@ -744,8 +741,8 @@ def check_if_pdf_is_exact(marginal_pdf: list) -> list:
     ```
     This will return a list [1, 0, 1, 0], indicating that the first and third indicators have 'exact' PDFs.
 
-    :rtype: list
     :param marginal_pdf: list
+    :return exact_pdf_mask: List[int]
     """
     exact_pdf_mask = [1 if pdf == 'exact' else 0 for pdf in marginal_pdf]
 
@@ -757,10 +754,10 @@ def check_if_pdf_is_poisson(marginal_pdf: list) -> list:
     Check if each indicator's probability distribution function (PDF) is of type 'poisson'.
 
     Parameters:
-    - marginal_pdf (list): A list containing the type of PDF for each indicator.
+    - marginal_pdf: a list containing the type of PDF for each indicator.
 
     Returns:
-    - list: A binary mask indicating whether the PDF for each indicator is 'poisson' (1) or not (0).
+    - list: a binary mask indicating whether the PDF for each indicator is 'poisson' (1) or not (0).
 
     Example:
     ```python
@@ -768,8 +765,8 @@ def check_if_pdf_is_poisson(marginal_pdf: list) -> list:
     ```
     This will return a list [1, 0, 0, 0], indicating that the first indicator have a 'poisson' PDF.
 
-    :rtype: list
     :param marginal_pdf: list
+    :return poisson_pdf_mask: List[int]
     """
     poisson_pdf_mask = [1 if pdf == 'poisson' else 0 for pdf in marginal_pdf]
 
@@ -781,10 +778,10 @@ def check_if_pdf_is_uniform(marginal_pdf: list) -> list:
     Check if each indicator's probability distribution function (PDF) is of type 'uniform'.
 
     Parameters:
-    - marginal_pdf (list): A list containing the type of PDF for each indicator.
+    - marginal_pdf (list): a list containing the type of PDF for each indicator.
 
     Returns:
-    - list: A binary mask indicating whether the PDF for each indicator is 'uniform' (1) or not (0).
+    - list: a binary mask indicating whether the PDF for each indicator is 'uniform' (1) or not (0).
 
     Example:
     ```python
@@ -792,8 +789,8 @@ def check_if_pdf_is_uniform(marginal_pdf: list) -> list:
     ```
     This will return a list [0, 0, 0, 1], indicating that the fourth indicator have a 'uniform' PDF.
 
-    :rtype: list
     :param marginal_pdf: list
+    :return uniform_pdf_mask: List[int]
     """
     uniform_pdf_mask = [1 if pdf == 'uniform' else 0 for pdf in marginal_pdf]
 
@@ -813,12 +810,11 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
     and logs the completion time.
 
     Parameters:
-    - input_matrix: The input_matrix without the alternatives.
+    - input_matrix: the input_matrix without the alternatives.
     - index_column_name: the name of the index column of the original input matrix.
     - index_column_values: the values of the index column of the original input matrix.
     - weights: the normalised weights (either fixed or random sampled weights, depending on the settings).
 
-    :return: None
     :param input_config: dict
     :param index_column_name: str
     :param index_column_values: list
@@ -827,13 +823,13 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
     :param f_norm: str
     :param f_agg: str
     :param is_robustness_weights: int
-
+    :return: None
     """
-    scores = pd.DataFrame()
-    normalized_scores = pd.DataFrame()
-    all_weights_score_means = pd.DataFrame()
-    all_weights_score_stds = pd.DataFrame()
-    all_weights_score_means_normalized = pd.DataFrame()
+    scores = pd.DataFrame
+    normalized_scores = pd.DataFrame
+    all_weights_score_means = pd.DataFrame
+    all_weights_score_stds = pd.DataFrame
+    all_weights_score_means_normalized = pd.DataFrame
     iterative_random_w_score_means_normalized = {}
     iterative_random_weights_statistics = {}
     iterative_random_w_score_means = {}
@@ -887,8 +883,6 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
                           input_matrix=input_matrix, config=input_config,
                           is_robustness_weights=is_robustness_weights)
 
-
-
 def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.DataFrame, index_column_name: str,
                                         index_column_values: list, mc_runs: int, random_seed: int, is_sensitivity: str,
                                         f_agg: str, f_norm: str, weights: Union[List[list], List[pd.DataFrame], dict],
@@ -900,13 +894,12 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
     It computes scores, saves the results, and logs the completion time.
 
     Parameters:
-    - input_matrix: The input_matrix without the alternatives.
+    - input_matrix: the input_matrix without the alternatives.
     - index_column_name: the name of the index column of the original input matrix.
     - index_column_values: the values of the index column of the original input matrix.
     - weights: the normalised weights (either fixed or random sampled weights, depending on the settings).
       In the context of the robustness analysis, only fixed normalised weights are used, i.e. weights[0].
 
-    :return: None
     :param input_config: dict
     :param index_column_name: str
     :param index_column_values: list
@@ -918,6 +911,7 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
     :param f_agg: str
     :param polar: List[str]
     :param marginal_pdf: List[str]
+    :return: None
     """
     logger.info("Start ProMCDA with uncertainty on the indicators")
     config = Config(input_config)
@@ -1083,7 +1077,7 @@ def _compute_ranks(scores: Optional[pd.DataFrame], index_column_name: str, index
     """
     Compute ranks based on the computed scores, mean scores with random weights, and mean scores for each random weight.
     """
-    ranks = pd.DataFrame()
+    ranks = pd.DataFrame
 
     if not scores.empty:
         ranks = scores.rank(pct=True)

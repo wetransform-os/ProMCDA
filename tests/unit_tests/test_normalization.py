@@ -31,30 +31,30 @@ class TestNormalization(unittest.TestCase):
         # When
         test_data_directory = Path(__file__).resolve().parent.parent / "resources/normalization"
         expected_res01_file_path = test_data_directory / "res_minmax_01.csv"
-        expected_res_no0_file_path = test_data_directory / "res_minmax_no0.csv"
+        expected_res_without_zero_file_path = test_data_directory / "res_minmax_without_zero.csv"
         expected_res_01 = read_matrix(expected_res01_file_path)
-        expected_res_no0 = read_matrix(expected_res_no0_file_path)
+        expected_res_without_zero = read_matrix(expected_res_without_zero_file_path)
         norm = Normalization(input_matrix, polarities)
         res_01 = norm.minmax(feature_range=(0, 1))
         res_01.columns = res_01.columns.astype('str')  # to match the type of columns in the two dfs
-        res_no0 = norm.minmax(feature_range=(0.1, 1))
-        res_no0.columns = res_no0.columns.astype('str')  # to match the type of columns in the two dfs
+        res_without_zero = norm.minmax(feature_range=(0.1, 1))
+        res_without_zero.columns = res_without_zero.columns.astype('str')  # to match the type of columns in the two dfs
 
         # Assure that the indexes are the same
         res_01 = reset_index_if_needed(res_01)
-        res_no0 = reset_index_if_needed(res_no0)
+        res_without_zero = reset_index_if_needed(res_without_zero)
         expected_res_01 = reset_index_if_needed(expected_res_01)
-        expected_res_no0 = reset_index_if_needed(expected_res_no0)
+        expected_res_without_zero = reset_index_if_needed(expected_res_without_zero)
 
         # Then
         assert isinstance(res_01, pd.DataFrame)
-        assert isinstance(res_no0, pd.DataFrame)
+        assert isinstance(res_without_zero, pd.DataFrame)
         assert_frame_equal(res_01, expected_res_01, check_like=True, check_dtype=False)
-        assert_frame_equal(res_no0, expected_res_no0, check_like=True, check_dtype=False)
+        assert_frame_equal(res_without_zero, expected_res_without_zero, check_like=True, check_dtype=False)
         assert_almost_equal(res_01.to_numpy().min(), 0)
         assert_almost_equal(res_01.to_numpy().max(), 1)
-        assert_almost_equal(res_no0.to_numpy().min(), 0.1)
-        assert_almost_equal(res_no0.to_numpy().max(), 1)
+        assert_almost_equal(res_without_zero.to_numpy().min(), 0.1)
+        assert_almost_equal(res_without_zero.to_numpy().max(), 1)
 
     def test_target(self):
         # Given
@@ -63,28 +63,28 @@ class TestNormalization(unittest.TestCase):
 
         # When
         expected_res_01 = read_matrix('tests/resources/normalization/res_target_01.csv')
-        expected_res_no0 = read_matrix('tests/resources/normalization/res_target_no0.csv')
+        expected_res_without_zero = read_matrix('tests/resources/normalization/res_target_without_zero.csv')
         norm = Normalization(input_matrix_no_alternatives, polarities)
         res_01 = norm.target(feature_range=(0, 1))
         res_01.columns = res_01.columns.astype('str')  # to match the type of columns in the two dfs
-        res_no0 = norm.target(feature_range=(0.1, 1))
-        res_no0.columns = res_no0.columns.astype('str')  # to match the type of columns in the two dfs
+        res_without_zero = norm.target(feature_range=(0.1, 1))
+        res_without_zero.columns = res_without_zero.columns.astype('str')  # to match the type of columns in the two dfs
 
         # Assure that the indexes are the same
         res_01 = reset_index_if_needed(res_01)
-        res_no0 = reset_index_if_needed(res_no0)
+        res_without_zero = reset_index_if_needed(res_without_zero)
         expected_res_01 = reset_index_if_needed(expected_res_01)
-        expected_res_no0 = reset_index_if_needed(expected_res_no0)
+        expected_res_without_zero = reset_index_if_needed(expected_res_without_zero)
 
         # Then
         assert isinstance(res_01, pd.DataFrame)
-        assert isinstance(res_no0, pd.DataFrame)
+        assert isinstance(res_without_zero, pd.DataFrame)
         assert_frame_equal(res_01, expected_res_01, check_like=True, check_dtype=False)
-        assert_frame_equal(res_no0, expected_res_no0, check_like=True, check_dtype=False)
+        assert_frame_equal(res_without_zero, expected_res_without_zero, check_like=True, check_dtype=False)
         assert_almost_equal(res_01.to_numpy().min(), 0)
         assert_almost_equal(res_01.to_numpy().max(), 1)
-        assert_almost_equal(res_no0.to_numpy().min(), 0.1)
-        assert_almost_equal(res_no0.to_numpy().max(), 1)
+        assert_almost_equal(res_without_zero.to_numpy().min(), 0.1)
+        assert_almost_equal(res_without_zero.to_numpy().max(), 1)
 
     def test_standardized(self):
         # Given
@@ -93,25 +93,25 @@ class TestNormalization(unittest.TestCase):
 
         # When
         expected_res_any = read_matrix('tests/resources/normalization/res_standardized_any.csv')
-        expected_res_no0 = read_matrix('tests/resources/normalization/res_standardized_no0.csv')
+        expected_res_without_zero = read_matrix('tests/resources/normalization/res_standardized_without_zero.csv')
         norm = Normalization(input_matrix_no_alternatives, polarities)
         res_any = norm.standardized(feature_range=('-inf', '+inf'))
-        res_no0 = norm.standardized(feature_range=(0.1, '+inf'))
+        res_without_zero = norm.standardized(feature_range=(0.1, '+inf'))
         res_any.columns = res_any.columns.astype('str')  # to match the type of columns in the two dfs
-        res_no0.columns = res_no0.columns.astype('str')
+        res_without_zero.columns = res_without_zero.columns.astype('str')
 
         # Assure that the indexes are the same
         res_any = reset_index_if_needed(res_any)
-        res_no0 = reset_index_if_needed(res_no0)
+        res_without_zero = reset_index_if_needed(res_without_zero)
         expected_res_any = reset_index_if_needed(expected_res_any)
-        expected_res_no0 = reset_index_if_needed(expected_res_no0)
+        expected_res_without_zero = reset_index_if_needed(expected_res_without_zero)
 
         # Then
         assert isinstance(res_any, pd.DataFrame)
-        assert isinstance(res_no0, pd.DataFrame)
+        assert isinstance(res_without_zero, pd.DataFrame)
         assert_frame_equal(res_any, expected_res_any, check_like=True, check_dtype=False)
-        assert_frame_equal(res_no0, expected_res_no0, check_like=True, check_dtype=False)
-        assert_almost_equal(res_no0.to_numpy().min(), 0.1)
+        assert_frame_equal(res_without_zero, expected_res_without_zero, check_like=True, check_dtype=False)
+        assert_almost_equal(res_without_zero.to_numpy().min(), 0.1)
         assert_almost_equal(res_any.to_numpy().mean(), 0, decimal=1)
         assert_almost_equal(res_any.to_numpy().std(), 1, decimal=1)
 

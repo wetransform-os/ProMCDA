@@ -133,21 +133,21 @@ class TestMCDA_without_robustness(unittest.TestCase):
         # Then
         assert isinstance(res_general, dict)
         TestCase.assertIn(self, member='standardized_any', container=res_general.keys())
-        TestCase.assertIn(self, member='standardized_no0', container=res_general.keys())
+        TestCase.assertIn(self, member='standardized_without_zero', container=res_general.keys())
         TestCase.assertIn(self, member='minmax_01', container=res_general.keys())
-        TestCase.assertIn(self, member='minmax_no0', container=res_general.keys())
+        TestCase.assertIn(self, member='minmax_without_zero', container=res_general.keys())
         TestCase.assertIn(self, member='target_01', container=res_general.keys())
-        TestCase.assertIn(self, member='target_no0', container=res_general.keys())
+        TestCase.assertIn(self, member='target_without_zero', container=res_general.keys())
         TestCase.assertIn(self, member='rank', container=res_general.keys())
         for key in res_general.keys(): assert (res_general[key].shape == input_matrix.shape)
 
         assert isinstance(res_simple_mcda, dict)
         TestCase.assertIn(self, member='minmax_01', container=res_simple_mcda.keys())
-        TestCase.assertIn(self, member='minmax_no0', container=res_simple_mcda.keys())
+        TestCase.assertIn(self, member='minmax_without_zero', container=res_simple_mcda.keys())
         TestCase.assertNotIn(self, member='standardized_any', container=res_simple_mcda.keys())
-        TestCase.assertNotIn(self, member='standardized_no0', container=res_simple_mcda.keys())
+        TestCase.assertNotIn(self, member='standardized_without_zero', container=res_simple_mcda.keys())
         TestCase.assertNotIn(self, member='target_01', container=res_simple_mcda.keys())
-        TestCase.assertNotIn(self, member='target_no0', container=res_simple_mcda.keys())
+        TestCase.assertNotIn(self, member='target_without_zero', container=res_simple_mcda.keys())
         TestCase.assertNotIn(self, member='rank', container=res_simple_mcda.keys())
         for key in res_simple_mcda.keys(): assert (res_simple_mcda[key].shape == input_matrix.shape)
 
@@ -175,8 +175,8 @@ class TestMCDA_without_robustness(unittest.TestCase):
                                                                                'aggregation'])
 
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                     'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
-                     'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
+                     'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
+                     'harm-minmax_without_zero', 'harm-target_without_zero', 'harm-standardized_without_zero', 'harm-rank',
                      'min-standardized_any']
 
         simple_mcda_col_names = ['ws-minmax_01']
@@ -215,8 +215,8 @@ class TestMCDA_without_robustness(unittest.TestCase):
                                                            config_randomness_simple_mcda.sensitivity['aggregation'])
 
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                     'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
-                     'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
+                     'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
+                     'harm-minmax_without_zero', 'harm-target_without_zero', 'harm-standardized_without_zero', 'harm-rank',
                      'min-standardized_any']
 
         simple_mcda_col_names = ['ws-minmax_01']

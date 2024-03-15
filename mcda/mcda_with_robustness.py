@@ -17,7 +17,6 @@ logger = logging.getLogger("MCDA with sensitivity")
 
 class MCDAWithRobustness:
     """
-
     Class MCDA with indicators' uncertainty
 
     This class allows one to run MCDA by considering the uncertainties related to the indicators.
@@ -28,6 +27,7 @@ class MCDAWithRobustness:
     They are None as default because not needed for certain methods.
 
     """
+
 
     def __init__(self, config: Config, input_matrix: pd.DataFrame(), is_exact_pdf_mask=None, is_poisson_pdf_mask=None,
                  random_seed=None):
@@ -69,20 +69,35 @@ class MCDAWithRobustness:
 
     def create_n_randomly_sampled_matrices(self) -> List[pd.DataFrame]:
         """
-        This function receives an input matrix of dimensions (AxnI).
-        nI = (num. indicators associated with an exact or Poisson PDF) + (2 x num. indicators associated with all others PDF)
-        The columns of the input matrix represent parameter 1 for exact and Poisson; or parameter1 and parameter 2 for the rest.
-        In a first step, the function produces a list of length I of matrices of dimension (AxN).
-        Every matrix represents the N random samples of every alternative (A), per indicator (I).
-        If there are negative random samples, they are rescaled into [0-1].
-        In a second step, a utility function converts this list into a list of length N of matrices of dimension (AxI).
-        The output is therefore a list containing N randomly sampled input matrices. The PDFs from where random values
-        are sampled depends on the indicator marginal distributions.
+        Generate N random samples for each indicator in the input matrix based on their marginal distributions.
 
-        A: all alternatives
-        I: all indicators
-        nI: all indicators first and second parameters, if the second is needed
-        N: number of random samples
+        This function takes an input matrix of dimensions (A x nI), where:
+        - A represents the number of all alternatives,
+        - nI is the total number of indicator parameters (including first and second parameters),
+        - the columns of the input matrix represent respectively only parameter 1 for exact and Poisson distributions,
+          or parameter 1 and parameter 2 for other distributions.
+
+        The function first produces a list of length I, where each element is a matrix of dimensions (A x N).
+        Each matrix represents N random samples for every alternative (A) for a specific indicator (I).
+        If any of the random samples are negative, they are rescaled to fall within the [0, 1] range.
+
+        Then, the function converts this list into a list of length N, where each element is a matrix of dimensions (A x I).
+        The output is a list containing N randomly sampled input matrices, with the PDFs from which random values are sampled
+        determined by the indicator marginal distributions.
+
+        Parameters:
+        - None
+
+        Returns:
+        - list: A list containing N randomly sampled input matrices.
+
+        Notes:
+        - 'A' represents the number of all alternatives.
+        - 'I' represents the number of all indicators.
+        - 'nI' represents the total number of indicator parameters.
+        - 'N' represents the number of random samples.
+
+        :return list_random_matrix: List[pd.DataFrame]
         """
         marginal_pdf = self._config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
         num_runs = self._config.monte_carlo_sampling["monte_carlo_runs"]  # N

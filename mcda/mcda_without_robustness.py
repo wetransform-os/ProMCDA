@@ -19,16 +19,11 @@ class MCDAWithoutRobustness:
     Class MCDA without indicators' uncertainty
 
     This class allows one to run MCDA without considering the uncertainties related to the indicators.
-    All indicators are associated to the exact type of marginal distribution.
+    All indicators are described by the exact marginal distribution.
     However, it's possible to have randomly sampled weights.
-
-    :input:  configuration dictionary
-             input_matrix with no alternatives column
-    :output: write csv files with the scores, normalized scores and ranks; log file
-
     """
 
-    def __init__(self, config: Config, input_matrix: pd.DataFrame()):
+    def __init__(self, config: Config, input_matrix: pd.DataFrame):
         self.normalized_indicators = None
         self.weights = None
         self._config = copy.deepcopy(config)
@@ -36,10 +31,23 @@ class MCDAWithoutRobustness:
 
     def normalize_indicators(self, method=None) -> dict:
         """
-        Get the input matrix.
-        :param method: The normalization method to use (None for all methods).
-        :return: a dictionary that contains the normalized values of each indicator per normalization method.
-        Normalization functions implemented: minmax; target; standardized; rank
+        Normalize the input matrix using the specified normalization method.
+
+        Parameters:
+        - method (optional): the normalization method to use. If None, all available methods will be applied.
+          Supported methods: 'minmax', 'target', 'standardized', 'rank'.
+
+        Returns:
+        - a dictionary containing the normalized values of each indicator per normalization method.
+
+        Notes:
+        Some aggregation methods do not work with indicator values equal or smaller than zero. For that reason:
+        - for the 'minmax' method, two sets of normalized indicators are returned: one with the range (0, 1) and
+          another with the range (0.1, 1).
+        - for the 'target' method, two sets of normalized indicators are returned: one with the range (0, 1) and
+          another with the range (0.1, 1).
+        - for the 'standardized' method, two sets of normalized indicators are returned: one with the range (-inf, +inf)
+          and another with the range (0.1, +inf).
         """
         norm = Normalization(self._input_matrix,
                              self._config.polarity_for_each_indicator)
@@ -48,23 +56,23 @@ class MCDAWithoutRobustness:
 
         if method is None or method == 'minmax':
             indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
-            # for aggregation "geometric" and "harmonic" that accept no 0
-            indicators_scaled_minmax_no0 = norm.minmax(feature_range=(0.1, 1))
-            normalized_indicators["minmax_no0"] = indicators_scaled_minmax_no0
+            # for aggregation "geometric" and "harmonic" that do not accept 0
+            indicators_scaled_minmax_without_zero = norm.minmax(feature_range=(0.1, 1))
+            normalized_indicators["minmax_without_zero"] = indicators_scaled_minmax_without_zero
             normalized_indicators["minmax_01"] = indicators_scaled_minmax_01
         if method is None or method == 'target':
             indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
-            indicators_scaled_target_no0 = norm.target(
+            indicators_scaled_target_without_zero = norm.target(
                 feature_range=(0.1, 1))  # for aggregation "geometric" and "harmonic" that do not accept 0
-            normalized_indicators["target_no0"] = indicators_scaled_target_no0
+            normalized_indicators["target_without_zero"] = indicators_scaled_target_without_zero
             normalized_indicators["target_01"] = indicators_scaled_target_01
         if method is None or method == 'standardized':
             indicators_scaled_standardized_any = norm.standardized(
                 feature_range=('-inf', '+inf'))
-            indicators_scaled_standardized_no0 = norm.standardized(
+            indicators_scaled_standardized_without_zero = norm.standardized(
                 feature_range=(0.1, '+inf'))
             normalized_indicators["standardized_any"] = indicators_scaled_standardized_any
-            normalized_indicators["standardized_no0"] = indicators_scaled_standardized_no0
+            normalized_indicators["standardized_without_zero"] = indicators_scaled_standardized_without_zero
         if method is None or method == 'rank':
             indicators_scaled_rank = norm.rank()
             normalized_indicators["rank"] = indicators_scaled_rank
@@ -75,14 +83,25 @@ class MCDAWithoutRobustness:
 
         return normalized_indicators
 
-    def aggregate_indicators(self, normalized_indicators: dict, weights: list, method=None) -> pd.DataFrame():
-        #     """
-        #     Get the normalized indicators per normalization methods in a dictionary.
-        #     :param: method The normalization method to use (None for all methods).
-        #     :return: aggregated scores per each alternative, and per each normalization method.
-        #     Aggregation functions implemented: weighted-sum; geometric; harmonic; minimum
-        #     """
+    def aggregate_indicators(self, normalized_indicators: dict, weights: list, method=None) -> pd.DataFrame:
+        """
+        Aggregate the normalized indicators using the specified aggregation method.
 
+        Parameters:
+        - normalized_indicators: a dictionary containing the normalized values of each indicator per normalization
+          method.
+        - weights: the weights to be applied during aggregation.
+        - method (optional): The aggregation method to use. If None, all available methods will be applied.
+        Supported methods: 'weighted_sum', 'geometric', 'harmonic', 'minimum'.
+
+        Returns:
+        - a DataFrame containing the aggregated scores per each alternative, and per each normalization method.
+
+        :param normalized_indicators: dict
+        :param weights: list
+        :param method: str
+        :return scores: pd.DataFrame
+        """
         self.normalized_indicators = normalized_indicators
         self.weights = weights
 
@@ -96,9 +115,10 @@ class MCDAWithoutRobustness:
         scores = pd.DataFrame()
         col_names_method = []
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                     'geom-minmax_no0', 'geom-target_no0', 'geom-standardized_no0', 'geom-rank',
-                     'harm-minmax_no0', 'harm-target_no0', 'harm-standardized_no0', 'harm-rank',
-                     'min-standardized_any']  # same order as in the following loop
+                     'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero',
+                     'geom-rank', 'harm-minmax_without_zero', 'harm-target_without_zero',
+                     'harm-standardized_without_zero', 'harm-rank', 'min-standardized_any']
+        # column names has the same order as in the following loop
 
         for key, values in self.normalized_indicators.items():
             if method is None or method == 'weighted_sum':
@@ -107,12 +127,12 @@ class MCDAWithoutRobustness:
                     scores_weighted_sum[key] = agg.weighted_sum(values)
                     col_names_method.append("ws-" + key)
             if method is None or method == 'geometric':
-                if key in ["standardized_no0", "minmax_no0", "target_no0",
+                if key in ["standardized_without_zero", "minmax_without_zero", "target_without_zero",
                            "rank"]:  # geom goes only with some specific normalizations
                     scores_geometric[key] = pd.Series(agg.geometric(values))
                     col_names_method.append("geom-" + key)
             if method is None or method == 'harmonic':
-                if key in ["standardized_no0", "minmax_no0", "target_no0",
+                if key in ["standardized_without_zero", "minmax_without_zero", "target_without_zero",
                            "rank"]:  # harm goes only with some specific normalizations
                     scores_harmonic[key] = pd.Series(agg.harmonic(values))
                     col_names_method.append("harm-" + key)
