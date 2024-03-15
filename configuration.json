@@ -17,6 +17,7 @@
   "monte_carlo_sampling": {
       "monte_carlo_runs": 10000,
       "num_cores": 1,
+      "random_seed": 67,
       "marginal_distribution_for_each_indicator": ["normal", "normal", "normal", "normal", "normal", "normal"]},
 
 

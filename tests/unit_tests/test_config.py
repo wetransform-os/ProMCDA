@@ -24,6 +24,7 @@ class TestConfig(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 10,
                 "num_cores": 4,
+                "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta']},
             "output_path": "/path/to/output"
         }
@@ -46,6 +47,7 @@ class TestConfig(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 10,
                 "num_cores": 4,
+                "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta']},
             "output_path": "/path/to/output"
         }
@@ -68,6 +70,7 @@ class TestConfig(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 10,
                 "num_cores": 4,
+                "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta']},
             "output_path": "/path/to/output"
         }

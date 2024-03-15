@@ -26,6 +26,7 @@ class TestMCDA_with_robustness(unittest.TestCase):
             "monte_carlo_sampling": {
                 "monte_carlo_runs": 100,
                 "num_cores": 1,
+                "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal', 'poisson']},
             "output_path": "/path/to/output"
         }

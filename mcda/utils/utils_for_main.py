@@ -45,32 +45,41 @@ def check_config_error(condition: bool, error_message: str):
         raise ValueError(error_message)
 
 
-def check_config_setting(condition_robustness_on_weights: bool, condition_robustness_on_indicators: bool, mc_runs: int)\
-        -> (int, int):
+        
+def check_config_setting(condition_robustness_on_weights: bool, condition_robustness_on_indicators: bool, mc_runs: int,
+                         random_seed: int) -> (int, int):
     """
     Checks configuration settings and logs information messages.
 
-    Return:
-    - is_robustness_weights, is_robustness_indicators, a tuple containing flags indicating robustness on weights and
-    indicators.
+    Returns:
+    - is_robustness_weights, is_robustness_indicators, booleans indicating if robustness is considered
+    on weights or indicators.
+
+    Example:
+    ```python
+    is_robustness_weights, is_robustness_indicators = check_config_setting(True, False, 1000, 42)
+    ```
 
     :param condition_robustness_on_weights: bool
     :param condition_robustness_on_indicators: bool
+    :param mc_runs: int
+    :param random_seed: int
+    :return: (is_robustness_weights, is_robustness_indicators)
     :rtype: Tuple[int, int]
-
     """
-
     is_robustness_weights = 0
     is_robustness_indicators = 0
 
     if condition_robustness_on_weights:
         logger.info("ProMCDA will consider uncertainty on the weights.")
         logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
+        logger.info("The random seed used is: {}".format(random_seed))
         is_robustness_weights = 1
 
     elif condition_robustness_on_indicators:
         logger.info("ProMCDA will consider uncertainty on the indicators.")
         logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
+        logger.info("The random seed used is: {}".format(random_seed))
         is_robustness_indicators = 1
 
     return is_robustness_weights, is_robustness_indicators
@@ -259,7 +268,6 @@ def check_indicator_weights_polarities(num_indicators: int, polar: List[str], co
     :param config: dict
     :return: None
     """
-
     if num_indicators != len(polar):
         raise ValueError('The number of polarities does not correspond to the no. of indicators')
 
@@ -875,11 +883,9 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
                           input_matrix=input_matrix, config=input_config,
                           is_robustness_weights=is_robustness_weights)
 
-
-def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.DataFrame,
-                                        index_column_name: str, index_column_values: list,
-                                        mc_runs: int, is_sensitivity: str, f_agg: str, f_norm: str,
-                                        weights: Union[List[list], List[pd.DataFrame], dict],
+def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.DataFrame, index_column_name: str,
+                                        index_column_values: list, mc_runs: int, random_seed: int, is_sensitivity: str,
+                                        f_agg: str, f_norm: str, weights: Union[List[list], List[pd.DataFrame], dict],
                                         polar: List[str], marginal_pdf: List[str]) -> None:
     """
     Runs ProMCDA with uncertainty on the indicators, i.e. with a robustness analysis.
@@ -924,7 +930,7 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
     is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
     is_poisson_pdf_mask = check_if_pdf_is_poisson(marginal_pdf)
 
-    mcda_with_uncert = MCDAWithRobustness(config, input_matrix, is_exact_pdf_mask, is_poisson_pdf_mask)
+    mcda_with_uncert = MCDAWithRobustness(config, input_matrix, is_exact_pdf_mask, is_poisson_pdf_mask, random_seed)
     n_random_input_matrices = mcda_with_uncert.create_n_randomly_sampled_matrices()
 
     if is_sensitivity == "yes":

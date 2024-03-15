@@ -28,9 +28,12 @@ class MCDAWithRobustness:
 
     """
 
-    def __init__(self, config: Config, input_matrix: pd.DataFrame, is_exact_pdf_mask=None, is_poisson_pdf_mask=None):
+
+    def __init__(self, config: Config, input_matrix: pd.DataFrame(), is_exact_pdf_mask=None, is_poisson_pdf_mask=None,
+                 random_seed=None):
         self.is_exact_pdf_mask = is_exact_pdf_mask
         self.is_poisson_pdf_mask = is_poisson_pdf_mask
+        self.random_seed = random_seed
         self._config = copy.deepcopy(config)
         self._input_matrix = copy.deepcopy(input_matrix)
 
@@ -101,8 +104,16 @@ class MCDAWithRobustness:
         input_matrix = self._input_matrix  # (AxnI)
         is_exact_pdf_mask = self.is_exact_pdf_mask
         is_poisson_pdf_mask = self.is_poisson_pdf_mask
+        random_seed = self.random_seed
 
-        np.random.seed(42)
+        if random_seed is not None:
+            np.random.seed(random_seed)
+        else:
+            # TODO: the default_random_seed cannot be used while reading the settings from a JSON file, where None
+            #  cannot be given as an option; it will be implemented when the congiguration settings will be passed as a
+            #  stream or handle.
+            default_random_seed = 42
+            np.random.seed(default_random_seed)
 
         sampled_matrices = []  # list long I
 

@@ -51,14 +51,14 @@ class Config:
     _str_values: List[str] = ['input_matrix_path', 'output_path', 'sensitivity_on', 'normalization', 'aggregation',
                               'robustness_on', 'on_single_weights', 'on_all_weights', 'given_weights', 'on_indicators']
 
-    _int_values: List[str] = ['monte_carlo_runs', 'num_cores']
+    _int_values: List[str] = ['monte_carlo_runs', 'num_cores', 'random_seed']
 
     _dict_values: List[str] = ['sensitivity', 'robustness', 'monte_carlo_sampling']
 
     _keys_of_dict_values = {'sensitivity': ['sensitivity_on', 'normalization', 'aggregation'],
                             'robustness': ['robustness_on', 'on_single_weights', 'on_all_weights',
                                            'given_weights', 'on_indicators'],
-                            'monte_carlo_sampling': ['monte_carlo_runs', 'num_cores',
+                            'monte_carlo_sampling': ['monte_carlo_runs', 'num_cores', 'random_seed',
                                                      'marginal_distribution_for_each_indicator']}
 
     def __init__(self, input_config: dict):
