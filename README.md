@@ -84,6 +84,22 @@ Here we define:
 
 The tool can be also used as a simple (i.e. deterministic) MCDA ranking tool with no robustness/sensitivity analysis (see below for instructions).
 
+### Input and output file paths
+All input and output files are saved by default in the `input_files` and `output_files` folders located in the project root directory. 
+The two variables, which define the default input and output paths, `DEFAULT_INPUT_DIRECTORY_PATH` and `DEFAULT_OUTPUT_DIRECTORY_PATH`
+are defined in `utils_for_main.py` and `utils_for_plotting.py`. Users can set custom environmental variables in their environment to override the default directory paths. 
+In the terminal, users can override one or both default variables by typying:
+
+```bash
+export PROMCDA_INPUT_PATH=/path/to/custom/input/directory
+export PROMCDA_OUTPUT_PATH=/path/to/custom/output/directory
+```
+Please ensure that you execute the above command(s) from within the project environment. The variable names `PROMCDA_INPUT_PATH` 
+and `PROMCDA_OUTPUT_PATH` are fixed as defined in `utils_for_main.py` and `utils_for_plotting.py`.
+
+This allows the user to customize the directory paths without modifying the source code of the Python package, 
+and using relative paths in the configuration file.
+
 ### Input information needed in the configuration file
 A configuration file is needed to run```ProMCDA```.
 The configuration file collects all the input information to run ```ProMCDA``` in your specific study case.

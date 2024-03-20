@@ -1,19 +1,28 @@
+
+import os
 import argparse
 import json
 import pickle
 import random
-from typing import Union, Any, List
+import logging
+import sys
+from typing import Union, Any, List, Tuple
 from typing import Optional
 
+import numpy as np
 import pandas as pd
+from datetime import datetime
 from sklearn import preprocessing
 from sklearn.preprocessing import MinMaxScaler
 
+import mcda.utils.utils_for_parallelization as utils_for_parallelization
+import mcda.utils.utils_for_plotting as utils_for_plotting
 from mcda.configuration.config import Config
-from mcda.utils.utils_for_parallelization import *
-from mcda.utils.utils_for_plotting import *
 from mcda.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.mcda_with_robustness import MCDAWithRobustness
+
+DEFAULT_INPUT_DIRECTORY_PATH = './input_files'  # root directory of ProMCDA
+DEFAULT_OUTPUT_DIRECTORY_PATH = './output_files'
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +54,6 @@ def check_config_error(condition: bool, error_message: str):
         raise ValueError(error_message)
 
 
-        
 def check_config_setting(condition_robustness_on_weights: bool, condition_robustness_on_indicators: bool, mc_runs: int,
                          random_seed: int) -> (int, int):
     """
@@ -160,9 +168,8 @@ def process_indicators_and_weights(config: dict, input_matrix: pd.DataFrame,
 def _handle_polarities_and_weights(is_robustness_indicators: int, is_robustness_weights: int, num_unique,
                                    col_to_drop_indexes: np.ndarray, polar: List[str], config: dict, mc_runs: int,
                                    num_indicators: int) \
-        -> Union[Tuple[List[str], list, None, None],
-        Tuple[List[str], None, List[List], None],
-        Tuple[List[str], None, None, dict]]:
+        -> Union[Tuple[List[str], list, None, None], Tuple[List[str], None, List[List], None],
+           Tuple[List[str], None, None, dict]]:
     """
     Manage polarities and weights based on the specified robustness settings, ensuring that the appropriate adjustments
     and normalizations are applied before returning the necessary data structures.
@@ -308,10 +315,34 @@ def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
     return input_matrix_no_alternatives
 
 
+def ensure_directory_exists(path):
+    """
+    Ensure that the directory specified by the given path exists.
+    If the directory does not exist, create it and any intermediate directories as needed.
+
+    Parameters:
+        path (str): The path of the filr in the directory to ensure exists.
+
+    Example:
+    ```python
+    ensure_directory_exists(/path/to/directory/file.csv)
+    ```
+
+    :param path: str
+    :return: None
+    """
+    directory = os.path.dirname(path)
+    if not os.path.exists(directory):
+        os.makedirs(path)
+
+
 def read_matrix(input_matrix_path: str) -> pd.DataFrame:
     """
     Read an input matrix from a CSV file and return it as a DataFrame.
     Set the 'Alternatives' column as index column.
+
+    Note: a default path is assigned to the input_matrix_path in mcda_run.py, and it is used
+    unless a custom path is set in an environmental variable in the environment.
 
     Parameters:
     - input_matrix_path (str): path to the CSV file containing the input matrix.
@@ -323,9 +354,14 @@ def read_matrix(input_matrix_path: str) -> pd.DataFrame:
     :rtype: pd.DataFrame
     """
 
+    custom_input_path = os.environ.get('PROMCDA_INPUT_PATH')  # check if an environmental variable is set
+    input_directory_path = custom_input_path if custom_input_path else DEFAULT_INPUT_DIRECTORY_PATH
+
+    ensure_directory_exists(input_directory_path)
+
     try:
-        filename = input_matrix_path
-        with open(filename, 'r') as fp:
+        full_file_path = os.path.join(input_directory_path, input_matrix_path)
+        with open(full_file_path, 'r') as fp:
             matrix = pd.read_csv(fp, sep="[,;:]", decimal='.', engine='python')
             data_types = {col: 'float64' for col in matrix.columns[1:]}
             matrix = matrix.astype(data_types)
@@ -415,6 +451,8 @@ def save_df(df: pd.DataFrame, folder_path: str, filename: str):
 
     Notes:
     - The saved file will have a timestamp added to its filename.
+    - A default output path is assigned, and it is used unless
+      a custom path is set in an environmental variable in the environment.
 
     Example:
     ```python
@@ -426,16 +464,24 @@ def save_df(df: pd.DataFrame, folder_path: str, filename: str):
     :param filename: str
     :return: None
     """
+    custom_output_path = os.environ.get('PROMCDA_OUTPUT_PATH')  # check if an environmental variable is set
+    output_directory_path = custom_output_path if custom_output_path else DEFAULT_OUTPUT_DIRECTORY_PATH
+
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
 
-    result_path = os.path.join(folder_path, new_filename)
-    df.to_csv(path_or_buf=result_path, index=False)
+    full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
+    ensure_directory_exists(os.path.dirname(full_output_path))
+
+    df.to_csv(path_or_buf=full_output_path, index=False)
 
 
 def save_dict(dictionary: dict, folder_path: str, filename: str):
     """
     Save a dictionary to a binary file using pickle with a timestamped filename.
+
+    Note: a default output path is assigned, and it is used unless
+    a custom path is set in an environmental variable in the environment.
 
     Parameters:
     - dictionary (dict): The dictionary to be saved.
@@ -452,17 +498,25 @@ def save_dict(dictionary: dict, folder_path: str, filename: str):
     :param filename: str
     :return: None
     """
+    custom_output_path = os.environ.get('PROMCDA_OUTPUT_PATH')  # check if an environmental variable is set
+    output_directory_path = custom_output_path if custom_output_path else DEFAULT_OUTPUT_DIRECTORY_PATH
+
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
-    result_path = os.path.join(folder_path, new_filename)
 
-    with open(result_path, 'wb') as fp:
+    full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
+    ensure_directory_exists(os.path.dirname(full_output_path))
+
+    with open(full_output_path, 'wb') as fp:
         pickle.dump(dictionary, fp)
 
 
 def save_config(config: dict, folder_path: str, filename: str):
     """
     Save a configuration dictionary to a JSON file with a timestamped filename.
+
+    Note: a default output path is assigned, and it is used unless
+    a custom path is set in an environmental variable in the environment.
 
     Parameters:
     - config (dict): The configuration dictionary to be saved.
@@ -479,12 +533,16 @@ def save_config(config: dict, folder_path: str, filename: str):
     :param filename: str
     :return: None
     """
+    custom_output_path = os.environ.get('PROMCDA_OUTPUT_PATH')  # check if an environmental variable is set
+    output_directory_path = custom_output_path if custom_output_path else DEFAULT_OUTPUT_DIRECTORY_PATH
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
 
-    result_path = os.path.join(folder_path, new_filename)
-    with open(result_path, 'w') as fp:
+    full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
+    ensure_directory_exists(os.path.dirname(full_output_path))
+
+    with open(full_output_path, 'w') as fp:
         json.dump(config, fp)
 
 
@@ -503,7 +561,6 @@ def check_path_exists(path: str):
     is_exist = os.path.exists(path)
     if not is_exist:
         os.makedirs(path)
-        print("The new output directory is created: {}".format(path))
 
 
 def rescale_minmax(scores: pd.DataFrame) -> pd.DataFrame:
@@ -883,6 +940,7 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
                           input_matrix=input_matrix, config=input_config,
                           is_robustness_weights=is_robustness_weights)
 
+
 def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.DataFrame, index_column_name: str,
                                         index_column_values: list, mc_runs: int, random_seed: int, is_sensitivity: str,
                                         f_agg: str, f_norm: str, weights: Union[List[list], List[pd.DataFrame], dict],
@@ -934,25 +992,26 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
     n_random_input_matrices = mcda_with_uncert.create_n_randomly_sampled_matrices()
 
     if is_sensitivity == "yes":
-        n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar)
+        n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(n_random_input_matrices, polar)
     else:
-        n_normalized_input_matrices = parallelize_normalization(n_random_input_matrices, polar, f_norm)
+        n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(n_random_input_matrices, polar, f_norm)
 
     args_for_parallel_agg = [(weights, normalized_indicators)
                              for normalized_indicators in n_normalized_input_matrices]
 
     if is_sensitivity == "yes":
-        all_indicators_scores = parallelize_aggregation(args_for_parallel_agg)
+        all_indicators_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg)
     else:
-        all_indicators_scores = parallelize_aggregation(args_for_parallel_agg, f_agg)
+        all_indicators_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg, f_agg)
 
     for matrix in all_indicators_scores:
         normalized_matrix = rescale_minmax(matrix)
         all_indicators_scores_normalized.append(normalized_matrix)
 
-    all_indicators_scores_means, all_indicators_scores_stds = estimate_runs_mean_std(all_indicators_scores)
+    all_indicators_scores_means, all_indicators_scores_stds = \
+        utils_for_parallelization.estimate_runs_mean_std(all_indicators_scores)
     all_indicators_means_scores_normalized, all_indicators_scores_stds_normalized = \
-        estimate_runs_mean_std(all_indicators_scores_normalized)
+        utils_for_parallelization.estimate_runs_mean_std(all_indicators_scores_normalized)
 
     ranks = all_indicators_scores_means.rank(pct=True)
 
@@ -996,17 +1055,18 @@ def _compute_scores_for_all_random_weights(indicators: dict, is_sensitivity: str
     args_for_parallel_agg = [(lst, indicators) for lst in random_weights]
 
     if is_sensitivity == "yes":
-        all_weights_scores = parallelize_aggregation(args_for_parallel_agg)  # rough scores coming from all runs
+        all_weights_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg)
+        #  rough scores coming from all runs
     else:
-        all_weights_scores = parallelize_aggregation(args_for_parallel_agg, f_agg)
+        all_weights_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg, f_agg)
 
     for matrix in all_weights_scores:
         normalized_matrix = rescale_minmax(matrix)  # all score normalization
         all_weights_scores_normalized.append(normalized_matrix)
-    all_weights_score_means, all_weights_score_stds = estimate_runs_mean_std(
+    all_weights_score_means, all_weights_score_stds = utils_for_parallelization.estimate_runs_mean_std(
         all_weights_scores)  # mean and std of rough scores
-    all_weights_score_means_normalized, all_weights_score_stds_normalized = estimate_runs_mean_std(
-        all_weights_scores_normalized)  # mean and std of norm. scores
+    all_weights_score_means_normalized, all_weights_score_stds_normalized = \
+        utils_for_parallelization.estimate_runs_mean_std(all_weights_scores_normalized)  # mean and std of norm. scores
 
     return all_weights_score_means, all_weights_score_stds, \
         all_weights_score_means_normalized, all_weights_score_stds_normalized
@@ -1039,18 +1099,20 @@ def _compute_scores_for_single_random_weight(indicators: dict,
         norm_one_random_weight = rand_weight_per_indicator.get("indicator_{}".format(index + 1), [])
         args_for_parallel_agg = [(lst, indicators) for lst in norm_one_random_weight]
         if is_sensitivity == "yes":
-            scores_one_random_weight = parallelize_aggregation(args_for_parallel_agg)
+            scores_one_random_weight = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg)
         else:
-            scores_one_random_weight = parallelize_aggregation(args_for_parallel_agg, f_agg)
+            scores_one_random_weight = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg, f_agg)
 
         scores_one_random_weight_normalized["indicator_{}".format(index + 1)] = []
         for matrix in scores_one_random_weight:
             matrix_normalized = rescale_minmax(matrix)  # normalize scores
             scores_one_random_weight_normalized["indicator_{}".format(index + 1)].append(matrix_normalized)
 
-        one_random_weight_score_means, one_random_weight_score_stds = estimate_runs_mean_std(scores_one_random_weight)
-        one_random_weight_score_means_normalized, one_random_weight_score_stds_normalized = estimate_runs_mean_std(
-            scores_one_random_weight_normalized["indicator_{}".format(index + 1)])
+        one_random_weight_score_means, one_random_weight_score_stds = \
+            utils_for_parallelization.estimate_runs_mean_std(scores_one_random_weight)
+        one_random_weight_score_means_normalized, one_random_weight_score_stds_normalized = \
+            utils_for_parallelization.estimate_runs_mean_std(
+                scores_one_random_weight_normalized["indicator_{}".format(index + 1)])
 
         one_random_weight_score_means.insert(0, index_column_name, index_column_values)
         one_random_weight_score_stds.insert(0, index_column_name, index_column_values)
@@ -1104,8 +1166,12 @@ def _save_output_files(scores: Optional[pd.DataFrame],
     """
     Save output files based of the computed scores, ranks, and configuration data.
     """
+    custom_output_path = os.environ.get('PROMCDA_OUTPUT_PATH')  # check if an environmental variable is set
+    output_directory_path = custom_output_path if custom_output_path else DEFAULT_OUTPUT_DIRECTORY_PATH
+
     config = Config(input_config)
-    logger.info("Saving results in {}".format(config.output_file_path))
+    full_output_path = os.path.join(output_directory_path, config.output_file_path)
+    logger.info("Saving results in {}".format(full_output_path))
     check_path_exists(config.output_file_path)
 
     if scores is not None and not scores.empty:
@@ -1142,8 +1208,8 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
                           iterative_random_w_score_means_normalized: Optional[dict],
                           input_matrix: pd.DataFrame,
                           config: dict,
-                          is_robustness_weights = None,
-                          is_robustness_indicators = None) -> None:
+                          is_robustness_weights=None,
+                          is_robustness_indicators=None) -> None:
     """
     Generate plots based on the computed scores and save them.
     """
@@ -1151,22 +1217,24 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
     num_indicators = input_matrix.shape[1]
 
     if scores is not None and not scores.empty:
-        plot_no_norm_scores = plot_non_norm_scores_without_uncert(scores)
-        save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores.png")
+        plot_no_norm_scores = utils_for_plotting.plot_non_norm_scores_without_uncert(scores)
+        utils_for_plotting.save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores.png")
 
-        plot_norm_scores = plot_norm_scores_without_uncert(normalized_scores)
-        save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores.png")
+        plot_norm_scores = utils_for_plotting.plot_norm_scores_without_uncert(normalized_scores)
+        utils_for_plotting.save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores.png")
 
     elif score_means is not None and not score_means.empty:
         if is_robustness_weights is not None and is_robustness_weights == 1:
-            chart_mean_scores = plot_mean_scores(score_means, "plot_std", "weights", score_stds)
-            chart_mean_scores_norm = plot_mean_scores(score_means_normalized, "not_plot_std", "weights", score_stds)
+            chart_mean_scores = utils_for_plotting.plot_mean_scores(score_means, "plot_std", "weights", score_stds)
+            chart_mean_scores_norm = utils_for_plotting.plot_mean_scores(score_means_normalized, "not_plot_std",
+                                                                         "weights", score_stds)
         elif is_robustness_indicators is not None and is_robustness_indicators == 1:
-            chart_mean_scores = plot_mean_scores(score_means, "plot_std", "indicators", score_stds)
-            chart_mean_scores_norm = plot_mean_scores(score_means_normalized, "not_plot_std", "indicators", score_stds)
+            chart_mean_scores = utils_for_plotting.plot_mean_scores(score_means, "plot_std", "indicators", score_stds)
+            chart_mean_scores_norm = utils_for_plotting.plot_mean_scores(score_means_normalized, "not_plot_std",
+                                                                         "indicators", score_stds)
 
-        save_figure(chart_mean_scores, config.output_file_path, "MCDA_rough_scores.png")
-        save_figure(chart_mean_scores_norm, config.output_file_path, "MCDA_norm_scores.png")
+        utils_for_plotting.save_figure(chart_mean_scores, config.output_file_path, "MCDA_rough_scores.png")
+        utils_for_plotting.save_figure(chart_mean_scores_norm, config.output_file_path, "MCDA_norm_scores.png")
 
     elif iterative_random_w_score_means is not None:
         images = []
@@ -1178,16 +1246,14 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
             one_random_weight_means_normalized = iterative_random_w_score_means_normalized[
                 "indicator_{}".format(index + 1)]
 
-            plot_weight_mean_scores = plot_mean_scores_iterative(one_random_weight_means,
-                                                                 input_matrix.columns, index,
-                                                                 "plot_std",
-                                                                 one_random_weight_stds)
-            plot_weight_mean_scores_norm = plot_mean_scores_iterative(one_random_weight_means_normalized,
-                                                                      input_matrix.columns, index,
-                                                                      "not_plot_std")
+            plot_weight_mean_scores = utils_for_plotting.plot_mean_scores_iterative(one_random_weight_means,
+                                                                                    input_matrix.columns, index,
+                                                                                    "plot_std", one_random_weight_stds)
+            plot_weight_mean_scores_norm = utils_for_plotting.plot_mean_scores_iterative(
+                one_random_weight_means_normalized, input_matrix.columns, index, "not_plot_std")
 
             images.append(plot_weight_mean_scores)
             images_norm.append(plot_weight_mean_scores_norm)
 
-        combine_images(images, config.output_file_path, "MCDA_one_weight_randomness_rough_scores.png")
-        combine_images(images_norm, config.output_file_path, "MCDA_one_weight_randomness_norm_scores.png")
+        utils_for_plotting.combine_images(images, config.output_file_path, "MCDA_one_weight_randomness_rough_scores.png")
+        utils_for_plotting.combine_images(images_norm, config.output_file_path, "MCDA_one_weight_randomness_norm_scores.png")

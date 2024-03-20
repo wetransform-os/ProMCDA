@@ -19,7 +19,7 @@ class Config:
     - sensitivity: sensitivity configuration.
     - robustness: robustness configuration.
     - monte_carlo_sampling: Monte Carlo sampling configuration.
-    - output_path: path to the output file.
+    - output_directory_path: path to the output file.
 
     Attributes:
     _valid_keys (List[str]): list of valid keys expected in the input dictionary.
@@ -43,12 +43,12 @@ class Config:
                               'sensitivity',
                               'robustness',
                               'monte_carlo_sampling',
-                              'output_path']
+                              'output_directory_path']
 
     _list_values: List[str] = [
         'marginal_distribution_for_each_indicator', 'polarity_for_each_indicator']
 
-    _str_values: List[str] = ['input_matrix_path', 'output_path', 'sensitivity_on', 'normalization', 'aggregation',
+    _str_values: List[str] = ['input_matrix_path', 'output_directory_path', 'sensitivity_on', 'normalization', 'aggregation',
                               'robustness_on', 'on_single_weights', 'on_all_weights', 'given_weights', 'on_indicators']
 
     _int_values: List[str] = ['monte_carlo_runs', 'num_cores', 'random_seed']
@@ -129,7 +129,7 @@ class Config:
 
     @property
     def output_file_path(self):
-        return self.get_property('output_path')
+        return self.get_property('output_directory_path')
 
     @staticmethod
     def check_dict_keys(dic: Dict[str, Any], keys: List[str]):
