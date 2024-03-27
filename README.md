@@ -226,10 +226,15 @@ where an example of configuration file can be found in `./configuration.json`.
 python3 -m pytest -s tests/unit_tests -vv
 ```
 ### Toy example
-The directory of ```ProMCDA``` contains a toy example, a simple case to test run the package. In the `toy_example/output` directory you 
-can find three different tests that have been run with the relative configuration and output files. Please modify your configuration file 
-according to the desired experiment. The directory contains also a Jupyter notebook to allow one to modify the input matrix easily. 
-The example chosen is very simple and not suitable for a robustness analysis test. Running the robustness analysis requires an input matrix 
+```ProMCDA``` contains a toy example, a simple case to test run the package. 
+The toy example helps you identify the best car models (i.e., the alternatives) you can buy based on a few indicators 
+(e.g., Model, Fuel Efficiency, Safety Rating, Price, Cargo Space, Acceleration, Warranty). 
+In the `output_files/toy_example/` directory you can find a few different tests that have been run already, with their 
+relative configuration and output files. 
+The input matrix for the toy example is in `output_files/toy_example/cara_data.csv`. 
+If you want to test the package yourself, you have to modify your configuration file according to the desired experiment. 
+The directory `toy_example_utilities` contains also a Jupyter notebook to allow you to modify the input matrix easily. 
+The chosen example is very simple and not suitable for a robustness analysis test. Running the robustness analysis requires an input matrix 
 containing information on the uncertainties of the criteria as described above, and it is not under the scope of the toy example. 
 
 ### Code overview: a high-level summary
