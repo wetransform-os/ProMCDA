@@ -1,4 +1,5 @@
 import io
+import logging
 import os
 from datetime import datetime
 
@@ -235,14 +236,17 @@ def save_figure(figure: object, folder_path: str, filename: str):
     :param filename: str
     :return: None
     """
-    custom_output_path = os.environ.get('PROMCDA_OUTPUT_PATH')  # check if an environmental variable is set
+    custom_output_path = os.environ.get('PROMCDA_OUTPUT_DIRECTORY_PATH')  # check if an environmental variable is set
     output_directory_path = custom_output_path if custom_output_path else DEFAULT_OUTPUT_DIRECTORY_PATH
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
 
     full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
-    utils_for_main.ensure_directory_exists(full_output_path)
+    try:
+        utils_for_main.ensure_directory_exists(full_output_path)
+    except IOError:
+        logging.error(f"Saving a figure failed.")
 
     figure.write_image(full_output_path)
 

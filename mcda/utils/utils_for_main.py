@@ -21,8 +21,14 @@ from mcda.configuration.config import Config
 from mcda.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.mcda_with_robustness import MCDAWithRobustness
 
-DEFAULT_INPUT_DIRECTORY_PATH = './input_files'  # root directory of ProMCDA
-DEFAULT_OUTPUT_DIRECTORY_PATH = './output_files'
+DEFAULT_INPUT_DIRECTORY_PATH = './input_files'  # present in the root directory of ProMCDA
+DEFAULT_OUTPUT_DIRECTORY_PATH = './output_files' # present in the root directory of ProMCDA
+
+custom_input_path = os.environ.get('PROMCDA_INPUT_DIRECTORY_PATH')  # check if an environmental variable is set
+input_directory_path = custom_input_path if custom_input_path else DEFAULT_INPUT_DIRECTORY_PATH
+
+custom_output_path = os.environ.get('PROMCDA_OUTPUT_DIRECTORY_PATH')  # check if an environmental variable is set
+output_directory_path = custom_output_path if custom_output_path else DEFAULT_OUTPUT_DIRECTORY_PATH
 
 log = logging.getLogger(__name__)
 
@@ -145,7 +151,6 @@ def process_indicators_and_weights(config: dict, input_matrix: pd.DataFrame,
     :return: polar, norm_weights
     :rtype: Tuple[List[str], Union[List[list], dict]]
     """
-
     num_unique = input_matrix.nunique()
     cols_to_drop = num_unique[num_unique == 1].index
     col_to_drop_indexes = input_matrix.columns.get_indexer(cols_to_drop)
@@ -321,7 +326,7 @@ def ensure_directory_exists(path):
     If the directory does not exist, create it and any intermediate directories as needed.
 
     Parameters:
-        path (str): The path of the filr in the directory to ensure exists.
+        path (str): The path of the file in the directory to ensure exists.
 
     Example:
     ```python
@@ -331,9 +336,12 @@ def ensure_directory_exists(path):
     :param path: str
     :return: None
     """
-    directory = os.path.dirname(path)
-    if not os.path.exists(directory):
-        os.makedirs(path)
+    try:
+        directory = os.path.dirname(path)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except Exception as e:
+        logging.error(f"An error occurred while ensuring directory exists: {e}")
 
 
 def read_matrix(input_matrix_path: str) -> pd.DataFrame:
@@ -353,15 +361,15 @@ def read_matrix(input_matrix_path: str) -> pd.DataFrame:
     :param input_matrix_path: str
     :rtype: pd.DataFrame
     """
-
-    custom_input_path = os.environ.get('PROMCDA_INPUT_PATH')  # check if an environmental variable is set
-    input_directory_path = custom_input_path if custom_input_path else DEFAULT_INPUT_DIRECTORY_PATH
-
-    ensure_directory_exists(input_directory_path)
+    try:
+        ensure_directory_exists(input_directory_path)
+    except IOError:
+        logging.error(f"Reading a matrix failed.")
 
     try:
         full_file_path = os.path.join(input_directory_path, input_matrix_path)
         with open(full_file_path, 'r') as fp:
+            logger.info("Reading the input matrix in {}".format(full_file_path))
             matrix = pd.read_csv(fp, sep="[,;:]", decimal='.', engine='python')
             data_types = {col: 'float64' for col in matrix.columns[1:]}
             matrix = matrix.astype(data_types)
@@ -414,7 +422,6 @@ def parse_args():
 
     :rtype: str
     """
-
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', help='config path', required=True)
     args = parser.parse_args()
@@ -432,7 +439,6 @@ def get_config(config_path: str) -> dict:
     :param config_path: str
     :rtype: dict
     """
-
     try:
         with open(config_path, 'r') as fp:
             return json.load(fp)
@@ -464,14 +470,14 @@ def save_df(df: pd.DataFrame, folder_path: str, filename: str):
     :param filename: str
     :return: None
     """
-    custom_output_path = os.environ.get('PROMCDA_OUTPUT_PATH')  # check if an environmental variable is set
-    output_directory_path = custom_output_path if custom_output_path else DEFAULT_OUTPUT_DIRECTORY_PATH
-
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
 
     full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
-    ensure_directory_exists(os.path.dirname(full_output_path))
+    try:
+        ensure_directory_exists(os.path.dirname(full_output_path))
+    except IOError:
+        logging.error(f"Saving a data frame failed.")
 
     df.to_csv(path_or_buf=full_output_path, index=False)
 
@@ -498,14 +504,14 @@ def save_dict(dictionary: dict, folder_path: str, filename: str):
     :param filename: str
     :return: None
     """
-    custom_output_path = os.environ.get('PROMCDA_OUTPUT_PATH')  # check if an environmental variable is set
-    output_directory_path = custom_output_path if custom_output_path else DEFAULT_OUTPUT_DIRECTORY_PATH
-
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
 
     full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
-    ensure_directory_exists(os.path.dirname(full_output_path))
+    try:
+        ensure_directory_exists(os.path.dirname(full_output_path))
+    except IOError:
+        logging.error(f"Saving a dictionary failed.")
 
     with open(full_output_path, 'wb') as fp:
         pickle.dump(dictionary, fp)
@@ -533,14 +539,14 @@ def save_config(config: dict, folder_path: str, filename: str):
     :param filename: str
     :return: None
     """
-    custom_output_path = os.environ.get('PROMCDA_OUTPUT_PATH')  # check if an environmental variable is set
-    output_directory_path = custom_output_path if custom_output_path else DEFAULT_OUTPUT_DIRECTORY_PATH
-
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
 
     full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
-    ensure_directory_exists(os.path.dirname(full_output_path))
+    try:
+        ensure_directory_exists(os.path.dirname(full_output_path))
+    except IOError:
+        logging.error(f"Saving the configuration file failed.")
 
     with open(full_output_path, 'w') as fp:
         json.dump(config, fp)
@@ -618,7 +624,6 @@ def randomly_sample_all_weights(num_weights: int, num_runs: int) -> List[list]:
     :param num_runs: int
     :return list_of_weights: List[list]
     """
-
     list_of_weights = []
     for _ in range(num_runs):
         lst = [np.random.uniform(0, 1) for _ in range(num_weights)]
@@ -651,7 +656,6 @@ def randomly_sample_ix_weight(num_weights: int, index: int, num_runs: int) -> Li
     :param num_runs: int
     :return list_of_weights: List[list]
     """
-
     list_of_weights = []
     for _ in range(num_runs):
         lst = [1] * num_weights
@@ -671,7 +675,6 @@ def check_norm_sum_weights(weights: list) -> list:
     :param weights: list
     :return weights: list
     """
-
     if sum(weights) != 1:
         norm_weights = [val / sum(weights) for val in weights]
         return norm_weights
@@ -1056,7 +1059,6 @@ def _compute_scores_for_all_random_weights(indicators: dict, is_sensitivity: str
 
     if is_sensitivity == "yes":
         all_weights_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg)
-        #  rough scores coming from all runs
     else:
         all_weights_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg, f_agg)
 
@@ -1166,9 +1168,6 @@ def _save_output_files(scores: Optional[pd.DataFrame],
     """
     Save output files based of the computed scores, ranks, and configuration data.
     """
-    custom_output_path = os.environ.get('PROMCDA_OUTPUT_PATH')  # check if an environmental variable is set
-    output_directory_path = custom_output_path if custom_output_path else DEFAULT_OUTPUT_DIRECTORY_PATH
-
     config = Config(input_config)
     full_output_path = os.path.join(output_directory_path, config.output_file_path)
     logger.info("Saving results in {}".format(full_output_path))
