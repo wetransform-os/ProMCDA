@@ -6,20 +6,23 @@ from pandas.testing import assert_series_equal
 from mcda.utils.utils_for_main import *
 from mcda.mcda_functions.aggregation import Aggregation
 
+current_directory = os.path.dirname(os.path.abspath(__file__))
+resources_directory = os.path.join(current_directory, '..', 'resources')
+
 
 class TestAggregation(unittest.TestCase):
 
     @staticmethod
     def get_normalized_input_matrix():
-        input_matrix_path = "tests/resources/normalization/res_minmax_without_zero.csv"
-        input_matrix = read_matrix(input_matrix_path)
+        input_matrix_file_path = os.path.join(resources_directory, 'normalization/res_minmax_without_zero.csv')
+        input_matrix = read_matrix(input_matrix_file_path)
 
         return input_matrix
 
     @staticmethod
     def get_normalized_input_matrix_w_0():
-        input_matrix_path = "tests/resources/normalization/res_minmax_01.csv"
-        input_matrix = read_matrix(input_matrix_path)
+        input_matrix_file_path = os.path.join(resources_directory, 'normalization/res_minmax_01.csv')
+        input_matrix = read_matrix(input_matrix_file_path)
 
         return input_matrix
 

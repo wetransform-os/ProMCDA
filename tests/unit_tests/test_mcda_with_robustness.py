@@ -28,7 +28,7 @@ class TestMCDA_with_robustness(unittest.TestCase):
                 "num_cores": 1,
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal', 'poisson']},
-            "output_path": "/path/to/output"
+            "output_directory_path": "/path/to/output"
         }
 
     @staticmethod

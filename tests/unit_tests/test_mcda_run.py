@@ -37,7 +37,7 @@ class TestMCDA(unittest.TestCase):
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ["exact", "exact", "exact", "exact", "exact", "exact"]},
 
-            "output_path": "/path/to/output"
+            "output_directory_path": "/path/to/output"
 
         }
 
@@ -65,7 +65,7 @@ class TestMCDA(unittest.TestCase):
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ["norm", "exact", "lnorm", "exact", "poisson", "exact"]},
 
-            "output_path": "/path/to/output"
+            "output_directory_path": "/path/to/output"
         }
 
     @staticmethod
@@ -92,7 +92,7 @@ class TestMCDA(unittest.TestCase):
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ["exact", "exact", "exact", "exact", "exact", "exact"]},
 
-            "output_path": "/path/to/output"
+            "output_directory_path": "/path/to/output"
         }
 
     @staticmethod
@@ -116,7 +116,7 @@ class TestMCDA(unittest.TestCase):
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['uniform', 'exact', 'normal', 'normal', 'exact',
                                                              'lnorm']},
-            "output_path": "/path/to/output"
+            "output_directory_path": "/path/to/output"
         }
 
     def setUp(self):

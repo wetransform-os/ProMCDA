@@ -26,7 +26,7 @@ class TestConfig(unittest.TestCase):
                 "num_cores": 4,
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta']},
-            "output_path": "/path/to/output"
+            "output_directory_path": "/path/to/output"
         }
 
     @staticmethod
@@ -49,7 +49,7 @@ class TestConfig(unittest.TestCase):
                 "num_cores": 4,
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta']},
-            "output_path": "/path/to/output"
+            "output_directory_path": "/path/to/output"
         }
 
     @staticmethod
@@ -72,7 +72,7 @@ class TestConfig(unittest.TestCase):
                 "num_cores": 4,
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['norm', 'lnorm', 'beta']},
-            "output_path": "/path/to/output"
+            "output_directory_path": "/path/to/output"
         }
 
     def test_init(self):

@@ -1,8 +1,17 @@
+import os
 import unittest
-from pathlib import Path
+import pandas as pd
 from unittest import TestCase
-from mcda.utils.utils_for_main import *
+
+
+from mcda.mcda_without_robustness import MCDAWithoutRobustness
+from mcda.configuration.config import Config
 from mcda.mcda_functions.aggregation import Aggregation
+import mcda.utils.utils_for_main as utils_for_main
+import mcda.utils.utils_for_parallelization as utils_for_parallelization
+
+current_directory = os.path.dirname(os.path.abspath(__file__))
+resources_directory = os.path.join(current_directory, '..', 'resources')
 
 
 class TestMCDA_without_robustness(unittest.TestCase):
@@ -27,7 +36,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
                 "num_cores": 4,
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
-            "output_path": "/path/to/output"
+            "output_directory_path": "/path/to/output"
         }
 
     @staticmethod
@@ -50,7 +59,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
                 "num_cores": 4,
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
-            "output_path": "/path/to/output"
+            "output_directory_path": "/path/to/output"
         }
 
     @staticmethod
@@ -73,7 +82,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
                 "num_cores": 4,
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
-            "output_path": "/path/to/output"
+            "output_directory_path": "/path/to/output"
         }
 
     @staticmethod
@@ -96,15 +105,13 @@ class TestMCDA_without_robustness(unittest.TestCase):
                 "num_cores": 4,
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
-            "output_path": "/path/to/output"
+            "output_directory_path": "/path/to/output"
         }
 
     @staticmethod
     def get_input_matrix():
-        test_data_directory = Path(__file__).resolve().parent.parent / "resources"
-        file_path = test_data_directory / "input_matrix_without_uncert.csv"
-
-        input_matrix = read_matrix(file_path)
+        input_matrix_file_path = os.path.join(resources_directory, 'input_matrix_without_uncert.csv')
+        input_matrix = utils_for_main.read_matrix(input_matrix_file_path)
 
         return input_matrix
 
@@ -139,7 +146,8 @@ class TestMCDA_without_robustness(unittest.TestCase):
         TestCase.assertIn(self, member='target_01', container=res_general.keys())
         TestCase.assertIn(self, member='target_without_zero', container=res_general.keys())
         TestCase.assertIn(self, member='rank', container=res_general.keys())
-        for key in res_general.keys(): assert (res_general[key].shape == input_matrix.shape)
+        for key in res_general.keys():
+            assert (res_general[key].shape == input_matrix.shape)
 
         assert isinstance(res_simple_mcda, dict)
         TestCase.assertIn(self, member='minmax_01', container=res_simple_mcda.keys())
@@ -149,7 +157,8 @@ class TestMCDA_without_robustness(unittest.TestCase):
         TestCase.assertNotIn(self, member='target_01', container=res_simple_mcda.keys())
         TestCase.assertNotIn(self, member='target_without_zero', container=res_simple_mcda.keys())
         TestCase.assertNotIn(self, member='rank', container=res_simple_mcda.keys())
-        for key in res_simple_mcda.keys(): assert (res_simple_mcda[key].shape == input_matrix.shape)
+        for key in res_simple_mcda.keys():
+            assert (res_simple_mcda[key].shape == input_matrix.shape)
 
     def test_aggregate_indicators(self):
         # Given
@@ -175,9 +184,9 @@ class TestMCDA_without_robustness(unittest.TestCase):
                                                                                'aggregation'])
 
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                     'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
-                     'harm-minmax_without_zero', 'harm-target_without_zero', 'harm-standardized_without_zero', 'harm-rank',
-                     'min-standardized_any']
+                     'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero',
+                     'geom-rank', 'harm-minmax_without_zero', 'harm-target_without_zero',
+                     'harm-standardized_without_zero', 'harm-rank', 'min-standardized_any']
 
         simple_mcda_col_names = ['ws-minmax_01']
 
@@ -206,18 +215,18 @@ class TestMCDA_without_robustness(unittest.TestCase):
         # When
         mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
         normalized_indicators = mcda_no_uncert.normalize_indicators()
-        res = aggregate_indicators_in_parallel(agg, normalized_indicators)
+        res = utils_for_parallelization.aggregate_indicators_in_parallel(agg, normalized_indicators)
 
         mcda_no_uncert_simple_mcda = MCDAWithoutRobustness(config_randomness_simple_mcda, input_matrix)
         normalized_indicators = mcda_no_uncert_simple_mcda.normalize_indicators(
             config_randomness_simple_mcda.sensitivity['normalization'])
-        res_simple_mcda = aggregate_indicators_in_parallel(agg, normalized_indicators,
-                                                           config_randomness_simple_mcda.sensitivity['aggregation'])
+        res_simple_mcda = utils_for_parallelization.aggregate_indicators_in_parallel(agg, normalized_indicators,
+            config_randomness_simple_mcda.sensitivity['aggregation'])
 
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                     'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
-                     'harm-minmax_without_zero', 'harm-target_without_zero', 'harm-standardized_without_zero', 'harm-rank',
-                     'min-standardized_any']
+                     'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero',
+                     'geom-rank', 'harm-minmax_without_zero', 'harm-target_without_zero',
+                     'harm-standardized_without_zero', 'harm-rank', 'min-standardized_any']
 
         simple_mcda_col_names = ['ws-minmax_01']
 
@@ -237,7 +246,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
         list_of_df = TestMCDA_without_robustness.get_list_of_df()
 
         # When
-        res = estimate_runs_mean_std(list_of_df)
+        res = utils_for_parallelization.estimate_runs_mean_std(list_of_df)
         std = {'col1': [0, 0, 0, 0, 0, 0], 'col2': [0, 0, 0, 0, 0, 0], 'col3': [0, 0, 0, 0, 0, 0],
                'col4': [0, 0, 0, 0, 0, 0]}
         df_std = pd.DataFrame(data=std)

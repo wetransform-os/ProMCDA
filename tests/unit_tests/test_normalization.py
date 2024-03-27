@@ -1,18 +1,21 @@
+import os
 import unittest
-from pathlib import Path
+import pandas as pd
 
 from pandas.testing import assert_frame_equal
 from numpy.testing import assert_almost_equal
 from mcda.utils.utils_for_main import *
 from mcda.mcda_functions.normalization import Normalization
 
+current_directory = os.path.dirname(os.path.abspath(__file__))
+resources_directory = os.path.join(current_directory, '..', 'resources')
+
 
 class TestNormalization(unittest.TestCase):
 
     @staticmethod
     def get_input_matrix():
-        test_data_directory = Path(__file__).resolve().parent.parent / "resources"
-        input_matrix_file_path = test_data_directory / "input_matrix_without_uncert.csv"
+        input_matrix_file_path = os.path.join(resources_directory, 'input_matrix_without_uncert.csv')
         input_matrix = read_matrix(input_matrix_file_path)
 
         return input_matrix
@@ -29,9 +32,8 @@ class TestNormalization(unittest.TestCase):
         input_matrix = TestNormalization.get_input_matrix()
 
         # When
-        test_data_directory = Path(__file__).resolve().parent.parent / "resources/normalization"
-        expected_res01_file_path = test_data_directory / "res_minmax_01.csv"
-        expected_res_without_zero_file_path = test_data_directory / "res_minmax_without_zero.csv"
+        expected_res01_file_path = os.path.join(resources_directory, 'normalization/res_minmax_01.csv')
+        expected_res_without_zero_file_path = os.path.join(resources_directory, "normalization/res_minmax_without_zero.csv")
         expected_res_01 = read_matrix(expected_res01_file_path)
         expected_res_without_zero = read_matrix(expected_res_without_zero_file_path)
         norm = Normalization(input_matrix, polarities)
@@ -62,8 +64,10 @@ class TestNormalization(unittest.TestCase):
         input_matrix_no_alternatives = TestNormalization.get_input_matrix()
 
         # When
-        expected_res_01 = read_matrix('tests/resources/normalization/res_target_01.csv')
-        expected_res_without_zero = read_matrix('tests/resources/normalization/res_target_without_zero.csv')
+        res_target_01 = os.path.join(resources_directory, 'normalization/res_target_01.csv')
+        expected_res_01 = read_matrix(res_target_01)
+        res_target_without_zero = os.path.join(resources_directory, 'normalization/res_target_without_zero.csv')
+        expected_res_without_zero = read_matrix(res_target_without_zero)
         norm = Normalization(input_matrix_no_alternatives, polarities)
         res_01 = norm.target(feature_range=(0, 1))
         res_01.columns = res_01.columns.astype('str')  # to match the type of columns in the two dfs
@@ -92,8 +96,10 @@ class TestNormalization(unittest.TestCase):
         input_matrix_no_alternatives = TestNormalization.get_input_matrix()
 
         # When
-        expected_res_any = read_matrix('tests/resources/normalization/res_standardized_any.csv')
-        expected_res_without_zero = read_matrix('tests/resources/normalization/res_standardized_without_zero.csv')
+        res_standardized_any = os.path.join(resources_directory, 'normalization/res_standardized_any.csv')
+        expected_res_any = read_matrix(res_standardized_any)
+        res_standardized_without_zero = os.path.join(resources_directory, 'normalization/res_standardized_without_zero.csv')
+        expected_res_without_zero = read_matrix(res_standardized_without_zero)
         norm = Normalization(input_matrix_no_alternatives, polarities)
         res_any = norm.standardized(feature_range=('-inf', '+inf'))
         res_without_zero = norm.standardized(feature_range=(0.1, '+inf'))
@@ -122,7 +128,8 @@ class TestNormalization(unittest.TestCase):
         no_alternatives = input_matrix_no_alternatives.shape[0]
 
         # When
-        expected_res = read_matrix('tests/resources/normalization/res_rank.csv')
+        res_rank = os.path.join(resources_directory, 'normalization/res_rank.csv')
+        expected_res = read_matrix(res_rank)
         norm = Normalization(input_matrix_no_alternatives, polarities)
         res = norm.rank()
         res.columns = res.columns.astype('str')  # to match the type of columns in the two dfs
