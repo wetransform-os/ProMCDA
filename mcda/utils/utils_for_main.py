@@ -22,13 +22,13 @@ from mcda.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.mcda_with_robustness import MCDAWithRobustness
 
 DEFAULT_INPUT_DIRECTORY_PATH = './input_files'  # present in the root directory of ProMCDA
-DEFAULT_OUTPUT_DIRECTORY_PATH = './output_files' # present in the root directory of ProMCDA
+DEFAULT_OUTPUT_DIRECTORY_PATH = './output_files'  # present in the root directory of ProMCDA
 
-custom_input_path = os.environ.get('PROMCDA_INPUT_DIRECTORY_PATH')  # check if an environmental variable is set
-input_directory_path = custom_input_path if custom_input_path else DEFAULT_INPUT_DIRECTORY_PATH
+CUSTOM_INPUT_PATH = os.environ.get('PROMCDA_INPUT_DIRECTORY_PATH')  # check if an environmental variable is set
+CUSTOM_OUTPUT_PATH = os.environ.get('PROMCDA_OUTPUT_DIRECTORY_PATH')  # check if an environmental variable is set
 
-custom_output_path = os.environ.get('PROMCDA_OUTPUT_DIRECTORY_PATH')  # check if an environmental variable is set
-output_directory_path = custom_output_path if custom_output_path else DEFAULT_OUTPUT_DIRECTORY_PATH
+input_directory_path = CUSTOM_INPUT_PATH if CUSTOM_INPUT_PATH else DEFAULT_INPUT_DIRECTORY_PATH
+output_directory_path = CUSTOM_OUTPUT_PATH if CUSTOM_OUTPUT_PATH else DEFAULT_OUTPUT_DIRECTORY_PATH
 
 log = logging.getLogger(__name__)
 
@@ -341,7 +341,9 @@ def ensure_directory_exists(path):
         if not os.path.exists(directory):
             os.makedirs(directory)
     except Exception as e:
-        logging.error(f"An error occurred while ensuring directory exists: {e}")
+        logging.error(f"An error occurred while ensuring directory exists for path '{path}': {e}")
+        raise  # Re-raise the exception to propagate it to the caller
+
 
 
 def read_matrix(input_matrix_path: str) -> pd.DataFrame:
@@ -361,11 +363,6 @@ def read_matrix(input_matrix_path: str) -> pd.DataFrame:
     :param input_matrix_path: str
     :rtype: pd.DataFrame
     """
-    try:
-        ensure_directory_exists(input_directory_path)
-    except IOError:
-        logging.error(f"Reading a matrix failed.")
-
     try:
         full_file_path = os.path.join(input_directory_path, input_matrix_path)
         with open(full_file_path, 'r') as fp:
@@ -473,14 +470,22 @@ def save_df(df: pd.DataFrame, folder_path: str, filename: str):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
 
+    if not os.path.isdir(folder_path):
+        logging.error(f"The provided folder path '{folder_path}' is not a valid directory.")
+        return
+
     full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
+
     try:
         ensure_directory_exists(os.path.dirname(full_output_path))
-    except IOError:
-        logging.error(f"Saving a data frame failed.")
+    except Exception as e:
+        logging.error(f"Error while saving data frame: {e}")
+        return
 
-    df.to_csv(path_or_buf=full_output_path, index=False)
-
+    try:
+        df.to_csv(path_or_buf=full_output_path, index=False)
+    except IOError as e:
+        logging.error(f"Error while writing data frame into a CSV file: {e}")
 
 def save_dict(dictionary: dict, folder_path: str, filename: str):
     """
@@ -507,14 +512,21 @@ def save_dict(dictionary: dict, folder_path: str, filename: str):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
 
+    if not os.path.isdir(folder_path):
+        logging.error(f"The provided folder path '{folder_path}' is not a valid directory.")
+        return
+
     full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
     try:
         ensure_directory_exists(os.path.dirname(full_output_path))
-    except IOError:
-        logging.error(f"Saving a dictionary failed.")
-
-    with open(full_output_path, 'wb') as fp:
-        pickle.dump(dictionary, fp)
+    except Exception as e:
+        logging.error(f"Error while saving dictionary: {e}")
+        return
+    try:
+        with open(full_output_path, 'wb') as fp:
+            pickle.dump(dictionary, fp)
+    except IOError as e:
+        logging.error(f"Error while dumping the dictionary into a pickle file: {e}")
 
 
 def save_config(config: dict, folder_path: str, filename: str):
@@ -542,14 +554,22 @@ def save_config(config: dict, folder_path: str, filename: str):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
 
+    if not os.path.isdir(folder_path):
+        logging.error(f"The provided folder path '{folder_path}' is not a valid directory.")
+        return
+
     full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
     try:
         ensure_directory_exists(os.path.dirname(full_output_path))
-    except IOError:
-        logging.error(f"Saving the configuration file failed.")
+    except Exception as e:
+        logging.error(f"Error while saving configuration: {e}")
+        return
 
-    with open(full_output_path, 'w') as fp:
-        json.dump(config, fp)
+    try:
+        with open(full_output_path, 'w') as fp:
+            json.dump(config, fp)
+    except IOError as e:
+        logging.error(f"Error while dumping the configuration into a JSON file: {e}")
 
 
 def check_path_exists(path: str):
