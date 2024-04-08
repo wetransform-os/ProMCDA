@@ -1,4 +1,5 @@
 import io
+import logging
 import os
 from datetime import datetime
 
@@ -7,6 +8,10 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
 from PIL import Image
+
+import mcda.utils.utils_for_main as utils_for_main
+
+DEFAULT_OUTPUT_DIRECTORY_PATH = './output_files'  # root directory of ProMCDA
 
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
@@ -123,7 +128,7 @@ def plot_mean_scores(all_means: pd.DataFrame, plot_std: str, rand_on: str, all_s
                 name=all_means.columns[i + 1],
                 x=all_means[alternatives_column_name].values.tolist(),
                 y=all_means.iloc[:, i + 1],
-                error_y=dict(type='data', array=all_stds.iloc[:, i+1])
+                error_y=dict(type='data', array=all_stds.iloc[:, (i+1)])
             ))
             fig.update_layout(title=f'<b>MCDA analysis with added randomness on the {rand_on}<b> (rough scores)',
                               title_font_size=22)
@@ -216,6 +221,11 @@ def save_figure(figure: object, folder_path: str, filename: str):
     """
     Save a Plotly figure as an image.
 
+    Notes:
+    - The saved file will have a timestamp added to its filename.
+    - A default output path is assigned, and it is used unless
+      a custom path is set in an environmental variable in the environment.
+
     Parameters:
     - figure: Plotly figure object to be saved.
     - folder_path: path to the folder where the image will be saved.
@@ -226,11 +236,19 @@ def save_figure(figure: object, folder_path: str, filename: str):
     :param filename: str
     :return: None
     """
+    custom_output_path = os.environ.get('PROMCDA_OUTPUT_DIRECTORY_PATH')  # check if an environmental variable is set
+    output_directory_path = custom_output_path if custom_output_path else DEFAULT_OUTPUT_DIRECTORY_PATH
+
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
 
-    result_path = os.path.join(folder_path, new_filename)
-    figure.write_image(result_path)
+    full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
+    try:
+        utils_for_main.ensure_directory_exists(full_output_path)
+    except IOError:
+        logging.error(f"Saving a figure failed.")
+
+    figure.write_image(full_output_path)
 
 
 def combine_images(figures: list, folder_path: str, filename: str):

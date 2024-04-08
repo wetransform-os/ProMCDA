@@ -84,6 +84,22 @@ Here we define:
 
 The tool can be also used as a simple (i.e. deterministic) MCDA ranking tool with no robustness/sensitivity analysis (see below for instructions).
 
+### Input and output file paths
+All input and output files are saved by default in the `input_files` and `output_files` folders located in the project root directory. 
+The two variables, which define the default input and output paths, `DEFAULT_INPUT_DIRECTORY_PATH` and `DEFAULT_OUTPUT_DIRECTORY_PATH`
+are defined in `utils_for_main.py` and `utils_for_plotting.py`. Users can set custom environmental variables in their environment to override the default directory paths. 
+In the terminal, users can override one or both default variables by typing:
+
+```bash
+export PROMCDA_INPUT_DIRECTORY_PATH=/path/to/custom/input/directory
+export PROMCDA_OUTPUT_DIRECTORY_PATH=/path/to/custom/output/directory
+```
+Please ensure that you execute the above command(s) from within the project environment. The variable names `PROMCDA_INPUT_DIRECTORY_PATH` 
+and `PROMCDA_OUTPUT_DIRECTORY_PATH` are fixed as defined in `utils_for_main.py` and `utils_for_plotting.py`.
+
+This allows the user to customize the directory paths without modifying the source code of the Python package, 
+and using relative paths in the configuration file.
+
 ### Input information needed in the configuration file
 A configuration file is needed to run```ProMCDA```.
 The configuration file collects all the input information to run ```ProMCDA``` in your specific study case.
@@ -210,10 +226,15 @@ where an example of configuration file can be found in `./configuration.json`.
 python3 -m pytest -s tests/unit_tests -vv
 ```
 ### Toy example
-The directory of ```ProMCDA``` contains a toy example, a simple case to test run the package. In the `toy_example/output` directory you 
-can find three different tests that have been run with the relative configuration and output files. Please modify your configuration file 
-according to the desired experiment. The directory contains also a Jupyter notebook to allow one to modify the input matrix easily. 
-The example chosen is very simple and not suitable for a robustness analysis test. Running the robustness analysis requires an input matrix 
+```ProMCDA``` contains a toy example, a simple case to test run the package. 
+The toy example helps you identify the best car models (i.e., the alternatives) you can buy based on a few indicators 
+(e.g., Model, Fuel Efficiency, Safety Rating, Price, Cargo Space, Acceleration, Warranty). 
+In the `output_files/toy_example/` directory you can find a few different tests that have been run already, with their 
+relative configuration and output files. 
+The input matrix for the toy example is in `output_files/toy_example/cara_data.csv`. 
+If you want to test the package yourself, you have to modify your configuration file according to the desired experiment. 
+The directory `toy_example_utilities` contains also a Jupyter notebook to allow you to modify the input matrix easily. 
+The chosen example is very simple and not suitable for a robustness analysis test. Running the robustness analysis requires an input matrix 
 containing information on the uncertainties of the criteria as described above, and it is not under the scope of the toy example. 
 
 ### Code overview: a high-level summary
