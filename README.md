@@ -148,8 +148,8 @@ Similarly, a run with or without uncertainty on the indicators or on the weights
 can be triggered by setting the `robustness_on` parameter to *yes* or *no*. If `robustness_on` is set to *yes*, then 
 the uncertainties might be on the indicators (`on_indicators`) or on the weights (`on_single_weights` or `on_all_weights`). 
 In the first case (`on_single_weights=yes`) one weight at time is randomly sampled from a uniform distribution; 
-in the second case (`on_all_weights=yes`) all weights are simultaneously sampled from a normal distribution. 
-If there is no uncertainty associated to the weights, then the user should provide a ***list of weights*** for the indicators. 
+in the second case (`on_all_weights=yes`) all weights are simultaneously sampled from a uniform distribution. 
+If there is no uncertainty associated to the weights, then the user should provide a ***list of weights*** in the `given_weights` parameter for the indicators. 
 The sum of the weights should always be equal to 1 or the values will be normalised internally. 
 Depending on the different options, information not needed are disregard. Sensitivity and robustness analysis can be run
 together. If robustness analysis is selected, it can run either on the weights or on the indicators, but not on both simultaneously.
@@ -160,7 +160,7 @@ e.g., larger or equal than 1000). The ***number of cores*** used for the paralle
 ***List of marginal distributions*** for each indicator; the available distributions are: 
   - exact, **"exact"**,
   - uniform distribution, **"uniform"**
-  - normal distribution, **"norm"**
+  - normal distribution, **"normal"**
   - lognormal distribution, **"lnorm"**
   - Poisson distribution, **"poisson"**
 
@@ -241,7 +241,7 @@ containing information on the uncertainties of the criteria as described above, 
 If no robustness analysis is selected, then:
 - the indicator values are normalized by mean of all the possible normalization methods (or by the selected one);
 - the normalized indicators are aggregated by mean of all the possible aggregation methods (or by the selected one), 
-  by considering their assigned weights;
+  by considering their assigned weights (in the `given_weights` parameter);
 - the resulting scores of all the combinations normalization/aggregation (or the selected ones only) are provided in form 
   of a csv table and plots in png format in the output directory.
 
@@ -259,7 +259,7 @@ If the robustness analysis regards the indicators, then:
 - for each N, and for each indicator, a value is sampled from the relative assigned marginal distribution: therefore, one of N input matrix is created;
 - normalizations and aggregations are performed as in points 1,2 of the first case: a list of all the results is created in the output directory;
 - mean and standard deviation of all the results are estimated across (monte_carlo_runs x pairs of combinations);  
-- in this case, no randomness on the weights is allowed.
+- in this case, no randomness on the weights is allowed, therefore, they need to be assigned to all indicators in the `given_weights` parameter.
 
 
 ### General information and references
