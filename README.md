@@ -206,7 +206,7 @@ conda create --name <choose-a-name-like-Promcda> python=3.8
 source activate <choose-a-name-like-Promcda>
 pip install -r requirements.txt
 ```
-The Python version should de 3.8 or higher.
+The Python version should de 3.9 or higher.
 
 ### Running the code 
 From the root dir, 
