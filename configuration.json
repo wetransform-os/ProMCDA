@@ -8,7 +8,7 @@
     "aggregation": "weighted_sum"},
 
   "robustness": {
-    "robustness_on": "yes",
+    "robustness_on": "no",
     "on_single_weights": "no",
     "on_all_weights": "yes",
     "given_weights": [0.8, 0.9, 0.5, 0.5, 0.1, 0.7],

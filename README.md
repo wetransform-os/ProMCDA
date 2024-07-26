@@ -196,16 +196,17 @@ effect.
 ### Requirements
 On Windows:
 ```bash
-conda create --name <choose-a-name-like-Promcda> python=3.6
+conda create --name <choose-a-name-like-Promcda> python=3.8
 activate.bat <choose-a-name-like-Promcda>
 pip install -r requirements.txt
 ```
 On Mac and Linux:
 ```bash
-conda create --name <choose-a-name-like-Promcda> python=3.6
+conda create --name <choose-a-name-like-Promcda> python=3.8
 source activate <choose-a-name-like-Promcda>
 pip install -r requirements.txt
 ```
+The Python version should de 3.8 or higher.
 
 ### Running the code 
 From the root dir, 
@@ -231,7 +232,7 @@ The toy example helps you identify the best car models (i.e., the alternatives) 
 (e.g., Model, Fuel Efficiency, Safety Rating, Price, Cargo Space, Acceleration, Warranty). 
 In the `output_files/toy_example/` directory you can find a few different tests that have been run already, with their 
 relative configuration and output files. 
-The input matrix for the toy example is in `output_files/toy_example/cara_data.csv`. 
+The input matrix for the toy example is in `input_files/toy_example/car_data.csv`. 
 If you want to test the package yourself, you have to modify your configuration file according to the desired experiment. 
 The directory `toy_example_utilities` contains also a Jupyter notebook to allow you to modify the input matrix easily. 
 The chosen example is very simple and not suitable for a robustness analysis test. Running the robustness analysis requires an input matrix 
