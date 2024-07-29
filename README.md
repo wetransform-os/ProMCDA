@@ -209,7 +209,7 @@ pip install -r requirements.txt
 The Python version should de 3.9 or higher.
 
 ### Running ProMCDA
-From the root dir, 
+From the root dir, via command line
 - on Windows:
 ```bash
 activate.bat <your-env>
@@ -221,6 +221,22 @@ source activate <your-env>
 python3 -m mcda.mcda_run -c configuration.json
 ```
 where an example of configuration file can be found in `./configuration.json`.
+
+We tested ProMCDA on Windows, Linux and Mac. We identified a possible issue with some Windows machines caused by the
+library ```kaleido``` (used to generate static images) and reported [here](https://github.com/plotly/Kaleido/issues/126). 
+If you are experiencing any unexpected behavior of the package, we provide to you also the possibility to run it via Docker.
+
+First, build the docker image:
+```bash
+docker build -t <your-docker-image> .
+```
+
+Then, run the Docker container:
+```bash
+docker run -p 4000:80 <your-docker-image>
+```
+
+Change the configuration file for your needs.
 
 ### Running the tests
 ```bash
