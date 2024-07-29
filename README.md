@@ -18,15 +18,15 @@ A tool to estimate scores of alternatives and their uncertainties based on a Mul
 
 ### Table of Contents
 - [Contributing](#contributing)
-- [MCDA quick overview and applications](#MCDAoverview)
-- [Input information needed in the configuration file](#configuration)
+- [MCDA quick overview and applications](#mcda-quick-overview-and-applications)
+- [Input information needed in the configuration file](#input-information-needed-in-the-configuration-file)
 - [Output](#output)
 - [Requirements](#requirements)
-- [Running the code](#running)
-- [Running the tests](#testing)
-- [Toy example](#toyexample)
-- [Code overview: a high-level summary](#overview)
-- [General information and references](#references)
+- [Running ProMCDA](#running-promcda)
+- [Running the tests](#running-the-tests)
+- [Toy example](#toy-example)
+- [A high level summary](#a-high-level-summary)
+- [General information and references](#general-information-and-references)
 
 ### Contributing
 We welcome contributions from the community! Before contributing, please read our 
@@ -196,19 +196,19 @@ effect.
 ### Requirements
 On Windows:
 ```bash
-conda create --name <choose-a-name-like-Promcda> python=3.8
+conda create --name <choose-a-name-like-Promcda> python=3.9
 activate.bat <choose-a-name-like-Promcda>
 pip install -r requirements.txt
 ```
 On Mac and Linux:
 ```bash
-conda create --name <choose-a-name-like-Promcda> python=3.8
+conda create --name <choose-a-name-like-Promcda> python=3.9
 source activate <choose-a-name-like-Promcda>
 pip install -r requirements.txt
 ```
 The Python version should de 3.9 or higher.
 
-### Running the code 
+### Running ProMCDA
 From the root dir, 
 - on Windows:
 ```bash
@@ -238,7 +238,7 @@ The directory `toy_example_utilities` contains also a Jupyter notebook to allow 
 The chosen example is very simple and not suitable for a robustness analysis test. Running the robustness analysis requires an input matrix 
 containing information on the uncertainties of the criteria as described above, and it is not under the scope of the toy example. 
 
-### Code overview: a high-level summary
+### A high level summary
 If no robustness analysis is selected, then:
 - the indicator values are normalized by mean of all the possible normalization methods (or by the selected one);
 - the normalized indicators are aggregated by mean of all the possible aggregation methods (or by the selected one), 
