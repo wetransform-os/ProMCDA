@@ -1,9 +1,11 @@
+import tempfile
 import unittest
 from unittest import TestCase
 from unittest.mock import patch
 
-from mcda.utils.utils_for_main import *
-from mcda.utils.utils_for_main import _check_and_rescale_negative_indicators
+from ProMCDA.mcda import mcda_run
+from ProMCDA.mcda.utils.utils_for_main import *
+from ProMCDA.mcda.utils.utils_for_main import _check_and_rescale_negative_indicators
 
 
 class TestUtils(unittest.TestCase):
@@ -137,12 +139,34 @@ class TestUtils(unittest.TestCase):
         isinstance(out_list, list)
         TestCase.assertListEqual(self, out_list, expected_list)
 
+    def test_print_input_parameters_pdf(self):
+        # Given
+        input_matrix_1 = TestUtils.get_input_matrix_1()
+        input_matrix_2 = TestUtils.get_input_matrix_2()
+        input_matrix_3 = TestUtils.get_input_matrix_3()
+        input_matrix_alternatives = TestUtils.get_input_matrix_alternatives()
+        car_data = read_matrix("/Users/kapil/workspace/ranking-service/ProMCDA/input_files/toy_example/car_data.csv")
+        pprint(f"input_matrix_1:\n {input_matrix_1.to_json()}")
+        pprint(f"input_matrix_2:\n {input_matrix_2.to_json()}")
+        pprint(f"input_matrix_alternatives:\n {input_matrix_alternatives.to_json()}")
+        pprint(f"car_data:\n {car_data}")
+        pprint(f"car_data:\n {car_data.to_json()}")
+
+
     def test_check_parameters_pdf(self):
         # Given
         input_matrix_1 = TestUtils.get_input_matrix_1()
         input_matrix_2 = TestUtils.get_input_matrix_2()
         input_matrix_3 = TestUtils.get_input_matrix_3()
         config = TestUtils.get_test_config()
+        temp_path = None
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
+            temp_path = tmp_file.name
+
+            # Step 2: Store the DataFrame to the temporary file
+            input_matrix_1.to_csv(temp_path, index=True, columns=input_matrix_1.columns)
+        config["input_matrix_path"] = temp_path
+        config = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
 
         # When
         are_parameters_correct_1 = check_parameters_pdf(input_matrix_1, config, True)

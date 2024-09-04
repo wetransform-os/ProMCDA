@@ -7,20 +7,20 @@ following the settings given in the configuration file 'configuration.json'.
 Usage (from root directory):
     $ python3 -m mcda.mcda_run -c configuration.json
 """
-
+import json
 import time
-import logging
 
-from mcda.configuration.config import Config
-from mcda.utils.utils_for_main import *
-from mcda.utils.utils_for_plotting import *
-from mcda.utils.utils_for_parallelization import *
+from ProMCDA.mcda import mcda_ranking_run
+from ProMCDA.mcda.configuration.config import Config
+from ProMCDA.mcda.utils.utils_for_main import *
+from ProMCDA.mcda.utils.utils_for_parallelization import *
 
 log = logging.getLogger(__name__)
 
 FORMATTER: str = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=FORMATTER)
 logger = logging.getLogger("ProMCDA")
+
 
 # noinspection PyTypeChecker
 def main(input_config: dict):
@@ -43,128 +43,54 @@ def main(input_config: dict):
     :param input_config: dict
     :return: None
     """
-    is_sensitivity = None
-    is_robustness = None
-    is_robustness_indicators = 0
-    is_robustness_weights = 0
-    f_norm = None
-    f_agg = None
-    marginal_pdf = []
-    num_unique = []
+    ranking_input_config = config_dict_to_configuration_model(input_config)
+    mcda_ranking_run.main_using_model(ranking_input_config)
 
-    t = time.time()
 
+def config_dict_to_configuration_model(input_config):
     # Extracting relevant configuration values
     config = Config(input_config)
     input_matrix = read_matrix(config.input_matrix_path)
-    index_column_name = input_matrix.index.name
-    index_column_values = input_matrix.index.tolist()
-    polar = config.polarity_for_each_indicator
-    is_sensitivity = config.sensitivity['sensitivity_on']
-    is_robustness = config.robustness['robustness_on']
-    mc_runs = config.monte_carlo_sampling["monte_carlo_runs"]
-    random_seed = config.monte_carlo_sampling["random_seed"]
+    # input_matrix = input_matrix.dropna()
+    robustness = "none"
+    on_weights_level = "none"
+    if config.robustness["robustness_on"] == "yes" and config.robustness["on_single_weights"] == "yes":
+        robustness = "weights"
+        on_weights_level = "single"
+    elif config.robustness["robustness_on"] == "yes" and config.robustness["on_all_weights"] == "yes":
+        robustness = "weights"
+        on_weights_level = "all"
+    elif config.robustness["robustness_on"] == "yes" and config.robustness["on_indicators"] == "yes":
+        robustness = "indicators"
+    input_json = input_matrix.to_json()
+    os.environ['NUM_CORES'] = input_config["monte_carlo_sampling"]["num_cores"]
+    os.environ['RANDOM_SEED'] = input_config["monte_carlo_sampling"]["random_seed"]
+    ranking_input_config = {
+        "inputMatrix": input_matrix,
+        "weights": input_config["robustness"]["given_weights"],
+        "polarity": config.polarity_for_each_indicator,
+        "sensitivity": {
+            "sensitivityOn": input_config["sensitivity"]["sensitivity_on"],
+            "normalization": input_config["sensitivity"]["normalization"],
+            "aggregation": input_config["sensitivity"]["aggregation"]
+        },
+        "robustness": {
+            "robustness": robustness,
+            "onWeightsLevel": on_weights_level,
+            "givenWeights": config.robustness["given_weights"]
+        },
+        "monteCarloSampling": {
+            "monteCarloRuns": config.monte_carlo_sampling["monte_carlo_runs"],
+            "marginalDistributions": config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
+        }
+    }
+    return ranking_input_config
 
-    # Check for sensitivity-related configuration errors
-    if is_sensitivity == "no":
-        f_norm = config.sensitivity['normalization']
-        f_agg = config.sensitivity['aggregation']
-        check_config_error(f_norm not in ['minmax', 'target', 'standardized', 'rank'],
-                           'The available normalization functions are: minmax, target, standardized, rank.')
-        check_config_error(f_agg not in ['weighted_sum', 'geometric', 'harmonic', 'minimum'],
-                           'The available aggregation functions are: weighted_sum, geometric, harmonic, minimum.'
-                           '\nWatch the correct spelling in the configuration file.')
-        logger.info("ProMCDA will only use one pair of norm/agg functions: " + f_norm + '/' + f_agg)
-    else:
-        logger.info("ProMCDA will use a set of different pairs of norm/agg functions")
-
-    # Check for robustness-related configuration errors
-    if is_robustness == "no":
-        logger.info("ProMCDA will run without uncertainty on the indicators or weights")
-        logger.info("Read input matrix without uncertainties at {}".format(config.input_matrix_path))
-    else:
-        check_config_error((config.robustness["on_single_weights"] == "no" and
-                            config.robustness["on_all_weights"] == "no" and
-                            config.robustness["on_indicators"] == "no"),
-                           'Robustness analysis is requested but where is not defined: weights or indicators? Please clarify.')
-
-        check_config_error((config.robustness["on_single_weights"] == "yes" and
-                            config.robustness["on_all_weights"] == "yes" and
-                            config.robustness["on_indicators"] == "no"),
-                           'Robustness analysis is requested on the weights: but on all or one at a time? Please clarify.')
-
-        check_config_error(((config.robustness["on_single_weights"] == "yes" and
-                             config.robustness["on_all_weights"] == "yes" and
-                             config.robustness["on_indicators"] == "yes") or
-                            (config.robustness["on_single_weights"] == "yes" and
-                             config.robustness["on_all_weights"] == "no" and
-                             config.robustness["on_indicators"] == "yes") or
-                            (config.robustness["on_single_weights"] == "no" and
-                             config.robustness["on_all_weights"] == "yes" and
-                             config.robustness["on_indicators"] == "yes")),
-                           'Robustness analysis is requested: but on weights or indicators? Please clarify.')
-
-        # Check seetings for robustness analysis on weights or indicators
-        condition_robustness_on_weights = (
-            (config.robustness['on_single_weights'] == 'yes' and
-            config.robustness['on_all_weights'] == 'no' and
-            config.robustness['on_indicators'] == 'no') or
-            (config.robustness['on_single_weights'] == 'no' and
-            config.robustness['on_all_weights'] == 'yes' and
-            config.robustness['on_indicators'] == 'no')
-        )
-        condition_robustness_on_indicators = (
-            (config.robustness['on_single_weights'] == 'no' and
-            config.robustness['on_all_weights'] == 'no' and
-            config.robustness['on_indicators'] == 'yes')
-        )
-
-
-        is_robustness_weights, is_robustness_indicators = \
-            check_config_setting(condition_robustness_on_weights,
-                                 condition_robustness_on_indicators,
-                                  mc_runs, random_seed)
-
-        marginal_pdf = config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
-        logger.info("Read input matrix with uncertainty of the indicators at {}".format(
-            config.input_matrix_path))
-
-    # Check the input matrix for duplicated rows in the alternatives, rescale negative indicator values and
-    # drop the column containing the alternatives
-    input_matrix_no_alternatives = check_input_matrix(input_matrix)
-    if is_robustness_indicators == 0:
-        num_indicators = input_matrix_no_alternatives.shape[1]
-    else:
-        num_non_exact_and_non_poisson = len(marginal_pdf) - marginal_pdf.count('exact') - marginal_pdf.count('poisson')
-        num_indicators = (input_matrix_no_alternatives.shape[1] - num_non_exact_and_non_poisson)
-
-    # Process indicators and weights based on input parameters in the configuration
-    polar, weights = process_indicators_and_weights(config, input_matrix_no_alternatives, is_robustness_indicators,
-                                                    is_robustness_weights, polar, mc_runs, num_indicators)
-
-    # Check the number of indicators, weights, and polarities
-    try:
-        check_indicator_weights_polarities(num_indicators, polar, config)
-    except ValueError as e:
-        logging.error(str(e), stack_info=True)
-        raise
-
-    # If there is no uncertainty of the indicators:
-    if is_robustness_indicators == 0:
-        run_mcda_without_indicator_uncertainty(input_config, index_column_name, index_column_values,
-                                               input_matrix_no_alternatives, weights, f_norm, f_agg,
-                                               is_robustness_weights)
-    # else (i.e. there is uncertainty):
-    else:
-        run_mcda_with_indicator_uncertainty(input_config, input_matrix_no_alternatives, index_column_name,
-                                            index_column_values, mc_runs, random_seed, is_sensitivity, f_agg, f_norm,
-                                            weights, polar, marginal_pdf)
-
-    logger.info("ProMCDA finished calculations: check the output files")
-    elapsed = time.time() - t
-    logger.info("All calculations finished in seconds {}".format(elapsed))
 
 if __name__ == '__main__':
+    t = time.time()
     config_path = parse_args()
     input_config = get_config(config_path)
-    main(input_config=input_config)
+    main(input_config)
+    elapsed = time.time() - t
+    logger.info("All calculations finished in seconds {}".format(elapsed))

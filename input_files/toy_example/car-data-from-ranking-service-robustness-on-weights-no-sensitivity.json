@@ -1,0 +1,34 @@
+{
+  "inputMatrix": {
+    "Fuel Efficiency":{"A":30.0,"B":25.0,"C":35.0,"D":40.0,"E":38.0,"F":40.0},
+    "Safety Rating":{"A":5.0,"B":4.0,"C":5.0,"D":3.0,"E":1.0,"F":4.0},
+    "Price":{"A":25000.0,"B":30000.0,"C":20000.0,"D":24000.0,"E":15000.0,"F":28000.0},
+    "Cargo 'Space":{"A":15.0,"B":20.0,"C":10.0,"D":30.0,"E":10.0,"F":15.0},
+    "Acceleration":{"A":8.0,"B":6.0,"C":10.0,"D":7.0,"E":10.0,"F":9.0},
+    "Warranty":{"A":3.0,"B":5.0,"C":2.0,"D":1.0,"E":3.0,"F":4.0}
+  },
+  "weights": [
+    0.8, 0.9, 0.5, 0.5, 0.1, 0.7
+  ],
+  "polarity": [
+    "+","+","-","+","+","+"
+  ],
+  "sensitivity": {
+    "sensitivityOn": "yes",
+    "normalization": "minmax",
+    "aggregation": "weighted_sum"
+  },
+  "robustness": {
+    "robustness": "weights",
+    "onWeightsLevel": "all",
+    "givenWeights": [
+      0.8, 0.9, 0.5, 0.5, 0.1, 0.7
+    ]
+  },
+  "monteCarloSampling": {
+    "monteCarloRuns": 10000,
+    "marginalDistributions": [
+      "normal", "normal", "normal", "normal", "normal", "normal"
+    ]
+  }
+}

@@ -71,7 +71,7 @@ class Config:
         # keys_of_dict_values = self._keys_of_dict_values
 
         self._validate(input_config, valid_keys, str_values,
-                       int_values, list_values, dict_values)
+                           int_values, list_values, dict_values)
         self._config = copy.deepcopy(input_config)
 
     def _validate(self, input_config, valid_keys, str_values, int_values, list_values, dict_values):

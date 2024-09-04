@@ -1,9 +1,13 @@
+import tempfile
+
 import pandas as pd
 import numpy as np
 import unittest
 
-from mcda.mcda_with_robustness import MCDAWithRobustness
-from mcda.configuration.config import Config
+from ProMCDA.mcda import mcda_run
+from ProMCDA.mcda.mcda_with_robustness import MCDAWithRobustness
+from ProMCDA.mcda.configuration.config import Config
+from ProMCDA.models.configuration import Configuration
 
 
 class TestMCDA_with_robustness(unittest.TestCase):
@@ -100,7 +104,7 @@ class TestMCDA_with_robustness(unittest.TestCase):
         config = TestMCDA_with_robustness.get_test_config()
         config = Config(config)
         mcda_with_robustness = MCDAWithRobustness(config, input_matrix, is_exact_pdf_mask, is_poisson_pdf_mask)
-        output_list = mcda_with_robustness.convert_list(out_list)
+        output_list = MCDAWithRobustness.convert_list(out_list)
 
         return output_list
 
@@ -127,7 +131,17 @@ class TestMCDA_with_robustness(unittest.TestCase):
     def test_convert_list(self):
         # Given
         input_matrix = self.get_input_matrix()
+
+        temp_path = None
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
+            temp_path = tmp_file.name
+
+            # Step 2: Store the DataFrame to the temporary file
+            input_matrix.to_csv(temp_path, index=True, columns=input_matrix.columns)
+
         config = TestMCDA_with_robustness.get_test_config()
+        config["input_matrix_path"] = temp_path
+        config_based_on_model = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
         input_list = TestMCDA_with_robustness.get_input_list()
         expected_output_list = TestMCDA_with_robustness.get_expected_out_list()
         is_exact_pdf_mask = (1, 0, 0, 0)
@@ -135,7 +149,7 @@ class TestMCDA_with_robustness(unittest.TestCase):
 
         # When
         config = Config(config)
-        mcda_with_robustness = MCDAWithRobustness(config, input_matrix, is_exact_pdf_mask, is_poisson_pdf_mask)
+        mcda_with_robustness = MCDAWithRobustness(config_based_on_model, input_matrix, is_exact_pdf_mask, is_poisson_pdf_mask)
         output_list = mcda_with_robustness.convert_list(input_list)
 
         # Then
@@ -148,17 +162,26 @@ class TestMCDA_with_robustness(unittest.TestCase):
     def test_create_n_randomly_sampled_matrices(self):
         # Given
         input_matrix = self.get_input_matrix()
-        input_matrix_rescale = self.get_input_matrix_rescale()
+        temp_path = None
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
+            temp_path = tmp_file.name
+
+            # Step 2: Store the DataFrame to the temporary file
+            input_matrix.to_csv(temp_path, index=True, columns=input_matrix.columns)
+
         config = TestMCDA_with_robustness.get_test_config()
+        config["input_matrix_path"] = temp_path
+        input_matrix_rescale = self.get_input_matrix_rescale()
+        config_based_on_model = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
         is_exact_pdf_mask = (1, 0, 0, 0)
         is_poisson_pdf_mask = (0, 0, 0, 1)
 
         # When
-        config = Config(config)
-        mcda_with_robustness = MCDAWithRobustness(config, input_matrix,
+        config_based_on_model = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
+        mcda_with_robustness = MCDAWithRobustness(config_based_on_model, input_matrix,
                                                   is_exact_pdf_mask, is_poisson_pdf_mask)
         n_random_matrices = mcda_with_robustness.create_n_randomly_sampled_matrices()
-        mcda_with_robustness_rescale = MCDAWithRobustness(config, input_matrix_rescale,
+        mcda_with_robustness_rescale = MCDAWithRobustness(config_based_on_model, input_matrix_rescale,
                                                           is_exact_pdf_mask, is_poisson_pdf_mask)
         n_random_matrices_rescale = mcda_with_robustness_rescale.create_n_randomly_sampled_matrices()
 
@@ -166,7 +189,7 @@ class TestMCDA_with_robustness(unittest.TestCase):
 
         # Then
         assert isinstance(n_random_matrices, list)
-        assert len(n_random_matrices) == config.monte_carlo_sampling["monte_carlo_runs"]
+        assert len(n_random_matrices) == config_based_on_model.monte_carlo_sampling.monte_carlo_runs
         for df1, df2 in zip(n_random_matrices, exp_n_random_matrices):
             assert df1.shape == (4, 4)
             assert df1.values.all() == df2.values.all()

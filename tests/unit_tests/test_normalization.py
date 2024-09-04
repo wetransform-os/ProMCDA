@@ -4,8 +4,8 @@ import pandas as pd
 
 from pandas.testing import assert_frame_equal
 from numpy.testing import assert_almost_equal
-from mcda.utils.utils_for_main import *
-from mcda.mcda_functions.normalization import Normalization
+from ProMCDA.mcda.utils.utils_for_main import *
+from ProMCDA.mcda.mcda_functions.normalization import Normalization
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 resources_directory = os.path.join(current_directory, '..', 'resources')

@@ -1,14 +1,16 @@
 import os
+import tempfile
 import unittest
 import pandas as pd
 from unittest import TestCase
 
-
-from mcda.mcda_without_robustness import MCDAWithoutRobustness
-from mcda.configuration.config import Config
-from mcda.mcda_functions.aggregation import Aggregation
-import mcda.utils.utils_for_main as utils_for_main
-import mcda.utils.utils_for_parallelization as utils_for_parallelization
+from ProMCDA.mcda import mcda_run
+from ProMCDA.mcda.mcda_without_robustness import MCDAWithoutRobustness
+from ProMCDA.mcda.configuration.config import Config
+from ProMCDA.mcda.mcda_functions.aggregation import Aggregation
+import ProMCDA.mcda.utils.utils_for_main as utils_for_main
+import ProMCDA.mcda.utils.utils_for_parallelization as utils_for_parallelization
+from ProMCDA.models.configuration import Configuration
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 resources_directory = os.path.join(current_directory, '..', 'resources')
@@ -124,11 +126,19 @@ class TestMCDA_without_robustness(unittest.TestCase):
     def test_normalize_indicators(self):
         # Given
         config_general = TestMCDA_without_robustness.get_test_config()
-        config_general = Config(config_general)
         input_matrix = TestMCDA_without_robustness.get_input_matrix()
+        temp_path = None
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
+            temp_path = tmp_file.name
+
+            # Step 2: Store the DataFrame to the temporary file
+            input_matrix.to_csv(temp_path, index=True, columns=input_matrix.columns)
+        config_general["input_matrix_path"] = temp_path
+        config_general = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config_general))
 
         config_simple_mcda = TestMCDA_without_robustness.get_test_config_simple_mcda()
-        config_simple_mcda = Config(config_simple_mcda)
+        config_simple_mcda["input_matrix_path"] = temp_path
+        config_simple_mcda = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config_simple_mcda))
 
         # When
         mcda_no_uncert_general = MCDAWithoutRobustness(config_general, input_matrix)
@@ -163,25 +173,31 @@ class TestMCDA_without_robustness(unittest.TestCase):
     def test_aggregate_indicators(self):
         # Given
         config = TestMCDA_without_robustness.get_test_config()
-        config = Config(config)
         input_matrix = TestMCDA_without_robustness.get_input_matrix()
+        temp_path = None
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
+            temp_path = tmp_file.name
 
+            # Step 2: Store the DataFrame to the temporary file
+            input_matrix.to_csv(temp_path, index=True, columns=input_matrix.columns)
+        config["input_matrix_path"] = temp_path
+        config = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
         config_simple_mcda = TestMCDA_without_robustness.get_test_config_simple_mcda()
-        config_simple_mcda = Config(config_simple_mcda)
+        config_simple_mcda["input_matrix_path"] = temp_path
+        config_simple_mcda = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config_simple_mcda))
 
         # When
-        weights = config.robustness["given_weights"]
+        weights = config.robustness.given_weights
 
         mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
         normalized_indicators = mcda_no_uncert.normalize_indicators()
         mcda_no_uncert_simple_mcdaa = MCDAWithoutRobustness(config_simple_mcda, input_matrix)
         normalized_indicators_simple_mcda = mcda_no_uncert_simple_mcdaa.normalize_indicators(
-            config_simple_mcda.sensitivity['normalization'])
+            config_simple_mcda.sensitivity.normalization)
 
         res = mcda_no_uncert.aggregate_indicators(normalized_indicators, weights)
         res_simple_mcda = mcda_no_uncert_simple_mcdaa.aggregate_indicators(normalized_indicators_simple_mcda, weights,
-                                                                           config_simple_mcda.sensitivity[
-                                                                               'aggregation'])
+                                                                           config_simple_mcda.sensitivity.aggregation)
 
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
                      'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero',
@@ -204,24 +220,34 @@ class TestMCDA_without_robustness(unittest.TestCase):
     def test_aggregate_indicators_in_parallel(self):
         # Given
         config = TestMCDA_without_robustness.get_test_config_randomness()
-        config = Config(config)
         input_matrix = TestMCDA_without_robustness.get_input_matrix()
-        weights = config.robustness["given_weights"]
+        temp_path = None
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
+            temp_path = tmp_file.name
+
+            # Step 2: Store the DataFrame to the temporary file
+            input_matrix.to_csv(temp_path, index=True, columns=input_matrix.columns)
+
+        config["input_matrix_path"] = temp_path
+        config_based_on_model = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
+        weights = config_based_on_model.robustness.given_weights
         agg = Aggregation(weights)
 
         config_randomness_simple_mcda = TestMCDA_without_robustness.get_test_config_randomness_simple_mcda()
-        config_randomness_simple_mcda = Config(config_randomness_simple_mcda)
+        config_randomness_simple_mcda["input_matrix_path"] = temp_path
+        config_randomness_simple_mcda = (
+            Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config_randomness_simple_mcda)))
 
         # When
-        mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
+        mcda_no_uncert = MCDAWithoutRobustness(config_based_on_model, input_matrix)
         normalized_indicators = mcda_no_uncert.normalize_indicators()
         res = utils_for_parallelization.aggregate_indicators_in_parallel(agg, normalized_indicators)
 
-        mcda_no_uncert_simple_mcda = MCDAWithoutRobustness(config_randomness_simple_mcda, input_matrix)
+        mcda_no_uncert_simple_mcda = MCDAWithoutRobustness(config_based_on_model, input_matrix)
         normalized_indicators = mcda_no_uncert_simple_mcda.normalize_indicators(
-            config_randomness_simple_mcda.sensitivity['normalization'])
+            config_randomness_simple_mcda.sensitivity.normalization)
         res_simple_mcda = utils_for_parallelization.aggregate_indicators_in_parallel(agg, normalized_indicators,
-            config_randomness_simple_mcda.sensitivity['aggregation'])
+            config_randomness_simple_mcda.sensitivity.aggregation)
 
         col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
                      'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero',

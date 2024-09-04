@@ -1,10 +1,12 @@
+import tempfile
 import unittest
 from statistics import mean, stdev
 
 from pandas.testing import assert_frame_equal
 
-from mcda.mcda_without_robustness import *
-from mcda.utils.utils_for_parallelization import *
+from ProMCDA.mcda import mcda_run
+from ProMCDA.mcda.mcda_without_robustness import *
+from ProMCDA.mcda.utils.utils_for_parallelization import *
 
 
 class TestUtilsForParallelization(unittest.TestCase):
@@ -74,7 +76,15 @@ class TestUtilsForParallelization(unittest.TestCase):
         data = {'0': [1, 1, 2, 3], '1': [4, 5, 6, 7], '2': [8, 9, 10, 11], '3': [12, 13, 14, 15], '4': [16, 17, 18, 19]}
         df = pd.DataFrame(data=data)
         config = TestUtilsForParallelization.get_test_config()
-        config = Config(config)
+        temp_path = None
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
+            temp_path = tmp_file.name
+
+            # Step 2: Store the DataFrame to the temporary file
+            df.to_csv(temp_path, index=True, columns=df.columns)
+        config["input_matrix_path"] = temp_path
+        config = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
+
         mcda_no_var = MCDAWithoutRobustness(config, df)
         df_norm = mcda_no_var.normalize_indicators()
 

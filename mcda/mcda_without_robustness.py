@@ -3,9 +3,10 @@ import copy
 import logging
 import pandas as pd
 
-from mcda.configuration.config import Config
-from mcda.mcda_functions.normalization import Normalization
-from mcda.mcda_functions.aggregation import Aggregation
+from ProMCDA.mcda.configuration.config import Config
+from ProMCDA.mcda.mcda_functions.normalization import Normalization
+from ProMCDA.mcda.mcda_functions.aggregation import Aggregation
+from ProMCDA.models.configuration import Configuration
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ class MCDAWithoutRobustness:
     However, it's possible to have randomly sampled weights.
     """
 
-    def __init__(self, config: Config, input_matrix: pd.DataFrame):
+    def __init__(self, config: Configuration, input_matrix: pd.DataFrame):
         self.normalized_indicators = None
         self.weights = None
         self._config = copy.deepcopy(config)
@@ -50,7 +51,7 @@ class MCDAWithoutRobustness:
           and another with the range (0.1, +inf).
         """
         norm = Normalization(self._input_matrix,
-                             self._config.polarity_for_each_indicator)
+                             self._config.polarity)
 
         normalized_indicators = {}
 
