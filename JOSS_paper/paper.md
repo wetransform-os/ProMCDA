@@ -57,16 +57,16 @@ The tool is designed for use by both researchers and practitioners in operations
 - **Data Aggregation:** Estimating a single composite indicator from all criteria.
 
 
-`ProMCDA` receives all necessary input information via a configuration file in JSON format (for more details, see the [README](https://github.com/wetransform-os/ProMCDA/blob/main/README.md)). The alternatives are represented as rows in an input matrix (CSV file format), with criteria values in columns. The tool offers the flexibility to conduct sensitivity analysis by comparing the different scores associated with alternatives using various combinations of normalization and aggregation functions. `ProMCDA` currently implements four normalization and four aggregation functions, as described in [Table 1](#Table 1) and [Table 2](#Table 2), respectively. However, the user can run `ProMCDA` with a specific pair of normalization and aggregation functions, thus switching off the sensitivity analysis. <br />
+`ProMCDA` receives all necessary input information via a configuration file in JSON format (for more details, see the [README](https://github.com/wetransform-os/ProMCDA/blob/main/README.md)). The alternatives are represented as rows in an input matrix (CSV file format), with criteria values in columns. The tool offers the flexibility to conduct sensitivity analysis by comparing the different scores associated with alternatives using various combinations of normalization and aggregation functions. `ProMCDA` currently implements four normalization and four aggregation functions, as described in [Table 1](#Table1) and [Table 2](#Table2), respectively. However, the user can run `ProMCDA` with a specific pair of normalization and aggregation functions, thus switching off the sensitivity analysis. <br />
 
-<a name="Table 1"></a>*Table 1: Normalization functions used in `ProMCDA`.*
+<a name="Table 1"></a>*Table1: Normalization functions used in `ProMCDA`.*
 \begin{center} 
 \includegraphics[width=300px]{Table1.png}
 \end{center} 
 
 <br />
 
-<a name="Table 2"></a>*Table 2: Aggregation functions used in `ProMCDA`.The sum of the weights is normalized to 1 as in @langhans_method_2014.*
+<a name="Table 2"></a>*Table2: Aggregation functions used in `ProMCDA`.The sum of the weights is normalized to 1 as in @langhans_method_2014.*
 \begin{center} 
 \includegraphics[width=300px]{Table2.png}
 \end{center} 
@@ -92,9 +92,9 @@ Once the pdf for each criterion is selected and the input parameters are in plac
 
 Once the pdfs for each criterion are selected and the input parameters are in the input CSV file, `ProMCDA` randomly samples n-values of each criterion per alternative from the given pdf to evaluate the alternatives' scores and rankings, taking into account robustness at the criteria level.
 
-Finally, in all possible cases (i.e., a simple MCDA, MCDA with sensitivity analysis for the different normalization/aggregation functions used, MCDA with robustness investigation related either to randomness on the weights or on the indicators), `ProMCDA` will output a CSV file with the scores/average scores and their plots. For a quick overview of the functionality of `ProMCDA`, refer to  [Table 3](#Table 3). For more details, refer to the [README](https://github.com/wetransform-os/ProMCDA/blob/main/README.md).
+Finally, in all possible cases (i.e., a simple MCDA, MCDA with sensitivity analysis for the different normalization/aggregation functions used, MCDA with robustness investigation related either to randomness on the weights or on the indicators), `ProMCDA` will output a CSV file with the scores/average scores and their plots. For a quick overview of the functionality of `ProMCDA`, refer to  [Table 3](#Table3). For more details, refer to the [README](https://github.com/wetransform-os/ProMCDA/blob/main/README.md).
 
-<a name="Table 3"></a>*Table 3: Overview on the functionalities of ProMCDA.*
+<a name="Table 3"></a>*Table3: Overview on the functionalities of ProMCDA.*
 \begin{center} 
 \includegraphics[width=300px]{Table3.png}
 \end{center} 
