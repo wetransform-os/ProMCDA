@@ -139,19 +139,6 @@ class TestUtils(unittest.TestCase):
         isinstance(out_list, list)
         TestCase.assertListEqual(self, out_list, expected_list)
 
-    def test_print_input_parameters_pdf(self):
-        # Given
-        input_matrix_1 = TestUtils.get_input_matrix_1()
-        input_matrix_2 = TestUtils.get_input_matrix_2()
-        input_matrix_3 = TestUtils.get_input_matrix_3()
-        input_matrix_alternatives = TestUtils.get_input_matrix_alternatives()
-        car_data = read_matrix("/Users/kapil/workspace/ranking-service/ProMCDA/input_files/toy_example/car_data.csv")
-        pprint(f"input_matrix_1:\n {input_matrix_1.to_json()}")
-        pprint(f"input_matrix_2:\n {input_matrix_2.to_json()}")
-        pprint(f"input_matrix_alternatives:\n {input_matrix_alternatives.to_json()}")
-        pprint(f"car_data:\n {car_data}")
-        pprint(f"car_data:\n {car_data.to_json()}")
-
 
     def test_check_parameters_pdf(self):
         # Given

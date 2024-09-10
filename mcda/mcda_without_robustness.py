@@ -6,7 +6,7 @@ import pandas as pd
 from ProMCDA.mcda.configuration.config import Config
 from ProMCDA.mcda.mcda_functions.normalization import Normalization
 from ProMCDA.mcda.mcda_functions.aggregation import Aggregation
-from ProMCDA.mcda.models import Configuration
+from ProMCDA.mcda.models.configuration import Configuration
 
 log = logging.getLogger(__name__)
 

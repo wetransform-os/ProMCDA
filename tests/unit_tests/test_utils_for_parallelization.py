@@ -6,6 +6,7 @@ from pandas.testing import assert_frame_equal
 
 from ProMCDA.mcda import mcda_run
 from ProMCDA.mcda.mcda_without_robustness import *
+from ProMCDA.mcda.models.configuration import Configuration
 from ProMCDA.mcda.utils.utils_for_parallelization import *
 
 

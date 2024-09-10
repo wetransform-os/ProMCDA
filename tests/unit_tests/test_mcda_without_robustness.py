@@ -10,7 +10,7 @@ from ProMCDA.mcda.configuration.config import Config
 from ProMCDA.mcda.mcda_functions.aggregation import Aggregation
 import ProMCDA.mcda.utils.utils_for_main as utils_for_main
 import ProMCDA.mcda.utils.utils_for_parallelization as utils_for_parallelization
-from ProMCDA.mcda.models import Configuration
+from ProMCDA.mcda.models.configuration import Configuration
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 resources_directory = os.path.join(current_directory, '..', 'resources')
