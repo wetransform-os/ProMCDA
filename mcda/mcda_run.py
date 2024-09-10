@@ -63,8 +63,8 @@ def config_dict_to_configuration_model(input_config):
     elif config.robustness["robustness_on"] == "yes" and config.robustness["on_indicators"] == "yes":
         robustness = "indicators"
     input_json = input_matrix.to_json()
-    os.environ['NUM_CORES'] = input_config["monte_carlo_sampling"]["num_cores"]
-    os.environ['RANDOM_SEED'] = input_config["monte_carlo_sampling"]["random_seed"]
+    os.environ['NUM_CORES'] = str(input_config["monte_carlo_sampling"]["num_cores"])
+    os.environ['RANDOM_SEED'] = str(input_config["monte_carlo_sampling"]["random_seed"])
     ranking_input_config = {
         "inputMatrix": input_matrix,
         "weights": input_config["robustness"]["given_weights"],

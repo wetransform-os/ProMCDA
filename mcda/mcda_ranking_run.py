@@ -22,8 +22,8 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=FORMATTER)
 logger = logging.getLogger("ProMCDA")
 
 # randomly assign seed if not specified as environment variable
-RANDOM_SEED = os.environ.get('random_seed') if os.environ.get('random_seed') else 67
-NUM_CORES = os.environ.get('num_cores') if os.environ.get('num_cores') else 1
+RANDOM_SEED = int(os.environ.get('RANDOM_SEED')) if os.environ.get('RANDOM_SEED') else 67
+NUM_CORES = int(os.environ.get('NUM_CORES')) if os.environ.get('NUM_CORES') else 1
 
 
 # noinspection PyTypeChecker
