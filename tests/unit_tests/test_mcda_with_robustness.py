@@ -7,7 +7,7 @@ import unittest
 from ProMCDA.mcda import mcda_run
 from ProMCDA.mcda.mcda_with_robustness import MCDAWithRobustness
 from ProMCDA.mcda.configuration.config import Config
-from ProMCDA.models.configuration import Configuration
+from ProMCDA.mcda.models import Configuration
 
 
 class TestMCDA_with_robustness(unittest.TestCase):

@@ -21,8 +21,8 @@ import ProMCDA.mcda.utils.utils_for_parallelization as utils_for_parallelization
 import ProMCDA.mcda.utils.utils_for_plotting as utils_for_plotting
 from ProMCDA.mcda.mcda_without_robustness import MCDAWithoutRobustness
 from ProMCDA.mcda.mcda_with_robustness import MCDAWithRobustness
+from ProMCDA.mcda.models.configuration import Configuration
 from ProMCDA.mcda.utils.application_enums import RobustnessAnalysis, RobustnessWightLevels, SensitivityAnalysis
-from ProMCDA.models.configuration import Configuration
 
 DEFAULT_INPUT_DIRECTORY_PATH = './input_files'  # present in the root directory of ProMCDA
 DEFAULT_OUTPUT_DIRECTORY_PATH = './output_files'  # present in the root directory of ProMCDA

@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 from ProMCDA.mcda.utils.application_enums import MonteCarloMarginalDistributions
-from ProMCDA.models.configuration import Configuration
+from ProMCDA.mcda.models import Configuration
 
 log = logging.getLogger(__name__)
 

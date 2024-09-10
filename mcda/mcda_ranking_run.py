@@ -13,7 +13,6 @@ from ProMCDA.mcda.utils.application_enums import *
 from ProMCDA.mcda.utils.utils_for_main import *
 from ProMCDA.mcda.utils.utils_for_plotting import *
 from ProMCDA.mcda.utils.utils_for_parallelization import *
-from ProMCDA.models.configuration import Configuration
 
 log = logging.getLogger(__name__)
 
