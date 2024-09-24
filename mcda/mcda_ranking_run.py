@@ -161,6 +161,11 @@ def read_matrix_from_file(column_names_list: list[str], file_from_stream) -> {}:
 
 
 if __name__ == '__main__':
+    '''
+    Entry point to run code with ranking-service input configuration
+    command to run 
+    > python3 -m ProMCDA.mcda.mcda_ranking_run -c ProMCDA/input_files/toy_example/car-data-input-sample-from-ranking-service.json
+    '''
     t = time.time()
     config_path = parse_args()
     input_config = get_config(config_path)

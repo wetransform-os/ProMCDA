@@ -1,4 +1,3 @@
-import copy
 import io
 import os
 import argparse
@@ -7,7 +6,6 @@ import pickle
 import random
 import logging
 import sys
-from pprint import pprint
 from typing import Union, Any, List, Tuple
 from typing import Optional
 
@@ -24,8 +22,8 @@ from ProMCDA.mcda.mcda_with_robustness import MCDAWithRobustness
 from ProMCDA.mcda.models.configuration import Configuration
 from ProMCDA.mcda.utils.application_enums import RobustnessAnalysis, RobustnessWightLevels, SensitivityAnalysis
 
-DEFAULT_INPUT_DIRECTORY_PATH = './input_files'  # present in the root directory of ProMCDA
-DEFAULT_OUTPUT_DIRECTORY_PATH = './output_files'  # present in the root directory of ProMCDA
+DEFAULT_INPUT_DIRECTORY_PATH = 'ProMCDA/input_files'  # present in the root directory of ProMCDA
+DEFAULT_OUTPUT_DIRECTORY_PATH = 'ProMCDA/output_files'  # present in the root directory of ProMCDA
 
 input_directory_path = os.environ.get('PROMCDA_INPUT_DIRECTORY_PATH') if os.environ.get(
     'PROMCDA_INPUT_DIRECTORY_PATH') else DEFAULT_INPUT_DIRECTORY_PATH
@@ -360,7 +358,11 @@ def read_matrix(input_matrix_path: str) -> pd.DataFrame:
     :rtype: pd.DataFrame
     """
     try:
-        full_file_path = os.path.join(input_directory_path, input_matrix_path)
+        full_file_path = None
+        if os.path.exists(input_matrix_path):
+            full_file_path = input_matrix_path
+        else:
+            full_file_path = os.path.join(input_directory_path, input_matrix_path)
         with open(full_file_path, 'r') as fp:
             logger.info("Reading the input matrix in {}".format(full_file_path))
             matrix = pd.read_csv(fp, sep="[,;:]", decimal='.', engine='python')
@@ -418,7 +420,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', help='config path', required=True)
     args = parser.parse_args()
-
+    print("args")
+    print(args)
     return args.config
 
 
@@ -471,7 +474,7 @@ def save_df(df: pd.DataFrame, folder_path: str, filename: str) -> {}:
         return
 
     full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
-
+    logger.info("Saving results in {}".format(full_output_path))
     try:
         ensure_directory_exists(os.path.dirname(full_output_path))
     except Exception as e:
@@ -516,6 +519,7 @@ def save_dict(dictionary: dict, folder_path: str, filename: str) -> {}:
         return
 
     full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
+    logger.info("Saving results in {}".format(full_output_path))
     try:
         ensure_directory_exists(os.path.dirname(full_output_path))
     except Exception as e:
@@ -558,6 +562,7 @@ def save_config(config: Configuration, folder_path: str, filename: str):
         return
 
     full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
+    logger.info("Saving results in {}".format(full_output_path))
     try:
         ensure_directory_exists(os.path.dirname(full_output_path))
     except Exception as e:
@@ -1194,7 +1199,6 @@ def _save_output_files(scores: Optional[pd.DataFrame],
     """
     output_filepath = "toy_example"
     # full_output_path = os.path.join(output_directory_path, output_filepath )
-    logger.info("Saving results in {}".format(output_filepath))
     # check_path_exists(output_filepath)
     response = {}
     if scores is not None and not scores.empty:

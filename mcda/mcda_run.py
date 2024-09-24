@@ -7,7 +7,6 @@ following the settings given in the configuration file 'configuration.json'.
 Usage (from root directory):
     $ python3 -m mcda.mcda_run -c configuration.json
 """
-import json
 import time
 
 from ProMCDA.mcda import mcda_ranking_run
@@ -51,7 +50,6 @@ def config_dict_to_configuration_model(input_config):
     # Extracting relevant configuration values
     config = Config(input_config)
     input_matrix = read_matrix(config.input_matrix_path)
-    # input_matrix = input_matrix.dropna()
     robustness = "none"
     on_weights_level = "none"
     if config.robustness["robustness_on"] == "yes" and config.robustness["on_single_weights"] == "yes":
@@ -62,7 +60,6 @@ def config_dict_to_configuration_model(input_config):
         on_weights_level = "all"
     elif config.robustness["robustness_on"] == "yes" and config.robustness["on_indicators"] == "yes":
         robustness = "indicators"
-    input_json = input_matrix.to_json()
     os.environ['NUM_CORES'] = str(input_config["monte_carlo_sampling"]["num_cores"])
     os.environ['RANDOM_SEED'] = str(input_config["monte_carlo_sampling"]["random_seed"])
     ranking_input_config = {
@@ -88,6 +85,11 @@ def config_dict_to_configuration_model(input_config):
 
 
 if __name__ == '__main__':
+    '''
+    Entry class if you want to run ProMCDA from cli.
+    The command to run the code must be run from outside of root directory. 
+    > python3 -m ProMCDA.mcda.mcda_run -c ProMCDA/configuration.json
+    '''
     t = time.time()
     config_path = parse_args()
     input_config = get_config(config_path)
