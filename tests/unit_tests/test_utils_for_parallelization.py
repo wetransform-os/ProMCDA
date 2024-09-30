@@ -4,6 +4,7 @@ from statistics import mean, stdev
 
 from pandas.testing import assert_frame_equal
 
+from ProMCDA.mcda.utils.utils_for_main import *
 from ProMCDA.mcda import mcda_run
 from ProMCDA.mcda.mcda_without_robustness import *
 from ProMCDA.mcda.models.configuration import Configuration
@@ -84,7 +85,7 @@ class TestUtilsForParallelization(unittest.TestCase):
             # Step 2: Store the DataFrame to the temporary file
             df.to_csv(temp_path, index=True, columns=df.columns)
         config["input_matrix_path"] = temp_path
-        config = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
+        config = Configuration.from_dict(config_dict_to_configuration_model(config))
 
         mcda_no_var = MCDAWithoutRobustness(config, df)
         df_norm = mcda_no_var.normalize_indicators()

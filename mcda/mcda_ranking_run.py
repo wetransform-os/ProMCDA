@@ -5,11 +5,10 @@ This script serves as the main entry point for running all pieces of functionali
 following the settings given in the configuration file 'configuration.json'.
 
 Usage (from root directory):
-    $ python3 -m mcda.mcda_run -c configuration.json
+    $ python3 -m ProMCDA.mcda.mcda_ranking_run -c ProMCDA/input_files/toy_example/car-data-input-sample-from-ranking-service.json
 """
 
 import time
-from ProMCDA.mcda.utils.application_enums import *
 from ProMCDA.mcda.utils.utils_for_main import *
 from ProMCDA.mcda.utils.utils_for_plotting import *
 from ProMCDA.mcda.utils.utils_for_parallelization import *
@@ -26,7 +25,7 @@ NUM_CORES = int(os.environ.get('NUM_CORES')) if os.environ.get('NUM_CORES') else
 
 
 # noinspection PyTypeChecker
-def main_using_model(input_config: dict) -> dict:
+def main(input_config: dict) -> dict:
     """
     Execute the ProMCDA (Probabilistic Multi-Criteria Decision Analysis) process.
 
@@ -50,7 +49,6 @@ def main_using_model(input_config: dict) -> dict:
     is_robustness_weights = 0
     f_norm = None
     f_agg = None
-    marginal_pdf = []
 
     # Extracting relevant configuration values
     config = Configuration.from_dict(input_config)
@@ -60,12 +58,14 @@ def main_using_model(input_config: dict) -> dict:
     polar = config.polarity
     robustness = config.robustness.robustness
     mc_runs = config.monte_carlo_sampling.monte_carlo_runs
+    marginal_pdf = config.monte_carlo_sampling.marginal_distributions
 
-    f_agg, f_norm, is_robustness_indicators, is_robustness_weights, marginal_pdf = verify_input(config, f_agg, f_norm,
-                                                                                                is_robustness_indicators,
-                                                                                                is_robustness_weights,
-                                                                                                marginal_pdf, mc_runs,
-                                                                                                robustness)
+    f_agg, f_norm, is_robustness_indicators, is_robustness_weights = verify_input(config, f_agg, f_norm,
+                                                                                  is_robustness_indicators,
+                                                                                  is_robustness_weights,
+                                                                                  mc_runs,
+                                                                                  robustness,
+                                                                                  RANDOM_SEED)
 
     # Check the input matrix for duplicated rows in the alternatives, rescale negative indicator values and
     # drop the column containing the alternatives
@@ -103,56 +103,6 @@ def get_polar_and_weights(config, input_matrix_no_alternatives, is_robustness_in
     return polar, weights
 
 
-def verify_input(config, f_agg, f_norm, is_robustness_indicators, is_robustness_weights, marginal_pdf, mc_runs,
-                 robustness):
-    # Check for sensitivity-related configuration errors
-    if config.sensitivity.sensitivity_on == SensitivityAnalysis.NO.value:
-        f_norm = config.sensitivity.normalization
-        f_agg = config.sensitivity.aggregation
-        check_valid_values(config.sensitivity.normalization, SensitivityNormalization,
-                           'The available normalization functions are: minmax, target, standardized, rank.')
-        check_valid_values(config.sensitivity.aggregation, SensitivityAggregation,
-                           """The available aggregation functions are: weighted_sum, geometric, harmonic, minimum.
-                           Watch the correct spelling in the configuration file.""")
-        logger.info("ProMCDA will only use one pair of norm/agg functions: " + f_norm + '/' + f_agg)
-    else:
-        logger.info("ProMCDA will use a set of different pairs of norm/agg functions")
-
-    # Check for robustness-related configuration errors
-    if robustness == RobustnessAnalysis.NONE.value:
-        logger.info("ProMCDA will without uncertainty on the indicators or weights")
-        logger.info("Read input matrix without uncertainties!")
-    else:
-        check_config_error((config.robustness.robustness == RobustnessAnalysis.NONE.value and
-                            config.robustness.on_weights_level != RobustnessWightLevels.NONE.value),
-                           'Robustness analysis is expected using weights but none is specified! Please clarify.')
-
-        check_config_error((config.robustness.robustness == RobustnessAnalysis.WEIGHTS.value and
-                            config.robustness.on_weights_level == RobustnessWightLevels.NONE.value),
-                           'Robustness analysis is requested on the weights: but on all or single? Please clarify.')
-
-        check_config_error((config.robustness.robustness == RobustnessAnalysis.INDICATORS.value and
-                            config.robustness.on_weights_level != RobustnessWightLevels.NONE.value),
-                           'Robustness analysis is requested: but on weights or indicators? Please clarify.')
-
-        # Check settings for robustness analysis on weights or indicators
-        if config.robustness.robustness == RobustnessAnalysis.WEIGHTS.value and config.robustness.on_weights_level != RobustnessWightLevels.NONE.value:
-            logger.info(f"""ProMCDA will consider uncertainty on the weights.
-            Number of Monte Carlo runs: {mc_runs}
-            logger.info("The random seed used is: {RANDOM_SEED}""")
-            is_robustness_weights = 1
-
-        if config.robustness.robustness == RobustnessAnalysis.INDICATORS.value and config.robustness.on_weights_level == RobustnessWightLevels.NONE.value:
-            logger.info(f"""ProMCDA will consider uncertainty on the indicators. 
-            Number of Monte Carlo runs: {mc_runs}
-            logger.info("The random seed used is: {RANDOM_SEED}""")
-            is_robustness_indicators = 1
-
-        marginal_pdf = config.monte_carlo_sampling.marginal_distributions
-        logger.info("Read input matrix with uncertainty of the indicators!")
-    return f_agg, f_norm, is_robustness_indicators, is_robustness_weights, marginal_pdf
-
-
 def read_matrix_from_file(column_names_list: list[str], file_from_stream) -> {}:
     result_dict = utils_for_main.read_matrix_from_file(file_from_stream).to_dict()
     if len(column_names_list) != len(result_dict.keys()):
@@ -169,6 +119,6 @@ if __name__ == '__main__':
     t = time.time()
     config_path = parse_args()
     input_config = get_config(config_path)
-    main_using_model(input_config)
+    main(input_config)
     elapsed = time.time() - t
     logger.info("All calculations finished in seconds {}".format(elapsed))

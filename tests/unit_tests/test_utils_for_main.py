@@ -3,6 +3,7 @@ import unittest
 from unittest import TestCase
 from unittest.mock import patch
 
+import ProMCDA.mcda.utils.utils_for_main
 from ProMCDA.mcda import mcda_run
 from ProMCDA.mcda.utils.utils_for_main import *
 from ProMCDA.mcda.utils.utils_for_main import _check_and_rescale_negative_indicators
@@ -153,7 +154,7 @@ class TestUtils(unittest.TestCase):
             # Step 2: Store the DataFrame to the temporary file
             input_matrix_1.to_csv(temp_path, index=True, columns=input_matrix_1.columns)
         config["input_matrix_path"] = temp_path
-        config = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
+        config = Configuration.from_dict(config_dict_to_configuration_model(config))
 
         # When
         are_parameters_correct_1 = check_parameters_pdf(input_matrix_1, config, True)

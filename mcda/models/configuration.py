@@ -1,3 +1,8 @@
+"""
+The Configuration class encapsulates a configuration for MCDA,
+allowing for structured data representation and easy manipulation of attributes.
+"""
+
 # coding: utf-8
 
 from __future__ import absolute_import

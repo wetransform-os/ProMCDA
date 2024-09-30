@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import unittest
 
-from ProMCDA.mcda import mcda_run
+from ProMCDA.mcda.utils.utils_for_main import *
 from ProMCDA.mcda.mcda_with_robustness import MCDAWithRobustness
 from ProMCDA.mcda.configuration.config import Config
 from ProMCDA.mcda.models.configuration import Configuration
@@ -101,10 +101,18 @@ class TestMCDA_with_robustness(unittest.TestCase):
         out_list = [data1, data2, data3, data4]
 
         input_matrix = TestMCDA_with_robustness.get_input_matrix()
+        temp_path = None
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
+            temp_path = tmp_file.name
+
+            # Step 2: Store the DataFrame to the temporary file
+            input_matrix.to_csv(temp_path, index=True, columns=input_matrix.columns)
+
         config = TestMCDA_with_robustness.get_test_config()
-        config = Config(config)
+        config["input_matrix_path"] = temp_path
+        config = Configuration.from_dict(config_dict_to_configuration_model(config))
         mcda_with_robustness = MCDAWithRobustness(config, input_matrix, is_exact_pdf_mask, is_poisson_pdf_mask)
-        output_list = MCDAWithRobustness.convert_list(out_list)
+        output_list = mcda_with_robustness.convert_list(out_list)
 
         return output_list
 
@@ -112,14 +120,22 @@ class TestMCDA_with_robustness(unittest.TestCase):
         # Given
         input_matrix = self.get_input_matrix()
         input_series = input_matrix.iloc[:, 0]
+        temp_path = None
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
+            temp_path = tmp_file.name
+
+            # Step 2: Store the DataFrame to the temporary file
+            input_matrix.to_csv(temp_path, index=True, columns=input_matrix.columns)
+
         config = TestMCDA_with_robustness.get_test_config()
-        config = Config(config)
+        config["input_matrix_path"] = temp_path
         num_runs = 10
         exp_matrix = pd.DataFrame(
             data={'0': [0, 1, 2, 3], '1': [0, 1, 2, 3], '2': [0, 1, 2, 3], '3': [0, 1, 2, 3], '4': [0, 1, 2, 3],
                   '5': [0, 1, 2, 3], '6': [0, 1, 2, 3], '7': [0, 1, 2, 3], '8': [0, 1, 2, 3], '9': [0, 1, 2, 3]})
 
         # When
+        config = Configuration.from_dict(config_dict_to_configuration_model(config))
         mcda_with_robustness = MCDAWithRobustness(config, input_matrix)
         output_matrix = mcda_with_robustness.repeat_series_to_create_df(input_series, num_runs)
 
@@ -141,14 +157,14 @@ class TestMCDA_with_robustness(unittest.TestCase):
 
         config = TestMCDA_with_robustness.get_test_config()
         config["input_matrix_path"] = temp_path
-        config_based_on_model = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
+        config_based_on_model = Configuration.from_dict(
+            config_dict_to_configuration_model(config))
         input_list = TestMCDA_with_robustness.get_input_list()
         expected_output_list = TestMCDA_with_robustness.get_expected_out_list()
         is_exact_pdf_mask = (1, 0, 0, 0)
         is_poisson_pdf_mask = (0, 0, 0, 1)
 
         # When
-        config = Config(config)
         mcda_with_robustness = MCDAWithRobustness(config_based_on_model, input_matrix, is_exact_pdf_mask, is_poisson_pdf_mask)
         output_list = mcda_with_robustness.convert_list(input_list)
 
@@ -172,12 +188,14 @@ class TestMCDA_with_robustness(unittest.TestCase):
         config = TestMCDA_with_robustness.get_test_config()
         config["input_matrix_path"] = temp_path
         input_matrix_rescale = self.get_input_matrix_rescale()
-        config_based_on_model = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
+        config_based_on_model = Configuration.from_dict(
+            config_dict_to_configuration_model(config))
         is_exact_pdf_mask = (1, 0, 0, 0)
         is_poisson_pdf_mask = (0, 0, 0, 1)
 
         # When
-        config_based_on_model = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
+        config_based_on_model = Configuration.from_dict(
+            config_dict_to_configuration_model(config))
         mcda_with_robustness = MCDAWithRobustness(config_based_on_model, input_matrix,
                                                   is_exact_pdf_mask, is_poisson_pdf_mask)
         n_random_matrices = mcda_with_robustness.create_n_randomly_sampled_matrices()

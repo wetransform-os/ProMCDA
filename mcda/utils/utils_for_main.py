@@ -17,10 +17,12 @@ from sklearn.preprocessing import MinMaxScaler
 
 import ProMCDA.mcda.utils.utils_for_parallelization as utils_for_parallelization
 import ProMCDA.mcda.utils.utils_for_plotting as utils_for_plotting
+from ProMCDA.mcda.configuration.config import Config
 from ProMCDA.mcda.mcda_without_robustness import MCDAWithoutRobustness
 from ProMCDA.mcda.mcda_with_robustness import MCDAWithRobustness
 from ProMCDA.mcda.models.configuration import Configuration
-from ProMCDA.mcda.utils.application_enums import RobustnessAnalysis, RobustnessWightLevels, SensitivityAnalysis
+from ProMCDA.mcda.utils.application_enums import RobustnessAnalysis, RobustnessWeightLevels, SensitivityAnalysis, \
+    SensitivityNormalization, SensitivityAggregation
 
 DEFAULT_INPUT_DIRECTORY_PATH = 'ProMCDA/input_files'  # present in the root directory of ProMCDA
 DEFAULT_OUTPUT_DIRECTORY_PATH = 'ProMCDA/output_files'  # present in the root directory of ProMCDA
@@ -193,12 +195,12 @@ def _handle_robustness_weights(config: Configuration, mc_runs: int, num_indicato
         raise ValueError('The number of MC runs should be larger than 0 for a robustness analysis')
 
     if (config.robustness.robustness == RobustnessAnalysis.WEIGHTS.value
-            and config.robustness.on_weights_level == RobustnessWightLevels.ALL.value):
+            and config.robustness.on_weights_level == RobustnessWeightLevels.ALL.value):
         random_weights = randomly_sample_all_weights(num_indicators, mc_runs)
         norm_random_weights = [check_norm_sum_weights(weights) for weights in random_weights]
         return norm_random_weights, None  # Return norm_random_weights, and None for rand_weight_per_indicator
     elif (config.robustness.robustness == RobustnessAnalysis.WEIGHTS.value
-          and config.robustness.on_weights_level == RobustnessWightLevels.SINGLE.value):
+          and config.robustness.on_weights_level == RobustnessWeightLevels.SINGLE.value):
         i = 0
         while i < num_indicators:
             random_weights = randomly_sample_ix_weight(num_indicators, i, mc_runs)
@@ -251,7 +253,7 @@ def check_indicator_weights_polarities(num_indicators: int, polar: List[str], co
         raise ValueError('The number of polarities does not correspond to the no. of indicators')
 
     # Check the number of fixed weights if "on_all_weights" is set to "no"
-    if (config.robustness.on_weights_level != RobustnessWightLevels.ALL.value and
+    if (config.robustness.on_weights_level != RobustnessWeightLevels.ALL.value and
             num_indicators != len(config.robustness.given_weights)):
         raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
 
@@ -440,6 +442,56 @@ def get_config(config_path: str) -> dict:
             return json.load(fp)
     except Exception as e:
         print(e)
+
+
+def config_dict_to_configuration_model(input_config):
+    """
+    Method that converts Config object into ConfigurationModel.
+    This method is used when ProMCDA is called using cli where input matrix is passed
+    in a separate file
+
+    Parameters:
+        - input_config: dict
+
+    :param input_config: dict
+    :rtype: dict
+    """
+
+    # Extracting relevant configuration values
+    config = Config(input_config)
+    input_matrix = read_matrix(config.input_matrix_path)
+    robustness = "none"
+    on_weights_level = "none"
+    if config.robustness["robustness_on"] == "yes" and config.robustness["on_single_weights"] == "yes":
+        robustness = "weights"
+        on_weights_level = "single"
+    elif config.robustness["robustness_on"] == "yes" and config.robustness["on_all_weights"] == "yes":
+        robustness = "weights"
+        on_weights_level = "all"
+    elif config.robustness["robustness_on"] == "yes" and config.robustness["on_indicators"] == "yes":
+        robustness = "indicators"
+    os.environ['NUM_CORES'] = str(input_config["monte_carlo_sampling"]["num_cores"])
+    os.environ['RANDOM_SEED'] = str(input_config["monte_carlo_sampling"]["random_seed"])
+    ranking_input_config = {
+        "inputMatrix": input_matrix,
+        "weights": input_config["robustness"]["given_weights"],
+        "polarity": config.polarity_for_each_indicator,
+        "sensitivity": {
+            "sensitivityOn": input_config["sensitivity"]["sensitivity_on"],
+            "normalization": input_config["sensitivity"]["normalization"],
+            "aggregation": input_config["sensitivity"]["aggregation"]
+        },
+        "robustness": {
+            "robustness": robustness,
+            "onWeightsLevel": on_weights_level,
+            "givenWeights": config.robustness["given_weights"]
+        },
+        "monteCarloSampling": {
+            "monteCarloRuns": config.monte_carlo_sampling["monte_carlo_runs"],
+            "marginalDistributions": config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
+        }
+    }
+    return ranking_input_config
 
 
 def save_df(df: pd.DataFrame, folder_path: str, filename: str) -> {}:
@@ -931,14 +983,14 @@ def run_mcda_without_indicator_uncertainty(config: Configuration, index_column_n
             else mcda_no_uncert.aggregate_indicators(normalized_indicators, weights, f_agg)
         normalized_scores = rescale_minmax(scores)
     elif (config.robustness.robustness == RobustnessAnalysis.WEIGHTS.value
-          and config.robustness.on_weights_level == RobustnessWightLevels.ALL.value):
+          and config.robustness.on_weights_level == RobustnessWeightLevels.ALL.value):
         # ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)
         all_weights_score_means, all_weights_score_stds, \
             all_weights_score_means_normalized, all_weights_score_stds_normalized = \
             _compute_scores_for_all_random_weights(normalized_indicators, config.sensitivity.sensitivity_on, weights,
                                                    f_agg)
     elif (config.robustness.robustness == RobustnessAnalysis.WEIGHTS.value
-          and config.robustness.on_weights_level == RobustnessWightLevels.SINGLE.value):
+          and config.robustness.on_weights_level == RobustnessWeightLevels.SINGLE.value):
         # ONE RANDOMLY SAMPLED WEIGHT A TIME (MCDA runs (num_samples * num_indicators) times)
         iterative_random_weights_statistics = _compute_scores_for_single_random_weight(
             normalized_indicators, weights, config.sensitivity.sensitivity_on, index_column_name, index_column_values,
@@ -1301,3 +1353,64 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
 
         utils_for_plotting.combine_images(images, output_file_path, "MCDA_one_weight_randomness_rough_scores.png")
         utils_for_plotting.combine_images(images_norm, output_file_path, "MCDA_one_weight_randomness_norm_scores.png")
+
+
+def verify_input(config, f_agg, f_norm, is_robustness_indicators, is_robustness_weights, mc_runs,
+                 robustness, random_seed):
+    """
+
+    @param config: Configuration model
+    @param f_agg:
+    @param f_norm:
+    @param is_robustness_indicators:
+    @param is_robustness_weights:
+    @param mc_runs:
+    @param robustness:
+    @param random_seed:
+    @return:
+    """
+    # Check for sensitivity-related configuration errors
+    if config.sensitivity.sensitivity_on == SensitivityAnalysis.NO.value:
+        f_norm = config.sensitivity.normalization
+        f_agg = config.sensitivity.aggregation
+        check_valid_values(config.sensitivity.normalization, SensitivityNormalization,
+                           'The available normalization functions are: minmax, target, standardized, rank.')
+        check_valid_values(config.sensitivity.aggregation, SensitivityAggregation,
+                           """The available aggregation functions are: weighted_sum, geometric, harmonic, minimum.
+                           Watch the correct spelling in the configuration file.""")
+        logger.info("ProMCDA will only use one pair of norm/agg functions: " + f_norm + '/' + f_agg)
+    else:
+        logger.info("ProMCDA will use a set of different pairs of norm/agg functions")
+
+    # Check for robustness-related configuration errors
+    if robustness == RobustnessAnalysis.NONE.value:
+        logger.info("ProMCDA will run without uncertainty on the indicators or weights")
+        logger.info("Read input matrix without uncertainties!")
+    else:
+        check_config_error((config.robustness.robustness == RobustnessAnalysis.NONE.value and
+                            config.robustness.on_weights_level != RobustnessWeightLevels.NONE.value),
+                           'Robustness analysis is expected using weights but none is specified! Please clarify.')
+
+        check_config_error((config.robustness.robustness == RobustnessAnalysis.WEIGHTS.value and
+                            config.robustness.on_weights_level == RobustnessWeightLevels.NONE.value),
+                           'Robustness analysis is requested on the weights: but on all or single? Please clarify.')
+
+        check_config_error((config.robustness.robustness == RobustnessAnalysis.INDICATORS.value and
+                            config.robustness.on_weights_level != RobustnessWeightLevels.NONE.value),
+                           'Robustness analysis is requested: but on weights or indicators? Please clarify.')
+
+        # Check settings for robustness analysis on weights or indicators
+        if config.robustness.robustness == RobustnessAnalysis.WEIGHTS.value and config.robustness.on_weights_level != RobustnessWeightLevels.NONE.value:
+            logger.info(f"""ProMCDA will consider uncertainty on the weights.
+            Number of Monte Carlo runs: {mc_runs}
+            logger.info("The random seed used is: {random_seed}""")
+            is_robustness_weights = 1
+
+        if config.robustness.robustness == RobustnessAnalysis.INDICATORS.value and config.robustness.on_weights_level == RobustnessWeightLevels.NONE.value:
+            logger.info(f"""ProMCDA will consider uncertainty on the indicators. 
+            Number of Monte Carlo runs: {mc_runs}
+            logger.info("The random seed used is: {random_seed}""")
+            is_robustness_indicators = 1
+
+        logger.info("Read input matrix with uncertainty of the indicators!")
+    return f_agg, f_norm, is_robustness_indicators, is_robustness_weights

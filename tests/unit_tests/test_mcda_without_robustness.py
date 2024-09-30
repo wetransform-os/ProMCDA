@@ -4,6 +4,7 @@ import unittest
 import pandas as pd
 from unittest import TestCase
 
+from ProMCDA.mcda.utils.utils_for_main import *
 from ProMCDA.mcda import mcda_run
 from ProMCDA.mcda.mcda_without_robustness import MCDAWithoutRobustness
 from ProMCDA.mcda.configuration.config import Config
@@ -134,11 +135,13 @@ class TestMCDA_without_robustness(unittest.TestCase):
             # Step 2: Store the DataFrame to the temporary file
             input_matrix.to_csv(temp_path, index=True, columns=input_matrix.columns)
         config_general["input_matrix_path"] = temp_path
-        config_general = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config_general))
+        config_general = Configuration.from_dict(
+           config_dict_to_configuration_model(config_general))
 
         config_simple_mcda = TestMCDA_without_robustness.get_test_config_simple_mcda()
         config_simple_mcda["input_matrix_path"] = temp_path
-        config_simple_mcda = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config_simple_mcda))
+        config_simple_mcda = Configuration.from_dict(
+            config_dict_to_configuration_model(config_simple_mcda))
 
         # When
         mcda_no_uncert_general = MCDAWithoutRobustness(config_general, input_matrix)
@@ -181,10 +184,11 @@ class TestMCDA_without_robustness(unittest.TestCase):
             # Step 2: Store the DataFrame to the temporary file
             input_matrix.to_csv(temp_path, index=True, columns=input_matrix.columns)
         config["input_matrix_path"] = temp_path
-        config = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
+        config = Configuration.from_dict(config_dict_to_configuration_model(config))
         config_simple_mcda = TestMCDA_without_robustness.get_test_config_simple_mcda()
         config_simple_mcda["input_matrix_path"] = temp_path
-        config_simple_mcda = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config_simple_mcda))
+        config_simple_mcda = Configuration.from_dict(
+            config_dict_to_configuration_model(config_simple_mcda))
 
         # When
         weights = config.robustness.given_weights
@@ -229,14 +233,16 @@ class TestMCDA_without_robustness(unittest.TestCase):
             input_matrix.to_csv(temp_path, index=True, columns=input_matrix.columns)
 
         config["input_matrix_path"] = temp_path
-        config_based_on_model = Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config))
+        config_based_on_model = Configuration.from_dict(
+            config_dict_to_configuration_model(config))
         weights = config_based_on_model.robustness.given_weights
         agg = Aggregation(weights)
 
         config_randomness_simple_mcda = TestMCDA_without_robustness.get_test_config_randomness_simple_mcda()
         config_randomness_simple_mcda["input_matrix_path"] = temp_path
         config_randomness_simple_mcda = (
-            Configuration.from_dict(mcda_run.config_dict_to_configuration_model(config_randomness_simple_mcda)))
+            Configuration.from_dict(
+                config_dict_to_configuration_model(config_randomness_simple_mcda)))
 
         # When
         mcda_no_uncert = MCDAWithoutRobustness(config_based_on_model, input_matrix)
