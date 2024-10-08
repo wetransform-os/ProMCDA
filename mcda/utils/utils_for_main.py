@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 from sklearn import preprocessing
-from sklearn.preprocessing import MinMaxScaler
 
 import mcda.utils.utils_for_parallelization as utils_for_parallelization
 import mcda.utils.utils_for_plotting as utils_for_plotting
@@ -37,287 +36,6 @@ logging.getLogger('PIL').setLevel(logging.WARNING)
 FORMATTER: str = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=FORMATTER)
 logger = logging.getLogger("ProMCDA")
-
-
-def check_config_error(condition: bool, error_message: str):
-    """
-    Check a condition and raise a ValueError with a specified error message if the condition is True.
-
-    Parameters:
-    - condition (bool): The condition to check.
-    - error_message (str): The error message to raise if the condition is True.
-
-    Raises:
-    - ValueError: If the condition is True, with the specified error message.
-
-    :param error_message: str
-    :param condition: bool
-    :return: None
-    """
-
-    if condition:
-        logger.error('Error Message', stack_info=True)
-        raise ValueError(error_message)
-
-
-def check_config_setting(condition_robustness_on_weights: bool, condition_robustness_on_indicators: bool, mc_runs: int,
-                         random_seed: int) -> (int, int):
-    """
-    Checks configuration settings and logs information messages.
-
-    Returns:
-    - is_robustness_weights, is_robustness_indicators, booleans indicating if robustness is considered
-    on weights or indicators.
-
-    Example:
-    ```python
-    is_robustness_weights, is_robustness_indicators = check_config_setting(True, False, 1000, 42)
-    ```
-
-    :param condition_robustness_on_weights: bool
-    :param condition_robustness_on_indicators: bool
-    :param mc_runs: int
-    :param random_seed: int
-    :return: (is_robustness_weights, is_robustness_indicators)
-    :rtype: Tuple[int, int]
-    """
-    is_robustness_weights = 0
-    is_robustness_indicators = 0
-
-    if condition_robustness_on_weights:
-        logger.info("ProMCDA will consider uncertainty on the weights.")
-        logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
-        logger.info("The random seed used is: {}".format(random_seed))
-        is_robustness_weights = 1
-
-    elif condition_robustness_on_indicators:
-        logger.info("ProMCDA will consider uncertainty on the indicators.")
-        logger.info("Number of Monte Carlo runs: {}".format(mc_runs))
-        logger.info("The random seed used is: {}".format(random_seed))
-        is_robustness_indicators = 1
-
-    return is_robustness_weights, is_robustness_indicators
-
-
-def process_indicators_and_weights(config: dict, input_matrix: pd.DataFrame,
-                                   is_robustness_indicators: int, is_robustness_weights: int, polar: List[str],
-                                   mc_runs: int, num_indicators: int) \
-        -> Tuple[List[str], Union[list, List[list], dict]]:
-    """
-    Process indicators and weights based on input parameters in the configuration.
-
-    Parameters:
-    - config: the configuration dictionary.
-    - input_matrix: the input matrix without alternatives.
-    - is_robustness_indicators: a flag indicating whether the matrix should include indicator uncertainties
-      (0 or 1).
-    - is_robustness_weights: a flag indicating whether robustness analysis is considered for the weights (0 or 1).
-    - marginal_pdf: a list of marginal probability density functions for indicators.
-    - mc_runs: number of Monte Carlo runs for robustness analysis.
-    - num_indicators: the number of indicators in the input matrix.
-
-    Raises:
-    - ValueError: If there are duplicated rows in the input matrix or if there is an issue with the configuration.
-
-    Returns:
-    - a shorter list of polarities if one has been dropped together with the relative indicator,
-      which brings no information. Otherwise, the same list.
-    - the normalised weights (either fixed or random sampled weights, depending on the settings)
-
-    Notes:
-    - For is_robustness_indicators == 0:
-    - Identifies and removes columns with constant values.
-    - Logs the number of alternatives and indicators.
-
-    - For is_robustness_indicators == 1:
-    - Handles uncertainty in indicators.
-    - Logs the number of alternatives and indicators.
-
-    - For is_robustness_weights == 0:
-    - Processes fixed weights if given.
-    - Logs weights and normalised weights.
-
-    - For is_robustness_weights == 1:
-    - Performs robustness analysis on weights.
-    - Logs randomly sampled weights.
-
-    :param mc_runs: int
-    :param polar: List[str]
-    :param is_robustness_weights: int
-    :param is_robustness_indicators: int
-    :param input_matrix: pd.DataFrame
-    :param config: dict
-    :param num_indicators: int
-    :return: polar, norm_weights
-    :rtype: Tuple[List[str], Union[List[list], dict]]
-    """
-    num_unique = input_matrix.nunique()
-    cols_to_drop = num_unique[num_unique == 1].index
-    col_to_drop_indexes = input_matrix.columns.get_indexer(cols_to_drop)
-
-    if is_robustness_indicators == 0:
-        _handle_no_robustness_indicators(input_matrix)
-    else:  # matrix with uncertainty on indicators
-        logger.info("Number of alternatives: {}".format(input_matrix.shape[0]))
-        logger.info("Number of indicators: {}".format(num_indicators))
-        # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional
-
-    polarities_and_weights = _handle_polarities_and_weights(is_robustness_indicators, is_robustness_weights, num_unique,
-                                                            col_to_drop_indexes, polar, config, mc_runs, num_indicators)
-
-    polar, norm_weights = tuple(item for item in polarities_and_weights if item is not None)
-
-    return polar, norm_weights
-
-
-def _handle_polarities_and_weights(is_robustness_indicators: int, is_robustness_weights: int, num_unique,
-                                   col_to_drop_indexes: np.ndarray, polar: List[str], config: dict, mc_runs: int,
-                                   num_indicators: int) \
-        -> Union[Tuple[List[str], list, None, None], Tuple[List[str], None, List[List], None],
-           Tuple[List[str], None, None, dict]]:
-    """
-    Manage polarities and weights based on the specified robustness settings, ensuring that the appropriate adjustments
-    and normalizations are applied before returning the necessary data structures.
-    """
-    norm_random_weights = []
-    rand_weight_per_indicator = {}
-
-    # Managing polarities
-    if is_robustness_indicators == 0:
-        if any(value == 1 for value in num_unique):
-            polar = pop_indexed_elements(col_to_drop_indexes, polar)
-    logger.info("Polarities: {}".format(polar))
-
-    # Managing weights
-    if is_robustness_weights == 0:
-        fixed_weights = config.robustness["given_weights"]
-        if any(value == 1 for value in num_unique):
-            fixed_weights = pop_indexed_elements(col_to_drop_indexes, fixed_weights)
-        norm_fixed_weights = check_norm_sum_weights(fixed_weights)
-        logger.info("Weights: {}".format(fixed_weights))
-        logger.info("Normalized weights: {}".format(norm_fixed_weights))
-        return polar, norm_fixed_weights, None, None
-        #  Return None for norm_random_weights and rand_weight_per_indicator
-    else:
-        output_weights = _handle_robustness_weights(config, mc_runs, num_indicators)
-        if output_weights is not None:
-            norm_random_weights, rand_weight_per_indicator = output_weights
-        if norm_random_weights:
-            return polar, None, norm_random_weights, None
-        else:
-            return polar, None, None, rand_weight_per_indicator
-        #  Return None for norm_fixed_weights and one of the other two cases of randomness
-
-
-def _handle_robustness_weights(config: dict, mc_runs: int, num_indicators: int) \
-        -> Tuple[Union[List[list], None], Union[dict, None]]:
-    """
-    Handle the generation and normalization of random weights based on the specified settings
-    when a robustness analysis is requested on all the weights.
-    """
-    norm_random_weights = []
-    rand_weight_per_indicator = {}
-
-    if mc_runs == 0:
-        logger.error('Error Message', stack_info=True)
-        raise ValueError('The number of MC runs should be larger than 0 for a robustness analysis')
-
-    if config.robustness["on_single_weights"] == "no" and config.robustness["on_all_weights"] == "yes":
-        random_weights = randomly_sample_all_weights(num_indicators, mc_runs)
-        for weights in random_weights:
-            weights = check_norm_sum_weights(weights)
-            norm_random_weights.append(weights)
-        return norm_random_weights, None  # Return norm_random_weights, and None for rand_weight_per_indicator
-    elif config.robustness["on_single_weights"] == "yes" and config.robustness["on_all_weights"] == "no":
-        i = 0
-        while i < num_indicators:
-            random_weights = randomly_sample_ix_weight(num_indicators, i, mc_runs)
-            norm_random_weight = []
-            for weights in random_weights:
-                weights = check_norm_sum_weights(weights)
-                norm_random_weight.append(weights)
-            rand_weight_per_indicator["indicator_{}".format(i + 1)] = norm_random_weight
-            i += 1
-        return None, rand_weight_per_indicator  # Return None for norm_random_weights, and rand_weight_per_indicator
-
-
-def _handle_no_robustness_indicators(input_matrix: pd.DataFrame):
-    """
-    Handle the indicators in case of no robustness analysis required.
-    (The input matrix is without the alternative column)
-    """
-    num_unique = input_matrix.nunique()
-    cols_to_drop = num_unique[num_unique == 1].index
-
-    if any(value == 1 for value in num_unique):
-        logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
-        input_matrix = input_matrix.drop(cols_to_drop, axis=1)
-
-    num_indicators = input_matrix.shape[1]
-    logger.info("Number of alternatives: {}".format(input_matrix.shape[0]))
-    logger.info("Number of indicators: {}".format(num_indicators))
-
-
-def check_indicator_weights_polarities(num_indicators: int, polar: List[str], config: dict):
-    """
-    Check the consistency of indicators, polarities, and fixed weights in a configuration.
-
-    Parameters:
-    - num_indicators: the number of indicators in the input matrix.
-    - polar: a list containing the polarity associated to each indicator.
-    - config: the configuration dictionary.
-
-    This function raises a ValueError if the following conditions are not met:
-    1. The number of indicators does not match the number of polarities.
-    2. "on_all_weights" is set to "no," and the number of fixed weights
-        does not correspond to the number of indicators.
-
-    Raises:
-    - ValueError: if the conditions for indicator-polarity and fixed weights consistency are not met.
-
-    :param num_indicators: int
-    :param polar: List[str]
-    :param config: dict
-    :return: None
-    """
-    if num_indicators != len(polar):
-        raise ValueError('The number of polarities does not correspond to the no. of indicators')
-
-    # Check the number of fixed weights if "on_all_weights" is set to "no"
-    if (config.robustness["on_all_weights"] == "no") and (
-            num_indicators != len(config.robustness["given_weights"])):
-        raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
-
-
-def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
-    """
-    Check the input matrix for duplicated rows in the alternatives column, rescale negative indicator values
-    and drop the index column of alternatives.
-
-    Parameters:
-    - input_matrix: The input matrix containing the alternatives and indicators.
-
-    Raises:
-    - ValueError: If duplicated rows are found in the alternative column.
-    - UserStoppedInfo: If the user chooses to stop when duplicates are found.
-
-     :param input_matrix: pd.DataFrame
-     :rtype: pd.DataFrame
-     :return: input_matrix
-    """
-    if input_matrix.duplicated().any():
-        raise ValueError('Error: Duplicated rows in the alternatives column.')
-    elif input_matrix.iloc[:, 0].duplicated().any():
-        logger.info('Duplicated rows in the alternatives column.')
-
-    index_column_values = input_matrix.index.tolist()
-    logger.info("Alternatives are {}".format(index_column_values))
-    input_matrix_no_alternatives = input_matrix.reset_index(drop=True)  # drop the alternative
-
-    input_matrix_no_alternatives = _check_and_rescale_negative_indicators(
-        input_matrix_no_alternatives)
-
-    return input_matrix_no_alternatives
 
 
 def ensure_directory_exists(path):
@@ -345,7 +63,7 @@ def ensure_directory_exists(path):
         raise  # Re-raise the exception to propagate it to the caller
 
 
-
+# TODO: maybe give the option of giving either a pd.DataFrame or a path as input parameter in ProMCDA
 def read_matrix(input_matrix_path: str) -> pd.DataFrame:
     """
     Read an input matrix from a CSV file and return it as a DataFrame.
@@ -393,21 +111,6 @@ def reset_index_if_needed(series):
     if not isinstance(series.index, pd.RangeIndex):
         series = series.reset_index(drop=True)
     return series
-
-
-def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame:
-    """
-    Rescale indicators of the input matrix if negative into [0-1].
-    """
-
-    if (input_matrix < 0).any().any():
-        scaler = MinMaxScaler()
-        scaled_data = scaler.fit_transform(input_matrix)
-        scaled_matrix = pd.DataFrame(
-            scaled_data, columns=input_matrix.columns, index=input_matrix.index)
-        return scaled_matrix
-    else:
-        return input_matrix
 
 
 def parse_args():
@@ -486,6 +189,7 @@ def save_df(df: pd.DataFrame, folder_path: str, filename: str):
         df.to_csv(path_or_buf=full_output_path, index=False)
     except IOError as e:
         logging.error(f"Error while writing data frame into a CSV file: {e}")
+
 
 def save_dict(dictionary: dict, folder_path: str, filename: str):
     """
