@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import unittest
 
-from mcda.mcda_with_robustness import MCDAWithRobustness
+from mcda.models.mcda_with_robustness import MCDAWithRobustness
 from mcda.configuration.config import Config
 
 

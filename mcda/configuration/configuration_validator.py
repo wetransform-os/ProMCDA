@@ -18,7 +18,7 @@ logger = logging.getLogger("ProMCDA")
 
 
 def extract_configuration_values(input_matrix: pd.DataFrame, polarity: Tuple[str], sensitivity: dict, robustness: dict,
-                                 monte_carlo: dict) -> dict:
+                                 monte_carlo: dict, output_path: str) -> dict:
 
     """
     Extracts relevant configuration values required for running the ProMCDA process.
@@ -45,6 +45,7 @@ def extract_configuration_values(input_matrix: pd.DataFrame, polarity: Tuple[str
     :param sensitivity : dict
     :param robustness : dict
     :param: monte_carlo : dict
+    :param: output_path: str
     :return: extracted_values: dict
     """
 
@@ -53,8 +54,8 @@ def extract_configuration_values(input_matrix: pd.DataFrame, polarity: Tuple[str
         "polarity": polarity,
         # Sensitivity settings
         "sensitivity_on": sensitivity["sensitivity_on"],
-        "normalization": sensitivity["normalization"],
-        "aggregation": sensitivity["aggregation"],
+        "normalization": None if sensitivity["sensitivity_on"] == 'yes' else sensitivity["normalization"],
+        "aggregation": None if sensitivity["sensitivity_on"] == 'yes' else sensitivity["aggregation"],
         # Robustness settings
         "robustness_on": robustness["robustness_on"],
         "robustness_on_single_weights": robustness["on_single_weights"],
@@ -65,13 +66,14 @@ def extract_configuration_values(input_matrix: pd.DataFrame, polarity: Tuple[str
         "monte_carlo_runs": monte_carlo["monte_carlo_runs"],
         "num_cores": monte_carlo["num_cores"],
         "random_seed": monte_carlo["random_seed"],
-        "marginal_distribution_for_each_indicator": monte_carlo["marginal_distribution_for_each_indicator"]
+        "marginal_distribution_for_each_indicator": monte_carlo["marginal_distribution_for_each_indicator"],
+        "output_path": output_path
     }
 
     return extracted_values
 
 
-def check_configuration_values(extracted_values: dict) -> int:
+def check_configuration_values(extracted_values: dict) -> Tuple[int, int, List[str], Union[list, List[list], dict]]:
     """
     Validates the configuration settings for the ProMCDA process based on the input parameters.
 
@@ -204,21 +206,7 @@ def check_configuration_values(extracted_values: dict) -> int:
         logging.error(str(e), stack_info=True)
         raise
 
-    return is_robustness_indicators
-
-    # TODO: THIS PART GOES SOMEWHERE ELSE?
-    # MAYBE THE CHECKS RETURN A FLAG TO KNOW WHAT TO FUNCTION TO RUN
-    # If there is no uncertainty of the indicators:
-    if is_robustness_indicators == 0:
-        run_mcda_without_indicator_uncertainty(input_config, index_column_name, index_column_values,
-                                              input_matrix_no_alternatives, weights, f_norm, f_agg,
-                                              is_robustness_weights)
-    # else (i.e. there is uncertainty):
-    else:
-        run_mcda_with_indicator_uncertainty(input_config, input_matrix_no_alternatives, index_column_name,
-                                            index_column_values, mc_runs, random_seed, is_sensitivity, f_agg,
-                                            f_norm,
-                                            weights, polar, marginal_distribution)
+    return is_robustness_indicators, is_robustness_weights, polar, weights
 
 
 def check_config_error(condition: bool, error_message: str):

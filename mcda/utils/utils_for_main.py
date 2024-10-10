@@ -1,4 +1,3 @@
-
 import os
 import argparse
 import json
@@ -6,7 +5,7 @@ import pickle
 import random
 import logging
 import sys
-from typing import Union, Any, List, Tuple
+from typing import Union, Any, List
 from typing import Optional
 
 import numpy as np
@@ -17,8 +16,8 @@ from sklearn import preprocessing
 import mcda.utils.utils_for_parallelization as utils_for_parallelization
 import mcda.utils.utils_for_plotting as utils_for_plotting
 from mcda.configuration.config import Config
-from mcda.mcda_without_robustness import MCDAWithoutRobustness
-from mcda.mcda_with_robustness import MCDAWithRobustness
+from mcda.models.mcda_without_robustness import MCDAWithoutRobustness
+from mcda.models.mcda_with_robustness import MCDAWithRobustness
 
 DEFAULT_INPUT_DIRECTORY_PATH = './input_files'  # present in the root directory of ProMCDA
 DEFAULT_OUTPUT_DIRECTORY_PATH = './output_files'  # present in the root directory of ProMCDA
@@ -581,10 +580,8 @@ def check_if_pdf_is_uniform(marginal_pdf: list) -> list:
     return uniform_pdf_mask
 
 
-def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name: str, index_column_values: list,
-                                           input_matrix: pd.DataFrame,
-                                           weights: Union[list, List[list], dict],
-                                           f_norm: str, f_agg: str, is_robustness_weights: int):
+def run_mcda_without_indicator_uncertainty(extracted_values: dict, is_robustness_weights: int,
+                                           weights: Union[List[str], List[pd.DataFrame], dict, None]):
     """
     Runs ProMCDA without uncertainty on the indicators, i.e. without performing
     a robustness analysis.
@@ -594,18 +591,12 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
     and logs the completion time.
 
     Parameters:
-    - input_matrix: the input_matrix without the alternatives.
-    - index_column_name: the name of the index column of the original input matrix.
-    - index_column_values: the values of the index column of the original input matrix.
+    - extracted_values: a dictionary containing configuration values extracted from the input parameters.
+    - is_robustness_weights: a flag indicating whether robustness analysis will be performed on indicators or not.
     - weights: the normalised weights (either fixed or random sampled weights, depending on the settings).
 
-    :param input_config: dict
-    :param index_column_name: str
-    :param index_column_values: list
-    :param input_matrix: pd:DataFrame
     :param weights: Union[List[str], List[pd.DataFrame], dict, None]
-    :param f_norm: str
-    :param f_agg: str
+    :param extracted_values: dict
     :param is_robustness_weights: int
     :return: None
     """
@@ -619,11 +610,20 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
     iterative_random_w_score_means = {}
     iterative_random_w_score_stds = {}
 
+    # Extract relevant values
+    input_matrix = extracted_values["input_matrix"]
+    alternatives_column_name = input_matrix.columns[0]
+    input_matrix = input_matrix.set_index(alternatives_column_name)
+    index_column_name = input_matrix.index.name
+    index_column_values = input_matrix.index.tolist()
+
     logger.info("Start ProMCDA without robustness of the indicators")
-    config = Config(input_config)
+    config = Config(extracted_values)
     is_sensitivity = config.sensitivity['sensitivity_on']
     is_robustness = config.robustness['robustness_on']
     mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
+    f_norm = extracted_values["normalization"]
+    f_agg = extracted_values["aggregation"]
 
     normalized_indicators = mcda_no_uncert.normalize_indicators() if is_sensitivity == "yes" \
         else mcda_no_uncert.normalize_indicators(f_norm)
@@ -656,7 +656,7 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
                        iterative_random_w_score_means_normalized=iterative_random_w_score_means_normalized,
                        iterative_random_w_score_stds=iterative_random_w_score_stds,
                        index_column_name=index_column_name, index_column_values=index_column_values,
-                       input_config=input_config)
+                       input_config=extracted_values)
 
     _plot_and_save_charts(scores=scores, normalized_scores=normalized_scores,
                           score_means=all_weights_score_means, score_stds=all_weights_score_stds,
@@ -664,7 +664,7 @@ def run_mcda_without_indicator_uncertainty(input_config: dict, index_column_name
                           iterative_random_w_score_means=iterative_random_w_score_means,
                           iterative_random_w_score_stds=iterative_random_w_score_stds,
                           iterative_random_w_score_means_normalized=iterative_random_w_score_means_normalized,
-                          input_matrix=input_matrix, config=input_config,
+                          input_matrix=input_matrix, config=extracted_values,
                           is_robustness_weights=is_robustness_weights)
 
 
@@ -690,6 +690,7 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
     :param index_column_values: list
     :param input_matrix: pd:DataFrame
     :param mc_runs: int
+    :param random_seed: int
     :param is_sensitivity: str
     :param weights: Union[List[str], List[pd.DataFrame], dict, None]
     :param f_norm: str
@@ -719,9 +720,11 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
     n_random_input_matrices = mcda_with_uncert.create_n_randomly_sampled_matrices()
 
     if is_sensitivity == "yes":
-        n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(n_random_input_matrices, polar)
+        n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(n_random_input_matrices,
+                                                                                          polar)
     else:
-        n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(n_random_input_matrices, polar, f_norm)
+        n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(n_random_input_matrices,
+                                                                                          polar, f_norm)
 
     args_for_parallel_agg = [(weights, normalized_indicators)
                              for normalized_indicators in n_normalized_input_matrices]
@@ -892,33 +895,33 @@ def _save_output_files(scores: Optional[pd.DataFrame],
     """
     Save output files based of the computed scores, ranks, and configuration data.
     """
-    config = Config(input_config)
-    full_output_path = os.path.join(output_directory_path, config.output_file_path)
+    output_path = input_config["output_path"]
+    full_output_path = os.path.join(output_directory_path, output_path)
     logger.info("Saving results in {}".format(full_output_path))
-    check_path_exists(config.output_file_path)
+    check_path_exists(output_path)
 
     if scores is not None and not scores.empty:
         scores.insert(0, index_column_name, index_column_values)
         normalized_scores.insert(0, index_column_name, index_column_values)
         ranks.insert(0, index_column_name, index_column_values)
 
-        save_df(scores, config.output_file_path, 'scores.csv')
-        save_df(normalized_scores, config.output_file_path, 'normalized_scores.csv')
-        save_df(ranks, config.output_file_path, 'ranks.csv')
+        save_df(scores, output_path, 'scores.csv')
+        save_df(normalized_scores, output_path, 'normalized_scores.csv')
+        save_df(ranks, output_path, 'ranks.csv')
     elif score_means is not None and not score_means.empty:
         score_means.insert(0, index_column_name, index_column_values)
         score_stds.insert(0, index_column_name, index_column_values)
         score_means_normalized.insert(0, index_column_name, index_column_values)
 
-        save_df(score_means, config.output_file_path, 'score_means.csv')
-        save_df(score_stds, config.output_file_path, 'score_stds.csv')
-        save_df(score_means_normalized, config.output_file_path, 'score_means_normalized.csv')
+        save_df(score_means, output_path, 'score_means.csv')
+        save_df(score_stds, output_path, 'score_stds.csv')
+        save_df(score_means_normalized, output_path, 'score_means_normalized.csv')
     elif iterative_random_w_score_means is not None:
-        save_dict(iterative_random_w_score_means, config.output_file_path, 'score_means.pkl')
-        save_dict(iterative_random_w_score_stds, config.output_file_path, 'score_stds.pkl')
-        save_dict(iterative_random_w_score_means_normalized, config.output_file_path, 'score_means_normalized.pkl')
+        save_dict(iterative_random_w_score_means, output_path, 'score_means.pkl')
+        save_dict(iterative_random_w_score_stds, output_path, 'score_stds.pkl')
+        save_dict(iterative_random_w_score_means_normalized, output_path, 'score_means_normalized.pkl')
 
-    save_config(input_config, config.output_file_path, 'configuration.json')
+    save_config(input_config, output_path, 'configuration.json')
 
 
 def _plot_and_save_charts(scores: Optional[pd.DataFrame],
@@ -936,15 +939,15 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
     """
     Generate plots based on the computed scores and save them.
     """
-    config = Config(config)
+    output_path = config["output_path"]
     num_indicators = input_matrix.shape[1]
 
     if scores is not None and not scores.empty:
         plot_no_norm_scores = utils_for_plotting.plot_non_norm_scores_without_uncert(scores)
-        utils_for_plotting.save_figure(plot_no_norm_scores, config.output_file_path, "MCDA_rough_scores.png")
+        utils_for_plotting.save_figure(plot_no_norm_scores, output_path, "MCDA_rough_scores.png")
 
         plot_norm_scores = utils_for_plotting.plot_norm_scores_without_uncert(normalized_scores)
-        utils_for_plotting.save_figure(plot_norm_scores, config.output_file_path, "MCDA_norm_scores.png")
+        utils_for_plotting.save_figure(plot_norm_scores, output_path, "MCDA_norm_scores.png")
 
     elif score_means is not None and not score_means.empty:
         if is_robustness_weights is not None and is_robustness_weights == 1:
@@ -956,8 +959,8 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
             chart_mean_scores_norm = utils_for_plotting.plot_mean_scores(score_means_normalized, "not_plot_std",
                                                                          "indicators", score_stds)
 
-        utils_for_plotting.save_figure(chart_mean_scores, config.output_file_path, "MCDA_rough_scores.png")
-        utils_for_plotting.save_figure(chart_mean_scores_norm, config.output_file_path, "MCDA_norm_scores.png")
+        utils_for_plotting.save_figure(chart_mean_scores, output_path, "MCDA_rough_scores.png")
+        utils_for_plotting.save_figure(chart_mean_scores_norm, output_path, "MCDA_norm_scores.png")
 
     elif iterative_random_w_score_means is not None:
         images = []
@@ -978,5 +981,7 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
             images.append(plot_weight_mean_scores)
             images_norm.append(plot_weight_mean_scores_norm)
 
-        utils_for_plotting.combine_images(images, config.output_file_path, "MCDA_one_weight_randomness_rough_scores.png")
-        utils_for_plotting.combine_images(images_norm, config.output_file_path, "MCDA_one_weight_randomness_norm_scores.png")
+        utils_for_plotting.combine_images(images, output_path,
+                                          "MCDA_one_weight_randomness_rough_scores.png")
+        utils_for_plotting.combine_images(images_norm, output_path,
+                                          "MCDA_one_weight_randomness_norm_scores.png")
