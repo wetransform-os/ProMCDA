@@ -5,10 +5,8 @@ import numpy as np
 import pandas as pd
 from typing import Tuple, List, Union
 
-from sklearn.preprocessing import MinMaxScaler
-
 from mcda.utils.utils_for_main import pop_indexed_elements, check_norm_sum_weights, randomly_sample_all_weights, \
-    randomly_sample_ix_weight
+    randomly_sample_ix_weight, check_input_matrix
 
 log = logging.getLogger(__name__)
 logging.getLogger('PIL').setLevel(logging.WARNING)
@@ -458,48 +456,3 @@ def check_indicator_weights_polarities(num_indicators: int, polar: List[str], co
             num_indicators != len(config["given_weights"])):
         raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
 
-
-def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
-    """
-    Check the input matrix for duplicated rows in the alternatives column, rescale negative indicator values
-    and drop the index column of alternatives.
-
-    Parameters:
-    - input_matrix: The input matrix containing the alternatives and indicators.
-
-    Raises:
-    - ValueError: If duplicated rows are found in the alternative column.
-    - UserStoppedInfo: If the user chooses to stop when duplicates are found.
-
-     :param input_matrix: pd.DataFrame
-     :rtype: pd.DataFrame
-     :return: input_matrix
-    """
-    if input_matrix.duplicated().any():
-        raise ValueError('Error: Duplicated rows in the alternatives column.')
-    elif input_matrix.iloc[:, 0].duplicated().any():
-        logger.info('Duplicated rows in the alternatives column.')
-
-    index_column_values = input_matrix.index.tolist()
-    logger.info("Alternatives are {}".format(index_column_values))
-    input_matrix_no_alternatives = input_matrix.reset_index(drop=True)  # drop the alternative
-
-    input_matrix_no_alternatives = _check_and_rescale_negative_indicators(
-        input_matrix_no_alternatives)
-
-    return input_matrix_no_alternatives
-
-
-def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame:
-    """
-    Rescale indicators of the input matrix if negative into [0-1].
-    """
-
-    if (input_matrix < 0).any().any():
-        scaler = MinMaxScaler()
-        scaled_data = scaler.fit_transform(input_matrix)
-        scaled_matrix = pd.DataFrame(
-            scaled_data, columns=input_matrix.columns, index=input_matrix.index)
-        return scaled_matrix
-    else:
-        return input_matrix

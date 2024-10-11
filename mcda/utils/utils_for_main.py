@@ -12,10 +12,10 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 from sklearn import preprocessing
+from sklearn.preprocessing import MinMaxScaler
 
 import mcda.utils.utils_for_parallelization as utils_for_parallelization
 import mcda.utils.utils_for_plotting as utils_for_plotting
-from mcda.configuration.config import Config
 from mcda.models.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.models.mcda_with_robustness import MCDAWithRobustness
 
@@ -459,12 +459,11 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict, for_testing=F
     :param for_testing: bool
     :return: Union[list, None]
     """
-    config = Config(config)
 
     satisfies_condition = False
     problem_logged = False
 
-    marginal_pdf = config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
+    marginal_pdf = config["marginal_distribution_for_each_indicator"]
     is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
     is_poisson_pdf_mask = check_if_pdf_is_poisson(marginal_pdf)
     is_uniform_pdf_mask = check_if_pdf_is_uniform(marginal_pdf)
@@ -616,14 +615,15 @@ def run_mcda_without_indicator_uncertainty(extracted_values: dict, is_robustness
     input_matrix = input_matrix.set_index(alternatives_column_name)
     index_column_name = input_matrix.index.name
     index_column_values = input_matrix.index.tolist()
-
-    logger.info("Start ProMCDA without robustness of the indicators")
-    config = Config(extracted_values)
-    is_sensitivity = config.sensitivity['sensitivity_on']
-    is_robustness = config.robustness['robustness_on']
-    mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
+    input_matrix_no_alternatives = check_input_matrix(input_matrix)
+    is_sensitivity = extracted_values['sensitivity_on']
+    is_robustness = extracted_values['robustness_on']
     f_norm = extracted_values["normalization"]
     f_agg = extracted_values["aggregation"]
+
+    mcda_no_uncert\
+        = MCDAWithoutRobustness(extracted_values, input_matrix_no_alternatives)
+    logger.info("Start ProMCDA without robustness of the indicators")
 
     normalized_indicators = mcda_no_uncert.normalize_indicators() if is_sensitivity == "yes" \
         else mcda_no_uncert.normalize_indicators(f_norm)
@@ -633,15 +633,16 @@ def run_mcda_without_indicator_uncertainty(extracted_values: dict, is_robustness
             if is_sensitivity == "yes" \
             else mcda_no_uncert.aggregate_indicators(normalized_indicators, weights, f_agg)
         normalized_scores = rescale_minmax(scores)
-    elif config.robustness["on_all_weights"] == "yes" and config.robustness["robustness_on"] == "yes":
+    elif extracted_values["on_all_weights"] == "yes" and extracted_values["robustness_on"] == "yes":
         # ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)
         all_weights_score_means, all_weights_score_stds, \
             all_weights_score_means_normalized, all_weights_score_stds_normalized = \
             _compute_scores_for_all_random_weights(normalized_indicators, is_sensitivity, weights, f_agg)
-    elif (config.robustness["on_single_weights"] == "yes") and (config.robustness["robustness_on"] == "yes"):
+    elif (extracted_values["on_single_weights"] == "yes") and (extracted_values["robustness_on"] == "yes"):
         # ONE RANDOMLY SAMPLED WEIGHT A TIME (MCDA runs (num_samples * num_indicators) times)
         iterative_random_weights_statistics: dict = _compute_scores_for_single_random_weight(
-            normalized_indicators, weights, is_sensitivity, index_column_name, index_column_values, f_agg, input_matrix)
+            normalized_indicators, weights, is_sensitivity, index_column_name, index_column_values, f_agg,
+            input_matrix_no_alternatives)
         iterative_random_w_score_means = iterative_random_weights_statistics['score_means']
         iterative_random_w_score_stds = iterative_random_weights_statistics['score_stds']
         iterative_random_w_score_means_normalized = iterative_random_weights_statistics['score_means_normalized']
@@ -664,14 +665,13 @@ def run_mcda_without_indicator_uncertainty(extracted_values: dict, is_robustness
                           iterative_random_w_score_means=iterative_random_w_score_means,
                           iterative_random_w_score_stds=iterative_random_w_score_stds,
                           iterative_random_w_score_means_normalized=iterative_random_w_score_means_normalized,
-                          input_matrix=input_matrix, config=extracted_values,
+                          input_matrix=input_matrix_no_alternatives, config=extracted_values,
                           is_robustness_weights=is_robustness_weights)
 
 
-def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.DataFrame, index_column_name: str,
-                                        index_column_values: list, mc_runs: int, random_seed: int, is_sensitivity: str,
-                                        f_agg: str, f_norm: str, weights: Union[List[list], List[pd.DataFrame], dict],
-                                        polar: List[str], marginal_pdf: List[str]) -> None:
+def run_mcda_with_indicator_uncertainty(extracted_values: dict, weights: Union[List[str], List[pd.DataFrame],
+                                        dict, None]) -> None:
+
     """
     Runs ProMCDA with uncertainty on the indicators, i.e. with a robustness analysis.
 
@@ -685,24 +685,28 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
     - weights: the normalised weights (either fixed or random sampled weights, depending on the settings).
       In the context of the robustness analysis, only fixed normalised weights are used, i.e. weights[0].
 
-    :param input_config: dict
-    :param index_column_name: str
-    :param index_column_values: list
-    :param input_matrix: pd:DataFrame
-    :param mc_runs: int
-    :param random_seed: int
-    :param is_sensitivity: str
+    :param extracted_values: dict
     :param weights: Union[List[str], List[pd.DataFrame], dict, None]
-    :param f_norm: str
-    :param f_agg: str
-    :param polar: List[str]
-    :param marginal_pdf: List[str]
     :return: None
     """
     logger.info("Start ProMCDA with uncertainty on the indicators")
-    config = Config(input_config)
     is_robustness_indicators = True
     all_indicators_scores_normalized = []
+
+    # Extract relevant values
+    input_matrix = extracted_values["input_matrix"]
+    alternatives_column_name = input_matrix.columns[0]
+    input_matrix = input_matrix.set_index(alternatives_column_name)
+    index_column_name = input_matrix.index.name
+    index_column_values = input_matrix.index.tolist()
+    input_matrix_no_alternatives = check_input_matrix(input_matrix)
+    mc_runs = extracted_values["monte_carlo_runs"]
+    marginal_pdf = extracted_values["marginal_distribution_for_each_indicator"]
+    random_seed = extracted_values["random_seed"]
+    is_sensitivity = extracted_values['sensitivity_on']
+    f_norm = extracted_values["normalization"]
+    f_agg = extracted_values["aggregation"]
+    polar = extracted_values["polarity_for_each_indicator"]
 
     if mc_runs <= 0:
         logger.error('Error Message', stack_info=True)
@@ -712,11 +716,12 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
         logger.info("The number of Monte-Carlo runs is only {}".format(mc_runs))
         logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
 
-    check_parameters_pdf(input_matrix, input_config)
+    check_parameters_pdf(input_matrix, extracted_values)
     is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
     is_poisson_pdf_mask = check_if_pdf_is_poisson(marginal_pdf)
 
-    mcda_with_uncert = MCDAWithRobustness(config, input_matrix, is_exact_pdf_mask, is_poisson_pdf_mask, random_seed)
+    mcda_with_uncert = MCDAWithRobustness(extracted_values, input_matrix_no_alternatives, is_exact_pdf_mask,
+                                          is_poisson_pdf_mask, random_seed)
     n_random_input_matrices = mcda_with_uncert.create_n_randomly_sampled_matrices()
 
     if is_sensitivity == "yes":
@@ -753,7 +758,7 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
                        iterative_random_w_score_means=None,
                        iterative_random_w_score_means_normalized=None,
                        iterative_random_w_score_stds=None,
-                       input_config=input_config,
+                       input_config=extracted_values,
                        index_column_name=index_column_name, index_column_values=index_column_values)
 
     _plot_and_save_charts(scores=None, normalized_scores=None,
@@ -762,8 +767,54 @@ def run_mcda_with_indicator_uncertainty(input_config: dict, input_matrix: pd.Dat
                           iterative_random_w_score_means=None,
                           iterative_random_w_score_stds=None,
                           iterative_random_w_score_means_normalized=None,
-                          input_matrix=input_matrix, config=input_config,
+                          input_matrix=input_matrix, config=extracted_values,
                           is_robustness_indicators=is_robustness_indicators)
+
+
+def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
+    """
+    Check the input matrix for duplicated rows in the alternatives column, rescale negative indicator values
+    and drop the index column of alternatives.
+
+    Parameters:
+    - input_matrix: The input matrix containing the alternatives and indicators.
+
+    Raises:
+    - ValueError: If duplicated rows are found in the alternative column.
+    - UserStoppedInfo: If the user chooses to stop when duplicates are found.
+
+     :param input_matrix: pd.DataFrame
+     :rtype: pd.DataFrame
+     :return: input_matrix
+    """
+    if input_matrix.duplicated().any():
+        raise ValueError('Error: Duplicated rows in the alternatives column.')
+    elif input_matrix.iloc[:, 0].duplicated().any():
+        logger.info('Duplicated rows in the alternatives column.')
+
+    index_column_values = input_matrix.index.tolist()
+    logger.info("Alternatives are {}".format(index_column_values))
+    input_matrix_no_alternatives = input_matrix.reset_index(drop=True)  # drop the alternative
+
+    input_matrix_no_alternatives = _check_and_rescale_negative_indicators(
+        input_matrix_no_alternatives)
+
+    return input_matrix_no_alternatives
+
+
+def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame:
+    """
+    Rescale indicators of the input matrix if negative into [0-1].
+    """
+
+    if (input_matrix < 0).any().any():
+        scaler = MinMaxScaler()
+        scaled_data = scaler.fit_transform(input_matrix)
+        scaled_matrix = pd.DataFrame(
+            scaled_data, columns=input_matrix.columns, index=input_matrix.index)
+        return scaled_matrix
+    else:
+        return input_matrix
 
 
 def _compute_scores_for_all_random_weights(indicators: dict, is_sensitivity: str,
