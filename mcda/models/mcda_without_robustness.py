@@ -23,7 +23,7 @@ class MCDAWithoutRobustness:
     However, it's possible to have randomly sampled weights.
     """
 
-    def __init__(self, config: Config, input_matrix: pd.DataFrame):
+    def __init__(self, config: dict, input_matrix: pd.DataFrame):
         self.normalized_indicators = None
         self.weights = None
         self._config = copy.deepcopy(config)
@@ -50,7 +50,7 @@ class MCDAWithoutRobustness:
           and another with the range (0.1, +inf).
         """
         norm = Normalization(self._input_matrix,
-                             self._config.polarity_for_each_indicator)
+                             self._config["polarity"])
 
         normalized_indicators = {}
 
