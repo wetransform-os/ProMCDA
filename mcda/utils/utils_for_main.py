@@ -270,9 +270,32 @@ def save_config(config: dict, folder_path: str, filename: str):
 
     try:
         with open(full_output_path, 'w') as fp:
-            json.dump(config, fp)
+            serializable_config = _prepare_config_for_json(config)
+            json.dump(serializable_config, fp)
     except IOError as e:
         logging.error(f"Error while dumping the configuration into a JSON file: {e}")
+
+
+def _convert_dataframe_to_serializable(df):
+    """
+    Convert a pandas DataFrame into a serializable dictionary format.
+    """
+    return {
+        'data': df.values.tolist(),  # Convert data to list of lists
+        'columns': df.columns.tolist(),  # Convert column names to list
+        'index': df.index.tolist()  # Convert index labels to list
+    }
+
+
+def _prepare_config_for_json(config):
+    """
+    Prepare the config dictionary by converting non-serializable objects into serializable ones.
+    """
+    config_copy = config.copy()  # Create a copy to avoid modifying the original config
+    if isinstance(config_copy['input_matrix'], pd.DataFrame):
+        # Convert DataFrame to serializable format
+        config_copy['input_matrix'] = _convert_dataframe_to_serializable(config_copy['input_matrix'])
+    return config_copy
 
 
 def check_path_exists(path: str):
@@ -612,7 +635,7 @@ def run_mcda_without_indicator_uncertainty(extracted_values: dict, is_robustness
     # Extract relevant values
     input_matrix = extracted_values["input_matrix"]
     alternatives_column_name = input_matrix.columns[0]
-    input_matrix = input_matrix.set_index(alternatives_column_name)
+    # input_matrix = input_matrix.set_index(alternatives_column_name)
     index_column_name = input_matrix.index.name
     index_column_values = input_matrix.index.tolist()
     input_matrix_no_alternatives = check_input_matrix(input_matrix)
@@ -621,7 +644,7 @@ def run_mcda_without_indicator_uncertainty(extracted_values: dict, is_robustness
     f_norm = extracted_values["normalization"]
     f_agg = extracted_values["aggregation"]
 
-    mcda_no_uncert\
+    mcda_no_uncert \
         = MCDAWithoutRobustness(extracted_values, input_matrix_no_alternatives)
     logger.info("Start ProMCDA without robustness of the indicators")
 
@@ -670,8 +693,7 @@ def run_mcda_without_indicator_uncertainty(extracted_values: dict, is_robustness
 
 
 def run_mcda_with_indicator_uncertainty(extracted_values: dict, weights: Union[List[str], List[pd.DataFrame],
-                                        dict, None]) -> None:
-
+dict, None]) -> None:
     """
     Runs ProMCDA with uncertainty on the indicators, i.e. with a robustness analysis.
 

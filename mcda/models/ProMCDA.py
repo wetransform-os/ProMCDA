@@ -35,6 +35,7 @@ class ProMCDA:
         df_normalized = promcda.normalize()
         df_aggregated = promcda.aggregate()
         """
+        self.logger = logging.getLogger("ProMCDA")
         self.input_matrix = input_matrix
         self.polarity = polarity
         self.sensitivity = sensitivity
@@ -51,7 +52,6 @@ class ProMCDA:
         self.aggregated_matrix = None
         self.ranked_matrix = None
 
-        self.logger = logging.getLogger("ProMCDA")
 
     def validate_inputs(self) -> Tuple[int, int, list, Union[list, List[list], dict], dict]:
         """
