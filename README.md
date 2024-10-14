@@ -19,6 +19,7 @@ A tool to estimate scores of alternatives and their uncertainties based on a Mul
 ### Table of Contents
 - [Contributing](#contributing)
 - [MCDA quick overview and applications](#mcda-quick-overview-and-applications)
+- [Input and output file paths](#input-and-output-file-paths)
 - [Input information needed in the configuration file](#input-information-needed-in-the-configuration-file)
 - [Output](#output)
 - [Requirements](#requirements)
