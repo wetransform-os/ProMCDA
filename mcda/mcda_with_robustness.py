@@ -6,7 +6,8 @@ from typing import List
 import pandas as pd
 import numpy as np
 
-from mcda.configuration.config import Config
+from ProMCDA.mcda.utils.application_enums import MonteCarloMarginalDistributions
+from ProMCDA.mcda.models.configuration import Configuration
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ class MCDAWithRobustness:
     """
 
 
-    def __init__(self, config: Config, input_matrix: pd.DataFrame(), is_exact_pdf_mask=None, is_poisson_pdf_mask=None,
+    def __init__(self, config: Configuration, input_matrix: pd.DataFrame(), is_exact_pdf_mask=None, is_poisson_pdf_mask=None,
                  random_seed=None):
         self.is_exact_pdf_mask = is_exact_pdf_mask
         self.is_poisson_pdf_mask = is_poisson_pdf_mask
@@ -99,8 +100,8 @@ class MCDAWithRobustness:
 
         :return list_random_matrix: List[pd.DataFrame]
         """
-        marginal_pdf = self._config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
-        num_runs = self._config.monte_carlo_sampling["monte_carlo_runs"]  # N
+        marginal_pdf = self._config.monte_carlo_sampling.marginal_distributions
+        num_runs = self._config.monte_carlo_sampling.monte_carlo_runs
         input_matrix = self._input_matrix  # (AxnI)
         is_exact_pdf_mask = self.is_exact_pdf_mask
         is_poisson_pdf_mask = self.is_poisson_pdf_mask
@@ -136,19 +137,19 @@ class MCDAWithRobustness:
 
             distribution_type = marginal_pdf[i]
 
-            if distribution_type == 'exact':
+            if distribution_type == MonteCarloMarginalDistributions.EXACT.value:
                 samples = self.repeat_series_to_create_df(
                     parameter1, num_runs).T
-            elif distribution_type == 'normal':
+            elif distribution_type == MonteCarloMarginalDistributions.NORMAL.value:
                 samples = np.random.normal(
                     loc=parameter1, scale=parameter2, size=(num_runs, len(parameter1)))
-            elif distribution_type == 'uniform':
+            elif distribution_type == MonteCarloMarginalDistributions.UNIFORM.value:
                 samples = np.random.uniform(
                     low=parameter1, high=parameter2, size=(num_runs, len(parameter1)))
-            elif distribution_type == 'lnorm':
+            elif distribution_type == MonteCarloMarginalDistributions.LOGNORMAL.value:
                 samples = np.random.lognormal(
                     mean=parameter1, sigma=parameter2, size=(num_runs, len(parameter1)))
-            elif distribution_type == 'poisson':
+            elif distribution_type == MonteCarloMarginalDistributions.POISSON.value:
                 samples = np.random.poisson(
                     lam=parameter1, size=(num_runs, len(parameter1)))
             else:

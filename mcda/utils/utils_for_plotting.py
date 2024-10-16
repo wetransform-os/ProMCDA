@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from PIL import Image
 
-import mcda.utils.utils_for_main as utils_for_main
+import ProMCDA.mcda.utils.utils_for_main as utils_for_main
 
 DEFAULT_OUTPUT_DIRECTORY_PATH = './output_files'  # root directory of ProMCDA
 
