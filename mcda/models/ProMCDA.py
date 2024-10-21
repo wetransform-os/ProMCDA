@@ -52,7 +52,6 @@ class ProMCDA:
         self.aggregated_matrix = None
         self.ranked_matrix = None
 
-
     def validate_inputs(self) -> Tuple[int, int, list, Union[list, List[list], dict], dict]:
         """
         Extract and validate input configuration parameters to ensure they are correct.
@@ -60,7 +59,8 @@ class ProMCDA:
         """
         configuration_values = extract_configuration_values(self.input_matrix, self.polarity, self.sensitivity,
                                                             self.robustness, self.monte_carlo, self.output_path)
-        is_robustness_indicators, is_robustness_weights, polar, weights = check_configuration_values(configuration_values)
+        is_robustness_indicators, is_robustness_weights, polar, weights = check_configuration_values(
+            configuration_values)
 
         # Validate input TODO: move into a different function validate_input_parameters_keys
         # self.validate_normalization(self.sensitivity['normalization'])
@@ -120,7 +120,8 @@ class ProMCDA:
     #
     #     return self.aggregated_matrix
 
-    def run_mcda(self, is_robustness_indicators: int, is_robustness_weights: int, weights: Union[list, List[list], dict],
+    def run_mcda(self, is_robustness_indicators: int, is_robustness_weights: int,
+                 weights: Union[list, List[list], dict],
                  configuration_settings: dict):
         """
         Execute the full ProMCDA process, either with or without uncertainties on the indicators.
@@ -150,4 +151,3 @@ class ProMCDA:
     #     """
     #     # Return the aggregated results (or any other relevant results)
     #     return self.aggregated_matrix
-

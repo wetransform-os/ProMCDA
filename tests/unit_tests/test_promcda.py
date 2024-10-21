@@ -1,4 +1,8 @@
+import os
+import shutil
 import unittest
+import warnings
+
 import pandas as pd
 from mcda.models.ProMCDA import ProMCDA
 
@@ -6,6 +10,7 @@ from mcda.models.ProMCDA import ProMCDA
 class TestProMCDA(unittest.TestCase):
 
     def setUp(self):
+        warnings.filterwarnings("error", category=ResourceWarning)
         # Mock input data for testing
         self.input_matrix = pd.DataFrame({
             'Criteria 1': [0.5, 0.2, 0.8],
@@ -42,7 +47,7 @@ class TestProMCDA(unittest.TestCase):
         """
         promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
                           self.output_path)
-        self.assertEqual(promcda.input_matrix.shape, (3, 3))
+        self.assertEqual(promcda.input_matrix.shape, (3, 2))
         self.assertEqual(promcda.polarity, self.polarity)
         self.assertEqual(promcda.sensitivity, self.sensitivity)
         self.assertEqual(promcda.robustness, self.robustness)
@@ -54,12 +59,26 @@ class TestProMCDA(unittest.TestCase):
         """
         promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
                           self.output_path)
-        is_robustness_indicators, polar, weights, config = promcda.validate_inputs()
+        (is_robustness_indicators, is_robustness_weights, polar, weights, config) = promcda.validate_inputs()
 
         # Validate the result
         self.assertIsInstance(is_robustness_indicators, int)
+        self.assertIsInstance(is_robustness_weights, int)
         self.assertIsInstance(polar, tuple)
         self.assertIsInstance(weights, list)
+        self.assertIsInstance(config, dict)
         self.assertEqual(is_robustness_indicators, 0)
+        self.assertEqual(is_robustness_weights, 0)
 
-    # You can write additional tests for normalization, aggregation, etc.
+    def tearDown(self):
+        """
+        Clean up temporary directories and files after each test.
+        """
+        if os.path.exists(self.output_path):
+            shutil.rmtree(self.output_path)
+
+if __name__ == '__main__':
+    unittest.main()
+
+    # TODO: write additional tests for normalization, aggregation, etc.
+
