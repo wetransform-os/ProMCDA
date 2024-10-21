@@ -3,7 +3,7 @@ import logging
 
 import numpy as np
 import pandas as pd
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Dict, Any
 
 from mcda.utils.utils_for_main import pop_indexed_elements, check_norm_sum_weights, randomly_sample_all_weights, \
     randomly_sample_ix_weight, check_input_matrix
@@ -14,10 +14,44 @@ FORMATTER: str = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=FORMATTER)
 logger = logging.getLogger("ProMCDA")
 
+from typing import Dict, List, Any
+
+
+def check_configuration_keys(sensitivity: dict, robustness: dict, monte_carlo: dict) -> bool:
+    """
+    Checks for required keys in sensitivity, robustness, and monte_carlo dictionaries.
+    TODO: revisit this logic when substitute classes to handle configuration settings.
+
+    :param sensitivity : dict
+    :param robustness : dict
+    :param: monte_carlo : dict
+    :rtype: bool
+    """
+
+    keys_of_dict_values = {
+        'sensitivity': ['sensitivity_on', 'normalization', 'aggregation'],
+        'robustness': ['robustness_on', 'on_single_weights', 'on_all_weights', 'given_weights', 'on_indicators'],
+        'monte_carlo': ['monte_carlo_runs', 'num_cores', 'random_seed', 'marginal_distribution_for_each_indicator']
+    }
+
+    _check_dict_keys(sensitivity, keys_of_dict_values['sensitivity'])
+    _check_dict_keys(robustness, keys_of_dict_values['robustness'])
+    _check_dict_keys(monte_carlo, keys_of_dict_values['monte_carlo'])
+
+    return True
+
+
+def _check_dict_keys(dic: Dict[str, Any], expected_keys: List[str]) -> None:
+    """
+    Helper function to check if the dictionary contains the required keys.
+    """
+    for key in expected_keys:
+        if key not in dic:
+            raise KeyError(f"The key '{key}' is missing in the provided dictionary")
+
 
 def extract_configuration_values(input_matrix: pd.DataFrame, polarity: Tuple[str], sensitivity: dict, robustness: dict,
                                  monte_carlo: dict, output_path: str) -> dict:
-
     """
     Extracts relevant configuration values required for running the ProMCDA process.
 
@@ -128,10 +162,10 @@ def check_configuration_values(extracted_values: dict) -> Tuple[int, int, List[s
     # Check for sensitivity-related configuration errors
     if sensitivity_on == "no":
         check_config_error(normalization not in ['minmax', 'target', 'standardized', 'rank'],
-                            'The available normalization functions are: minmax, target, standardized, rank.')
+                           'The available normalization functions are: minmax, target, standardized, rank.')
         check_config_error(aggregation not in ['weighted_sum', 'geometric', 'harmonic', 'minimum'],
-                            'The available aggregation functions are: weighted_sum, geometric, harmonic, minimum.'
-                            '\nWatch the correct spelling in the configuration.')
+                           'The available aggregation functions are: weighted_sum, geometric, harmonic, minimum.'
+                           '\nWatch the correct spelling in the configuration.')
         logger.info("ProMCDA will only use one pair of norm/agg functions: " + normalization + '/' + aggregation)
     else:
         logger.info("ProMCDA will use a set of different pairs of norm/agg functions")
@@ -143,40 +177,40 @@ def check_configuration_values(extracted_values: dict) -> Tuple[int, int, List[s
         check_config_error((robustness_on_single_weights == "no" and
                             robustness_on_all_weights == "no" and
                             robustness_on_indicators == "no"),
-                            'Robustness analysis has been requested, but it’s unclear whether it should be applied to '
-                            'weights or indicators. Please clarify it.')
+                           'Robustness analysis has been requested, but it’s unclear whether it should be applied to '
+                           'weights or indicators. Please clarify it.')
 
         check_config_error((robustness_on_single_weights == "yes" and
                             robustness_on_all_weights == "yes" and
                             robustness_on_indicators == "no"),
-                            'Robustness analysis has been requested for the weights, but it’s unclear whether it should '
-                            'be applied to all weights or just one at a time? Please clarify.')
+                           'Robustness analysis has been requested for the weights, but it’s unclear whether it should '
+                           'be applied to all weights or just one at a time? Please clarify.')
 
         check_config_error(((robustness_on_single_weights == "yes" and
-            robustness_on_all_weights == "yes" and
-            robustness_on_indicators == "yes") or
-            (robustness_on_single_weights == "yes" and
-            robustness_on_all_weights == "no" and
-            robustness_on_indicators == "yes") or
-            (robustness_on_single_weights == "no" and
-            robustness_on_all_weights == "yes" and
-            robustness_on_indicators == "yes")),
-            'Robustness analysis has been requested, but it’s unclear whether it should be applied to '
-            'weights or indicators. Please clarify.')
+                             robustness_on_all_weights == "yes" and
+                             robustness_on_indicators == "yes") or
+                            (robustness_on_single_weights == "yes" and
+                             robustness_on_all_weights == "no" and
+                             robustness_on_indicators == "yes") or
+                            (robustness_on_single_weights == "no" and
+                             robustness_on_all_weights == "yes" and
+                             robustness_on_indicators == "yes")),
+                           'Robustness analysis has been requested, but it’s unclear whether it should be applied to '
+                           'weights or indicators. Please clarify.')
 
         # Check seetings for robustness analysis on weights or indicators
         condition_robustness_on_weights = (
-            (robustness_on_single_weights == 'yes' and
-            robustness_on_all_weights == 'no' and
-            robustness_on_indicators == 'no') or
-            (robustness_on_single_weights == 'no' and
-            robustness_on_all_weights == 'yes' and
-            robustness_on_indicators == 'no'))
+                (robustness_on_single_weights == 'yes' and
+                 robustness_on_all_weights == 'no' and
+                 robustness_on_indicators == 'no') or
+                (robustness_on_single_weights == 'no' and
+                 robustness_on_all_weights == 'yes' and
+                 robustness_on_indicators == 'no'))
 
         condition_robustness_on_indicators = (
             (robustness_on_single_weights == 'no' and
-            robustness_on_all_weights == 'no' and
-            robustness_on_indicators == 'yes'))
+             robustness_on_all_weights == 'no' and
+             robustness_on_indicators == 'yes'))
 
         is_robustness_weights, is_robustness_indicators = check_config_setting(condition_robustness_on_weights,
                                                                                condition_robustness_on_indicators,
@@ -194,7 +228,8 @@ def check_configuration_values(extracted_values: dict) -> Tuple[int, int, List[s
         num_indicators = (input_matrix_no_alternatives.shape[1] - num_non_exact_and_non_poisson)
 
     # Process indicators and weights based on input parameters in the configuration
-    polar, weights = process_indicators_and_weights(extracted_values, input_matrix_no_alternatives, is_robustness_indicators,
+    polar, weights = process_indicators_and_weights(extracted_values, input_matrix_no_alternatives,
+                                                    is_robustness_indicators,
                                                     is_robustness_weights, polarity, monte_carlo_runs, num_indicators)
 
     # Check the number of indicators, weights, and polarities
@@ -342,7 +377,7 @@ def _handle_polarities_and_weights(is_robustness_indicators: int, is_robustness_
                                    col_to_drop_indexes: np.ndarray, polar: List[str], config: dict, mc_runs: int,
                                    num_indicators: int) \
         -> Union[Tuple[List[str], list, None, None], Tuple[List[str], None, List[List], None],
-                 Tuple[List[str], None, None, dict]]:
+        Tuple[List[str], None, None, dict]]:
     """
     Manage polarities and weights based on the specified robustness settings, ensuring that the appropriate adjustments
     and normalizations are applied before returning the necessary data structures.
@@ -455,4 +490,3 @@ def check_indicator_weights_polarities(num_indicators: int, polar: List[str], co
     if (config["robustness_on_all_weights"] == "no") and (
             num_indicators != len(config["given_weights"])):
         raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')
-

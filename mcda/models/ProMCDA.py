@@ -4,7 +4,8 @@ import logging
 import pandas as pd
 from typing import Tuple, List, Union
 
-from mcda.configuration.configuration_validator import extract_configuration_values, check_configuration_values
+from mcda.configuration.configuration_validator import extract_configuration_values, check_configuration_values, \
+    check_configuration_keys
 from mcda.utils.utils_for_main import run_mcda_without_indicator_uncertainty, run_mcda_with_indicator_uncertainty
 
 log = logging.getLogger(__name__)
@@ -43,8 +44,14 @@ class ProMCDA:
         self.monte_carlo = monte_carlo
         self.output_path = output_path
 
-        # self.validate_input_parameters_keys # TODO: still need a formal check as made in old config class,
-        # maybe use some of following functions validate_
+        # Check configuration dictionary keys and handle potential issues
+        # TODO: revisit this logic when substitute classes to handle configuration settings
+        try:
+            check_configuration_keys(self.sensitivity, self.robustness, self.monte_carlo)
+        except KeyError as e:
+            print(f"Configuration Error: {e}")
+            raise  # Optionally re-raise the error after logging it
+
         is_robustness_indicators, is_robustness_weights, polar, weights, configuration_settings = self.validate_inputs()
         self.run_mcda(is_robustness_indicators, is_robustness_weights, weights, configuration_settings)
 
@@ -57,17 +64,19 @@ class ProMCDA:
         Extract and validate input configuration parameters to ensure they are correct.
         Return a flag indicating whether robustness analysis will be performed on indicators (1) or not (0).
         """
+
         configuration_values = extract_configuration_values(self.input_matrix, self.polarity, self.sensitivity,
                                                             self.robustness, self.monte_carlo, self.output_path)
         is_robustness_indicators, is_robustness_weights, polar, weights = check_configuration_values(
             configuration_values)
 
-        # Validate input TODO: move into a different function validate_input_parameters_keys
-        # self.validate_normalization(self.sensitivity['normalization'])
-        # self.validate_aggregation(self.sensitivity['aggregation'])
-        # self.validate_robustness(self.robustness)
-
         return is_robustness_indicators, is_robustness_weights, polar, weights, configuration_values
+
+
+
+    # self.validate_normalization(self.sensitivity['normalization'])
+    # self.validate_aggregation(self.sensitivity['aggregation'])
+    # self.validate_robustness(self.robustness)
 
     # def validate_normalization(self, f_norm):
     #     """
