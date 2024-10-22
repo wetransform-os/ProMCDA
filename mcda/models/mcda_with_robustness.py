@@ -6,8 +6,6 @@ from typing import List
 import pandas as pd
 import numpy as np
 
-from mcda.configuration.config import Config
-
 log = logging.getLogger(__name__)
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'

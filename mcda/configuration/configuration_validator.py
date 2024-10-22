@@ -160,12 +160,13 @@ def check_configuration_values(extracted_values: dict) -> Tuple[int, int, List[s
     marginal_distribution = extracted_values["marginal_distribution_for_each_indicator"]
 
     # Check for sensitivity-related configuration errors
+    valid_norm_methods = ['minmax', 'target', 'standardized', 'rank']
+    valid_agg_methods = ['weighted_sum', 'geometric', 'harmonic', 'minimum']
     if sensitivity_on == "no":
-        check_config_error(normalization not in ['minmax', 'target', 'standardized', 'rank'],
-                           'The available normalization functions are: minmax, target, standardized, rank.')
-        check_config_error(aggregation not in ['weighted_sum', 'geometric', 'harmonic', 'minimum'],
-                           'The available aggregation functions are: weighted_sum, geometric, harmonic, minimum.'
-                           '\nWatch the correct spelling in the configuration.')
+        check_config_error(normalization not in valid_norm_methods,
+                           f'Invalid normalization method: {normalization}. Available methods: {valid_norm_methods}')
+        check_config_error(aggregation not in valid_agg_methods,
+                           f'Invalid aggregation method: {aggregation}. Available methods: {valid_agg_methods}')
         logger.info("ProMCDA will only use one pair of norm/agg functions: " + normalization + '/' + aggregation)
     else:
         logger.info("ProMCDA will use a set of different pairs of norm/agg functions")

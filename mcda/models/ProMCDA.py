@@ -6,6 +6,7 @@ from typing import Tuple, List, Union
 
 from mcda.configuration.configuration_validator import extract_configuration_values, check_configuration_values, \
     check_configuration_keys
+from mcda.mcda_functions.normalization import Normalization
 from mcda.utils.utils_for_main import run_mcda_without_indicator_uncertainty, run_mcda_with_indicator_uncertainty
 
 log = logging.getLogger(__name__)
@@ -29,12 +30,10 @@ class ProMCDA:
         :param output_path: path for saving output files.
 
         # Example of instantiating the class and using it
-        promcda = ProMCDA(input_matrix, polarity, sensitivity, robustness, monte_carlo)
-        sensitivity = sensitivity_class(input1, input2)
-        aggregate = aggregate_class(input1, input2)
-        promcda.run_mcda()
-        df_normalized = promcda.normalize()
-        df_aggregated = promcda.aggregate()
+            promcda = ProMCDA(input_matrix, polarity, sensitivity, robustness, monte_carlo)
+            promcda.run_mcda()
+            df_normalized = promcda.normalize()
+            df_aggregated = promcda.aggregate()
         """
         self.logger = logging.getLogger("ProMCDA")
         self.input_matrix = input_matrix
@@ -72,51 +71,62 @@ class ProMCDA:
 
         return is_robustness_indicators, is_robustness_weights, polar, weights, configuration_values
 
+    def normalize(self, feature_range=(0, 1)) -> Union[pd.DataFrame, dict]:
+        """
+        Normalize the decision matrix based on the configuration `f_norm`.
 
+        If `f_norm` is a string representing a single normalization method,
+        it applies that method to the decision matrix.
 
-    # self.validate_normalization(self.sensitivity['normalization'])
-    # self.validate_aggregation(self.sensitivity['aggregation'])
-    # self.validate_robustness(self.robustness)
+        If `f_norm` is a list of functions, each normalization function will be
+        applied to the input matrix sequentially, and the results will be stored
+        in a dictionary where the keys are function names.
 
-    # def validate_normalization(self, f_norm):
-    #     """
-    #     Validate the normalization method.
-    #     """
-    #     valid_norm_methods = ['minmax', 'target', 'standardized', 'rank']
-    #     if f_norm not in valid_norm_methods:
-    #         raise ValueError(f"Invalid normalization method: {f_norm}. Available methods: {valid_norm_methods}")
-    #
-    # def validate_aggregation(self, f_agg):
-    #     """
-    #     Validate the aggregation method.
-    #     """
-    #     valid_agg_methods = ['weighted_sum', 'geometric', 'harmonic', 'minimum']
-    #     if f_agg not in valid_agg_methods:
-    #         raise ValueError(f"Invalid aggregation method: {f_agg}. Available methods: {valid_agg_methods}")
-    #
-    # def validate_robustness(self, robustness):
-    #     """
-    #     Validate robustness analysis settings.
-    #     """
-    #     if not isinstance(robustness, dict):
-    #         raise ValueError("Robustness settings must be a dictionary.")
-    #
-    #     # Add more specific checks based on robustness config structure
-    #     if robustness['on_single_weights'] == 'yes' and robustness['on_all_weights'] == 'yes':
-    #         raise ValueError("Conflicting settings for robustness analysis on weights.")
-    #
-    # def normalize(self):
-    #     """
-    #     Normalize the decision matrix based on the configuration.
-    #     """
-    #     f_norm = self.sensitivity['normalization']
-    #     self.logger.info("Normalizing matrix with method: %s", f_norm)
-    #
-    #     # Perform normalization (replace this with actual logic)
-    #     self.normalized_matrix = normalize_matrix(self.input_matrix, f_norm)
-    #
-    #     return self.normalized_matrix
-    #
+        Args:
+            feature_range (tuple): Range for normalization methods that require it, like MinMax normalization.
+                                   The range (0.1, 1) is not needed when no aggregation will follow.
+
+        Returns:
+            A single normalized DataFrame or a dictionary of DataFrames if multiple
+            normalization methods are applied.
+        """
+        normalization = Normalization(self.input_matrix, self.polarity)
+
+        sensitivity_on = self.sensitivity['sensitivity_on']
+        f_norm = self.sensitivity['normalization']
+        f_norm_list = ['minmax', 'target', 'standardized', 'rank']
+
+        if sensitivity_on == "yes":
+            self.normalized_matrix = {}
+            for norm_function in f_norm_list:
+                self.logger.info("Applying normalization method: %s", norm_function)
+                norm_method = getattr(normalization, norm_function, None)
+                if norm_function in ['minmax', 'target', 'standardized']:
+                    result = norm_method(feature_range)
+                    if result is None:
+                        raise ValueError(f"{norm_function} method returned None")
+                    self.normalized_matrix[norm_function] = result
+                else:
+                    result = normalization.rank()
+                    if result is None:
+                        raise ValueError(f"{norm_function} method returned None")
+                    self.normalized_matrix[norm_function] = result
+        else:
+            self.logger.info("Normalizing matrix with method(s): %s", f_norm)
+            norm_method = getattr(normalization, f_norm, None)
+            if f_norm in ['minmax', 'target', 'standardized']:
+                result = norm_method(feature_range)
+                if result is None:
+                    raise ValueError(f"{f_norm} method returned None")
+                self.normalized_matrix = result
+            else:
+                result = norm_method()
+                if result is None:
+                    raise ValueError(f"{f_norm} method returned None")
+                self.normalized_matrix = result
+
+            return self.normalized_matrix
+
     # def aggregate(self):
     #     """
     #     Aggregate the decision matrix based on the configuration.

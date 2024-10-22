@@ -3,7 +3,6 @@ import copy
 import logging
 import pandas as pd
 
-from mcda.configuration.config import Config
 from mcda.mcda_functions.normalization import Normalization
 from mcda.mcda_functions.aggregation import Aggregation
 

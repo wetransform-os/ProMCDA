@@ -45,8 +45,10 @@ class TestProMCDA(unittest.TestCase):
         """
         Test if ProMCDA initializes correctly.
         """
+        # Given
         promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
                           self.output_path)
+        # Then
         self.assertEqual(promcda.input_matrix.shape, (3, 2))
         self.assertEqual(promcda.polarity, self.polarity)
         self.assertEqual(promcda.sensitivity, self.sensitivity)
@@ -57,11 +59,13 @@ class TestProMCDA(unittest.TestCase):
         """
         Test if input validation works and returns the expected values.
         """
+        # Given
         promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
                           self.output_path)
+        # When
         (is_robustness_indicators, is_robustness_weights, polar, weights, config) = promcda.validate_inputs()
 
-        # Validate the result
+        # Then
         self.assertIsInstance(is_robustness_indicators, int)
         self.assertIsInstance(is_robustness_weights, int)
         self.assertIsInstance(polar, tuple)
@@ -69,6 +73,46 @@ class TestProMCDA(unittest.TestCase):
         self.assertIsInstance(config, dict)
         self.assertEqual(is_robustness_indicators, 0)
         self.assertEqual(is_robustness_weights, 0)
+
+    def test_normalize_single_method(self):
+        """
+        Test normalization with a single methods.
+        Test the correctness of the output values happens in unit_tests/test_normalization.py
+        """
+        # Given
+        self.sensitivity['sensitivity_on'] = 'no'
+
+        # When
+        promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
+                          self.output_path)
+        normalized_matrix = promcda.normalize()
+
+        # Then
+        self.assertIsInstance(normalized_matrix, pd.DataFrame)
+
+    def test_normalize_multiple_methods(self):
+        """
+        Test normalization with multiple methods.
+        Test the correctness of the output values happens in unit_tests/test_normalization.py
+        """
+        self.sensitivity['sensitivity_on'] = 'yes'
+        self.sensitivity['normalization'] = ['minmax', 'standardized', 'rank', 'target']
+
+        promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
+                              self.output_path)
+        normalized_matrices = promcda.normalize()
+
+        self.assertIsInstance(normalized_matrices, dict)
+        self.assertIn('minmax', normalized_matrices)
+        self.assertIn('standardized', normalized_matrices)
+        self.assertIn('rank', normalized_matrices)
+        self.assertIn('target', normalized_matrices)
+
+        self.assertIsInstance(normalized_matrices['minmax'], pd.DataFrame)
+        self.assertIsInstance(normalized_matrices['standardized'], pd.DataFrame)
+        self.assertIsInstance(normalized_matrices['rank'], pd.DataFrame)
+        self.assertIsInstance(normalized_matrices['target'], pd.DataFrame)
+
 
     def tearDown(self):
         """
@@ -80,5 +124,4 @@ class TestProMCDA(unittest.TestCase):
 if __name__ == '__main__':
     unittest.main()
 
-    # TODO: write additional tests for normalization, aggregation, etc.
 
