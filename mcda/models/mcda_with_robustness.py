@@ -6,8 +6,6 @@ from typing import List
 import pandas as pd
 import numpy as np
 
-from mcda.configuration.config import Config
-
 log = logging.getLogger(__name__)
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
@@ -29,7 +27,7 @@ class MCDAWithRobustness:
     """
 
 
-    def __init__(self, config: Config, input_matrix: pd.DataFrame(), is_exact_pdf_mask=None, is_poisson_pdf_mask=None,
+    def __init__(self, config: dict, input_matrix: pd.DataFrame(), is_exact_pdf_mask=None, is_poisson_pdf_mask=None,
                  random_seed=None):
         self.is_exact_pdf_mask = is_exact_pdf_mask
         self.is_poisson_pdf_mask = is_poisson_pdf_mask
@@ -99,8 +97,8 @@ class MCDAWithRobustness:
 
         :return list_random_matrix: List[pd.DataFrame]
         """
-        marginal_pdf = self._config.monte_carlo_sampling["marginal_distribution_for_each_indicator"]
-        num_runs = self._config.monte_carlo_sampling["monte_carlo_runs"]  # N
+        marginal_pdf = self._config["marginal_distribution_for_each_indicator"]
+        num_runs = self._config["monte_carlo_runs"]  # N
         input_matrix = self._input_matrix  # (AxnI)
         is_exact_pdf_mask = self.is_exact_pdf_mask
         is_poisson_pdf_mask = self.is_poisson_pdf_mask
