@@ -6,6 +6,7 @@ from typing import Tuple, List, Union
 
 from mcda.configuration.configuration_validator import extract_configuration_values, check_configuration_values, \
     check_configuration_keys
+from mcda.configuration.enums import NormalizationFunctions
 from mcda.mcda_functions.normalization import Normalization
 from mcda.utils.utils_for_main import run_mcda_without_indicator_uncertainty, run_mcda_with_indicator_uncertainty
 
@@ -94,14 +95,16 @@ class ProMCDA:
 
         sensitivity_on = self.sensitivity['sensitivity_on']
         f_norm = self.sensitivity['normalization']
-        f_norm_list = ['minmax', 'target', 'standardized', 'rank']
+        if isinstance(f_norm, NormalizationFunctions):
+            f_norm = f_norm.value
 
         if sensitivity_on == "yes":
             self.normalized_matrix = {}
-            for norm_function in f_norm_list:
+            for norm_function in f_norm:
                 self.logger.info("Applying normalization method: %s", norm_function)
                 norm_method = getattr(normalization, norm_function, None)
-                if norm_function in ['minmax', 'target', 'standardized']:
+                if norm_function in {NormalizationFunctions.MINMAX.value, NormalizationFunctions.STANDARDIZED.value,
+                                     NormalizationFunctions.TARGET.value}:
                     result = norm_method(feature_range)
                     if result is None:
                         raise ValueError(f"{norm_function} method returned None")
@@ -114,7 +117,8 @@ class ProMCDA:
         else:
             self.logger.info("Normalizing matrix with method(s): %s", f_norm)
             norm_method = getattr(normalization, f_norm, None)
-            if f_norm in ['minmax', 'target', 'standardized']:
+            if f_norm in {NormalizationFunctions.MINMAX.value, NormalizationFunctions.STANDARDIZED.value,
+                          NormalizationFunctions.TARGET.value}:
                 result = norm_method(feature_range)
                 if result is None:
                     raise ValueError(f"{f_norm} method returned None")
@@ -125,7 +129,7 @@ class ProMCDA:
                     raise ValueError(f"{f_norm} method returned None")
                 self.normalized_matrix = result
 
-            return self.normalized_matrix
+        return self.normalized_matrix
 
     # def aggregate(self):
     #     """

@@ -5,6 +5,7 @@ import pickle
 import random
 import logging
 import sys
+from enum import Enum
 from typing import Union, Any, List
 from typing import Optional
 
@@ -232,6 +233,29 @@ def save_dict(dictionary: dict, folder_path: str, filename: str):
         logging.error(f"Error while dumping the dictionary into a pickle file: {e}")
 
 
+def preprocess_enums(data) -> str:
+    """
+    Preprocess data to convert enums to strings
+
+    Parameters:
+    - data: to be processed
+
+    Example:
+    ```python
+    preprocess_enums(data)
+    ```
+    :param data: enums
+    :return: string
+    """
+    if isinstance(data, dict):
+        return {k: preprocess_enums(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [preprocess_enums(v) for v in data]
+    elif isinstance(data, Enum):
+        return data.value
+    return data
+
+
 def save_config(config: dict, folder_path: str, filename: str):
     """
     Save a configuration dictionary to a JSON file with a timestamped filename.
@@ -270,7 +294,8 @@ def save_config(config: dict, folder_path: str, filename: str):
 
     try:
         with open(full_output_path, 'w') as fp:
-            serializable_config = _prepare_config_for_json(config)
+            processed_config = preprocess_enums(config)
+            serializable_config = _prepare_config_for_json(processed_config)
             json.dump(serializable_config, fp)
     except IOError as e:
         logging.error(f"Error while dumping the configuration into a JSON file: {e}")

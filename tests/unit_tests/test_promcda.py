@@ -4,7 +4,9 @@ import unittest
 import warnings
 
 import pandas as pd
+
 from mcda.models.ProMCDA import ProMCDA
+from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions
 
 
 class TestProMCDA(unittest.TestCase):
@@ -20,8 +22,8 @@ class TestProMCDA(unittest.TestCase):
 
         self.sensitivity = {
             'sensitivity_on': 'no',
-            'normalization': 'minmax',
-            'aggregation': 'weighted_sum'
+            'normalization': NormalizationFunctions.MINMAX,
+            'aggregation': AggregationFunctions.WEIGHTED_SUM
         }
 
         self.robustness = {
@@ -95,23 +97,24 @@ class TestProMCDA(unittest.TestCase):
         Test normalization with multiple methods.
         Test the correctness of the output values happens in unit_tests/test_normalization.py
         """
+
         self.sensitivity['sensitivity_on'] = 'yes'
-        self.sensitivity['normalization'] = ['minmax', 'standardized', 'rank', 'target']
+        self.sensitivity['normalization'] = [method.value for method in NormalizationFunctions]
 
         promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
-                              self.output_path)
+                          self.output_path)
         normalized_matrices = promcda.normalize()
 
         self.assertIsInstance(normalized_matrices, dict)
-        self.assertIn('minmax', normalized_matrices)
-        self.assertIn('standardized', normalized_matrices)
-        self.assertIn('rank', normalized_matrices)
-        self.assertIn('target', normalized_matrices)
+        self.assertIn(NormalizationFunctions.MINMAX.value, normalized_matrices)
+        self.assertIn(NormalizationFunctions.STANDARDIZED.value, normalized_matrices)
+        self.assertIn(NormalizationFunctions.RANK.value, normalized_matrices)
+        self.assertIn(NormalizationFunctions.TARGET.value, normalized_matrices)
 
-        self.assertIsInstance(normalized_matrices['minmax'], pd.DataFrame)
-        self.assertIsInstance(normalized_matrices['standardized'], pd.DataFrame)
-        self.assertIsInstance(normalized_matrices['rank'], pd.DataFrame)
-        self.assertIsInstance(normalized_matrices['target'], pd.DataFrame)
+        self.assertIsInstance(normalized_matrices[NormalizationFunctions.MINMAX.value], pd.DataFrame)
+        self.assertIsInstance(normalized_matrices[NormalizationFunctions.STANDARDIZED.value], pd.DataFrame)
+        self.assertIsInstance(normalized_matrices[NormalizationFunctions.RANK.value], pd.DataFrame)
+        self.assertIsInstance(normalized_matrices[NormalizationFunctions.TARGET.value], pd.DataFrame)
 
 
     def tearDown(self):

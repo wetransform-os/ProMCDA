@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from typing import Tuple, List, Union, Dict, Any
 
+from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions
 from mcda.utils.utils_for_main import pop_indexed_elements, check_norm_sum_weights, randomly_sample_all_weights, \
     randomly_sample_ix_weight, check_input_matrix
 
@@ -160,8 +161,13 @@ def check_configuration_values(extracted_values: dict) -> Tuple[int, int, List[s
     marginal_distribution = extracted_values["marginal_distribution_for_each_indicator"]
 
     # Check for sensitivity-related configuration errors
-    valid_norm_methods = ['minmax', 'target', 'standardized', 'rank']
-    valid_agg_methods = ['weighted_sum', 'geometric', 'harmonic', 'minimum']
+    valid_norm_methods = [method.value for method in NormalizationFunctions]
+    valid_agg_methods = [method.value for method in AggregationFunctions]
+    if isinstance(normalization, NormalizationFunctions):
+        normalization = normalization.value
+    if isinstance(aggregation, AggregationFunctions):
+        aggregation = aggregation.value
+
     if sensitivity_on == "no":
         check_config_error(normalization not in valid_norm_methods,
                            f'Invalid normalization method: {normalization}. Available methods: {valid_norm_methods}')
