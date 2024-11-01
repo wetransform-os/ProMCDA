@@ -31,16 +31,16 @@ class NormalizationNames4Sensitivity(Enum):
     """
     Names of normalization functions in case of sensitivity analysis
     """
-    MINMAX_01 = 'minmax_01'
     MINMAX_WITHOUT_ZERO = 'minmax_without_zero'
-    TARGET_01 = 'target_01'
+    MINMAX_01 = 'minmax_01'
     TARGET_WITHOUT_ZERO = 'target_without_zero'
+    TARGET_01 = 'target_01'
     STANDARDIZED_ANY = 'standardized_any'
     STANDARDIZED_WITHOUT_ZERO = 'standardized_without_zero'
     RANK = 'rank'
 
 
-class OutputColumNames4Sensitivity(Enum):
+class OutputColumnNames4Sensitivity(Enum):
     """
     Names of output columns in case of sensitivity analysis
     """

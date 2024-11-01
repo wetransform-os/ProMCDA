@@ -3,7 +3,7 @@ import copy
 import logging
 import pandas as pd
 
-from mcda.configuration.enums import NormalizationFunctions, OutputColumNames4Sensitivity, \
+from mcda.configuration.enums import NormalizationFunctions, OutputColumnNames4Sensitivity, \
     NormalizationNames4Sensitivity, AggregationFunctions
 from mcda.mcda_functions.normalization import Normalization
 from mcda.mcda_functions.aggregation import Aggregation
@@ -121,7 +121,7 @@ class MCDAWithoutRobustness:
 
         scores = pd.DataFrame()
         col_names_method = []
-        col_names = [method.value for method in OutputColumNames4Sensitivity]
+        col_names = [method.value for method in OutputColumnNames4Sensitivity]
         # column names has the same order as in the following loop
 
         for key, values in self.normalized_indicators.items():
