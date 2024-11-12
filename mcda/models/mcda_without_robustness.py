@@ -30,7 +30,9 @@ class MCDAWithoutRobustness:
         self._config = copy.deepcopy(config)
         self._input_matrix = copy.deepcopy(input_matrix)
 
-    def normalize_indicators(self, method=None) -> dict:
+    import pandas as pd
+
+    def normalize_indicators(self, method=None) -> pd.DataFrame:
         """
         Normalize the input matrix using the specified normalization method.
 
@@ -39,7 +41,8 @@ class MCDAWithoutRobustness:
           Supported methods: 'minmax', 'target', 'standardized', 'rank'.
 
         Returns:
-        - a dictionary containing the normalized values of each indicator per normalization method.
+        - A DataFrame containing the normalized values of each indicator per normalization method.
+          Columns are named according to the normalization method applied.
 
         Notes:
         Some aggregation methods do not work with indicator values equal or smaller than zero. For that reason:
@@ -50,121 +53,147 @@ class MCDAWithoutRobustness:
         - for the 'standardized' method, two sets of normalized indicators are returned: one with the range (-inf, +inf)
           and another with the range (0.1, +inf).
         """
-        norm = Normalization(self._input_matrix,
-                             self._config["polarity"])
+        norm = Normalization(self._input_matrix, self._config["polarity"])
 
-        normalized_indicators = {}
+        normalized_dataframes = []
+
+        def add_normalized_df(df, method_name):
+            df.columns = [f"{col}_{method_name}" for col in df.columns]
+            normalized_dataframes.append(df)
 
         if isinstance(method, NormalizationFunctions):
             method = method.value
+
         if method is None or method == NormalizationFunctions.MINMAX.value:
-            indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
-            # for aggregation "geometric" and "harmonic" that do not accept 0
-            indicators_scaled_minmax_without_zero = norm.minmax(feature_range=(0.1, 1))
-            normalized_indicators[NormalizationNames4Sensitivity.MINMAX_WITHOUT_ZERO.value] = \
-                indicators_scaled_minmax_without_zero
-            normalized_indicators[NormalizationNames4Sensitivity.MINMAX_01.value] = indicators_scaled_minmax_01
+            indicators_minmax_01 = norm.minmax(feature_range=(0, 1))
+            indicators_minmax_without_zero = norm.minmax(feature_range=(0.1, 1))
+            add_normalized_df(indicators_minmax_01, "minmax_01")
+            add_normalized_df(indicators_minmax_without_zero, "minmax_without_zero")
+
         if method is None or method == NormalizationFunctions.TARGET.value:
-            indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
-            indicators_scaled_target_without_zero = norm.target(
-                feature_range=(0.1, 1))  # for aggregation "geometric" and "harmonic" that do not accept 0
-            normalized_indicators[NormalizationNames4Sensitivity.TARGET_WITHOUT_ZERO.value] = \
-                indicators_scaled_target_without_zero
-            normalized_indicators[NormalizationNames4Sensitivity.TARGET_01.value] = indicators_scaled_target_01
+            indicators_target_01 = norm.target(feature_range=(0, 1))
+            indicators_target_without_zero = norm.target(feature_range=(0.1, 1))
+            add_normalized_df(indicators_target_01, "target_01")
+            add_normalized_df(indicators_target_without_zero, "target_without_zero")
+
         if method is None or method == NormalizationFunctions.STANDARDIZED.value:
-            indicators_scaled_standardized_any = norm.standardized(
-                feature_range=('-inf', '+inf'))
-            indicators_scaled_standardized_without_zero = norm.standardized(
-                feature_range=(0.1, '+inf'))
-            normalized_indicators[NormalizationNames4Sensitivity.STANDARDIZED_ANY.value] = indicators_scaled_standardized_any
-            normalized_indicators[NormalizationNames4Sensitivity.STANDARDIZED_WITHOUT_ZERO.value] = indicators_scaled_standardized_without_zero
+            indicators_standardized_any = norm.standardized(feature_range=('-inf', '+inf'))
+            indicators_standardized_without_zero = norm.standardized(feature_range=(0.1, '+inf'))
+            add_normalized_df(indicators_standardized_any, "standardized_any")
+            add_normalized_df(indicators_standardized_without_zero, "standardized_without_zero")
+
         if method is None or method == NormalizationFunctions.RANK.value:
-            indicators_scaled_rank = norm.rank()
-            normalized_indicators[NormalizationNames4Sensitivity.RANK.value] = indicators_scaled_rank
-        if isinstance(method, NormalizationFunctions):
-            method = method.value
+            indicators_rank = norm.rank()
+            add_normalized_df(indicators_rank, "rank")
+
         if method is not None and method not in [method.value for method in NormalizationFunctions]:
             logger.error('Error Message', stack_info=True)
-            raise ValueError(
-                'The selected normalization method is not supported')
+            raise ValueError('The selected normalization method is not supported')
 
-        return normalized_indicators
+        # Concatenate all normalized DataFrames along columns
+        normalized_df = pd.concat(normalized_dataframes, axis=1)
 
-    def aggregate_indicators(self, normalized_indicators: dict, weights: list, method=None) -> pd.DataFrame:
+        return normalized_df
+
+    def aggregate_indicators(self, normalized_indicators: pd.DataFrame, weights: list, method=None) -> pd.DataFrame:
         """
         Aggregate the normalized indicators using the specified aggregation method.
 
         Parameters:
-        - normalized_indicators: a dictionary containing the normalized values of each indicator per normalization
+        - normalized_indicators: a DataFrame containing the normalized values of each indicator per normalization
           method.
         - weights: the weights to be applied during aggregation.
         - method (optional): The aggregation method to use. If None, all available methods will be applied.
-        Supported methods: 'weighted_sum', 'geometric', 'harmonic', 'minimum'.
+          Supported methods: 'weighted_sum', 'geometric', 'harmonic', 'minimum'.
 
         Returns:
-        - a DataFrame containing the aggregated scores per each alternative, and per each normalization method.
-
-        :param normalized_indicators: dict
-        :param weights: list
-        :param method: str
-        :return scores: pd.DataFrame
+        - A DataFrame containing the aggregated scores for each alternative and normalization method.
         """
+        # Convert `method` to string if it’s an enum instance
+        if isinstance(method, AggregationFunctions):
+            method = method.value
+
         self.normalized_indicators = normalized_indicators
         self.weights = weights
 
         agg = Aggregation(self.weights)
 
-        scores_weighted_sum = {}
-        scores_geometric = {}
-        scores_harmonic = {}
-        scores_minimum = {}
+        # Dictionary to map aggregation methods to their corresponding score DataFrames
+        score_dfs = {
+            AggregationFunctions.WEIGHTED_SUM.value: pd.DataFrame(),
+            AggregationFunctions.GEOMETRIC.value: pd.DataFrame(),
+            AggregationFunctions.HARMONIC.value: pd.DataFrame(),
+            AggregationFunctions.MINIMUM.value: pd.DataFrame(),
+        }
 
-        scores = pd.DataFrame()
-        col_names_method = []
-        col_names = [method.value for method in OutputColumnNames4Sensitivity]
-        # column names has the same order as in the following loop
+        def _apply_aggregation(agg_method, df_subset, suffix):
+            """
+            Apply the aggregation method to a subset of the DataFrame and store results in the appropriate DataFrame.
+            """
+            agg_function = {
+                AggregationFunctions.WEIGHTED_SUM.value: agg.weighted_sum,
+                AggregationFunctions.GEOMETRIC.value: agg.geometric,
+                AggregationFunctions.HARMONIC.value: agg.harmonic,
+                AggregationFunctions.MINIMUM.value: agg.minimum,
+            }.get(agg_method)
 
-        for key, values in self.normalized_indicators.items():
-            if isinstance(method, AggregationFunctions):
-                method = method.value
-            if method is None or method == AggregationFunctions.WEIGHTED_SUM.value:
-                if key in [NormalizationNames4Sensitivity.STANDARDIZED_ANY.value,
-                           NormalizationNames4Sensitivity.MINMAX_01.value,
-                           NormalizationNames4Sensitivity.TARGET_01.value, NormalizationNames4Sensitivity.RANK.value]:
-                           # ws goes only with some specific normalizations
-                    scores_weighted_sum[key] = agg.weighted_sum(values)
-                    col_names_method.append("ws-" + key)
-            if method is None or method == AggregationFunctions.GEOMETRIC.value:
-                if key in [NormalizationNames4Sensitivity.STANDARDIZED_WITHOUT_ZERO.value,
-                           NormalizationNames4Sensitivity.MINMAX_WITHOUT_ZERO.value,
-                           NormalizationNames4Sensitivity.TARGET_WITHOUT_ZERO.value,
-                           NormalizationNames4Sensitivity.RANK.value]:  # geom goes only with some specific normalizations
-                    scores_geometric[key] = pd.Series(agg.geometric(values))
-                    col_names_method.append("geom-" + key)
-            if method is None or method == AggregationFunctions.HARMONIC.value:
-                if key in [NormalizationNames4Sensitivity.STANDARDIZED_WITHOUT_ZERO.value,
-                           NormalizationNames4Sensitivity.MINMAX_WITHOUT_ZERO.value,
-                           NormalizationNames4Sensitivity.TARGET_WITHOUT_ZERO.value,
-                           NormalizationNames4Sensitivity.RANK.value]:  # harm goes only with some specific normalizations
-                    scores_harmonic[key] = pd.Series(agg.harmonic(values))
-                    col_names_method.append("harm-" + key)
-            if method is None or method == AggregationFunctions.MINIMUM.value:
-                if key == NormalizationNames4Sensitivity.STANDARDIZED_ANY.value:
-                    scores_minimum[key] = pd.Series(agg.minimum(
-                        self.normalized_indicators[NormalizationNames4Sensitivity.STANDARDIZED_ANY.value]))
-                    col_names_method.append("min-" + key)
+            if agg_function:
+                aggregated_scores = agg_function(df_subset)
 
-        dict_list = [scores_weighted_sum, scores_geometric,
-                     scores_harmonic, scores_minimum]
+                if isinstance(aggregated_scores, pd.Series):
+                    aggregated_scores = aggregated_scores.to_frame()
 
-        for d in dict_list:
-            if d:
-                scores = pd.concat([scores, pd.DataFrame.from_dict(d)], axis=1)
+                aggregated_scores.columns = [f"{col}_{agg_method}_{suffix}" for col in
+                                             df_subset.columns.unique(level=0)]
 
-        if method is None:
-            scores.columns = col_names
-        else:
-            scores.columns = col_names_method
+        for base_col_name in self.normalized_indicators.columns.str.split("_").str[0].unique():
+            relevant_columns = self.normalized_indicators.filter(regex=f"^{base_col_name}_")
+
+            for suffix in relevant_columns.columns.str.split("_", n=1).str[1].unique():
+                # Define the correct columns based on whether "without_zero" is in the suffix or not
+                if method is None or method == AggregationFunctions.WEIGHTED_SUM.value:
+                    if "without_zero" not in suffix:
+                        # Only select columns ending with the exact suffix that doesn't contain "without_zero"
+                        selected_columns = relevant_columns.filter(regex=f"_{suffix}$")
+                        _apply_aggregation(AggregationFunctions.WEIGHTED_SUM.value, selected_columns, suffix)
+
+                elif method in [AggregationFunctions.GEOMETRIC.value, AggregationFunctions.HARMONIC.value]:
+                    if "without_zero" in suffix:
+                        selected_columns = relevant_columns.filter(regex=f"_{suffix}$")
+                        if method == AggregationFunctions.GEOMETRIC.value:
+                            _apply_aggregation(AggregationFunctions.GEOMETRIC.value, selected_columns, suffix)
+                        elif method == AggregationFunctions.HARMONIC.value:
+                            _apply_aggregation(AggregationFunctions.HARMONIC.value, selected_columns, suffix)
+
+                elif method == AggregationFunctions.MINIMUM.value:
+                    if "without_zero" not in suffix:
+                        selected_columns = relevant_columns.filter(regex=f"_{suffix}$")
+                        _apply_aggregation(AggregationFunctions.MINIMUM.value, selected_columns, suffix)
+
+        # Loop through all columns to detect normalization methods
+        # for normalization_col_name in self.normalized_indicators.columns.str.split("_").str[1].unique():
+        #     suffix = normalized_indicators.columns.str.split("_", n=1).str[1]
+        #     relevant_columns = self.normalized_indicators.filter(regex=f"_{normalization_col_name}(_|$)")
+        #
+        #      # weighted_sum
+        #     if method is None or method == AggregationFunctions.WEIGHTED_SUM.value:
+        #         if "without_zero" not in suffix:
+        #             _apply_aggregation(AggregationFunctions.WEIGHTED_SUM.value, relevant_columns, suffix)
+        #
+        #     # geometric or harmonic
+        #     if method in [AggregationFunctions.GEOMETRIC.value,
+        #                   AggregationFunctions.HARMONIC.value] and "without_zero" in suffix:
+        #     # minimum
+        #         if method == AggregationFunctions.GEOMETRIC.value:
+        #             _apply_aggregation(AggregationFunctions.GEOMETRIC.value, relevant_columns,
+        #                                    f"_geom_{suffix}")
+        #         elif method == AggregationFunctions.HARMONIC.value:
+        #             _apply_aggregation(AggregationFunctions.HARMONIC.value, relevant_columns, f"_harm_{suffix}")
+        #     if method == AggregationFunctions.MINIMUM.value:
+        #         if "without_zero" not in suffix:
+        #             _apply_aggregation(AggregationFunctions.MINIMUM.value, selected_columns, f"_min_{suffix}")
+
+        # Concatenate all score DataFrames into a single DataFrame
+        scores = pd.concat([df for df in score_dfs.values() if not df.empty], axis=1)
 
         return scores
-

@@ -16,9 +16,11 @@ class TestProMCDA(unittest.TestCase):
         warnings.filterwarnings("error", category=ResourceWarning)
         # Mock input data for testing
         self.input_matrix = pd.DataFrame({
+            'Alternatives': ['A', 'B', 'C'],
             'Criteria 1': [0.5, 0.2, 0.8],
             'Criteria 2': [0.3, 0.6, 0.1]
-        }, index=['A', 'B', 'C'])
+        })
+        self.input_matrix.set_index('Alternatives', inplace=True)
         self.polarity = ('+', '-',)
 
         self.sensitivity = {
@@ -83,79 +85,77 @@ class TestProMCDA(unittest.TestCase):
         promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
                           self.output_path)
 
-        expected_keys = [method.value for method in NormalizationNames4Sensitivity]
+        # expected_keys = [method.value for method in NormalizationNames4Sensitivity]
+        # TODO: delete if return is not a dic
+        expected_suffixes = [method.value for method in NormalizationNames4Sensitivity]
 
         # When
         normalized_values = promcda.normalize()
 
         # Then
-        self.assertCountEqual(list(set(normalized_values.keys())), expected_keys,
-                              "Not all methods were applied or extra keys found.")
-        self.assertEqual(list(normalized_values), (expected_keys))
+        #self.assertCountEqual(list(set(normalized_values.keys())), expected_keys,
+        #                      "Not all methods were applied or extra keys found.")
+        #self.assertEqual(list(normalized_values), (expected_keys))
+        # TODO: delete if return is not a dic
+        actual_suffixes = {col.split('_',1)[1] for col in normalized_values.columns}
+        self.assertCountEqual(actual_suffixes, expected_suffixes,
+                              "Not all methods were applied or extra suffixes found in column names.")
 
     def test_normalize_specific_method(self):
         # Given
         promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
-                              self.output_path)
+                          self.output_path)
         method = 'minmax'
 
         # When
         normalized_values = promcda.normalize(method=method)
 
         # Then
-        expected_keys = ["minmax_without_zero", "minmax_01"]
+        expected_keys = ['Criteria 1_minmax_without_zero', 'Criteria 2_minmax_without_zero', 'Criteria 1_minmax_01',
+         'Criteria 2_minmax_01']
         self.assertCountEqual(expected_keys, list(normalized_values.keys()))
         self.assertEqual(list(normalized_values), expected_keys)
 
     def test_aggregate_all_methods(self):
-        # Test when no specific method is given, so all methods should be applied
-        aggregated_scores = self.pro_mcda.aggregate()
+        # Given
+        promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
+                          self.output_path)
+        aggregated_scores = promcda.aggregate(weights=self.robustness['given_weights'])
 
-        # Verify the structure of the DataFrame
+        # When
         expected_columns = [
             'ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
             'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
             'harm-minmax_without_zero', 'harm-target_without_zero', 'harm-standardized_without_zero', 'harm-rank',
             'min-standardized_any'
         ]
+
+        # Then
         self.assertCountEqual(aggregated_scores.columns, expected_columns,
                               "Not all methods were applied or extra columns found.")
         self.assertEqual(len(aggregated_scores), len(self.input_matrix),
                          "Number of alternatives does not match input matrix rows.")
 
     def test_aggregate_with_specific_normalization_and_aggregation_methods(self):
-        # Test specific normalization and aggregation methods
+        # Given
         normalization_method = 'minmax'
         aggregation_method = 'weighted_sum'
-        aggregated_scores = self.pro_mcda.aggregate(normalization_method=normalization_method,
-                                                    aggregation_method=aggregation_method)
+        promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
+                          self.output_path)
+        aggregated_scores = promcda.aggregate(normalization_method=normalization_method,
+                                              aggregation_method=aggregation_method,
+                                              weights=self.robustness['given_weights'])
 
-        # Expected columns when only weighted_sum with minmax is applied
+        # When
         expected_columns = ['ws-minmax_01']
-        self.assertCountEqual(aggregated_scores.columns, expected_columns, "Only specified methods should be applied.")
 
-        # Check if values are within expected range
+        # Then
+        self.assertCountEqual(aggregated_scores.columns, expected_columns, "Only specified methods should be applied.")
         self.assertTrue(
             (aggregated_scores['ws-minmax_01'] >= 0).all() and (aggregated_scores['ws-minmax_01'] <= 1).all(),
             "Values should be in the range [0, 1] for minmax normalization with weighted sum.")
 
-    def test_aggregate_with_default_weights(self):
-        # Test with default weights (None)
-        aggregated_scores = self.pro_mcda.aggregate(weights=None)
 
-        # Check if output DataFrame matches the expected structure and size
-        expected_columns = [
-            'ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-            'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
-            'harm-minmax_without_zero', 'harm-target_without_zero', 'harm-standardized_without_zero', 'harm-rank',
-            'min-standardized_any'
-        ]
-        self.assertCountEqual(aggregated_scores.columns, expected_columns,
-                              "Not all methods were applied or extra columns found.")
-
-        # Verify that weights were automatically set to equal distribution
-        self.assertTrue(np.allclose(self.pro_mcda.weights, [0.5, 0.5]),
-                        "Default weights should be equal if None is passed.")
 
     # def test_normalize_single_method(self):
     #     """

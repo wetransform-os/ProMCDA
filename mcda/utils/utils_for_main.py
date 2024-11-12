@@ -233,7 +233,7 @@ def save_dict(dictionary: dict, folder_path: str, filename: str):
         logging.error(f"Error while dumping the dictionary into a pickle file: {e}")
 
 
-def preprocess_enums(data) -> str:
+def preprocess_enums(data) -> Union[Union[dict, list[str]], Any]:
     """
     Preprocess data to convert enums to strings
 
@@ -659,8 +659,6 @@ def run_mcda_without_indicator_uncertainty(extracted_values: dict, is_robustness
 
     # Extract relevant values
     input_matrix = extracted_values["input_matrix"]
-    alternatives_column_name = input_matrix.columns[0]
-    # input_matrix = input_matrix.set_index(alternatives_column_name)
     index_column_name = input_matrix.index.name
     index_column_values = input_matrix.index.tolist()
     input_matrix_no_alternatives = check_input_matrix(input_matrix)
@@ -864,7 +862,7 @@ def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.Dat
         return input_matrix
 
 
-def _compute_scores_for_all_random_weights(indicators: dict, is_sensitivity: str,
+def _compute_scores_for_all_random_weights(indicators: pd.DataFrame, is_sensitivity: str,
                                            weights: Union[List[str], List[pd.DataFrame], dict, None],
                                            f_agg: str) -> tuple[Any, Any, Any, Any]:
     """
@@ -899,7 +897,7 @@ def _compute_scores_for_all_random_weights(indicators: dict, is_sensitivity: str
         all_weights_score_means_normalized, all_weights_score_stds_normalized
 
 
-def _compute_scores_for_single_random_weight(indicators: dict,
+def _compute_scores_for_single_random_weight(indicators: pd.DataFrame,
                                              weights: Union[List[str], List[pd.DataFrame], dict, None],
                                              is_sensitivity: str, index_column_name: str, index_column_values: list,
                                              f_agg: str, input_matrix: pd.DataFrame) -> dict:
