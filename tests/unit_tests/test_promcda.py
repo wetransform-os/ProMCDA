@@ -147,12 +147,12 @@ class TestProMCDA(unittest.TestCase):
                                               weights=self.robustness['given_weights'])
 
         # When
-        expected_columns = ['ws-minmax_01']
+        expected_columns = ['minmax_01_weighted_sum', 'minmax_without_zero_weighted_sum']
 
         # Then
         self.assertCountEqual(aggregated_scores.columns, expected_columns, "Only specified methods should be applied.")
         self.assertTrue(
-            (aggregated_scores['ws-minmax_01'] >= 0).all() and (aggregated_scores['ws-minmax_01'] <= 1).all(),
+            (aggregated_scores['minmax_01_weighted_sum'] >= 0).all() and (aggregated_scores['minmax_01_weighted_sum'] <= 1).all(),
             "Values should be in the range [0, 1] for minmax normalization with weighted sum.")
 
 

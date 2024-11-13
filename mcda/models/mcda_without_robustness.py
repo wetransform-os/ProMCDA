@@ -1,3 +1,4 @@
+import re
 import sys
 import copy
 import logging
@@ -109,24 +110,17 @@ class MCDAWithoutRobustness:
         Returns:
         - A DataFrame containing the aggregated scores for each alternative and normalization method.
         """
-        # Convert `method` to string if it’s an enum instance
         if isinstance(method, AggregationFunctions):
             method = method.value
 
         self.normalized_indicators = normalized_indicators
         self.weights = weights
 
-        agg = Aggregation(self.weights)
+        agg= Aggregation(weights)
 
-        # Dictionary to map aggregation methods to their corresponding score DataFrames
-        score_dfs = {
-            AggregationFunctions.WEIGHTED_SUM.value: pd.DataFrame(),
-            AggregationFunctions.GEOMETRIC.value: pd.DataFrame(),
-            AggregationFunctions.HARMONIC.value: pd.DataFrame(),
-            AggregationFunctions.MINIMUM.value: pd.DataFrame(),
-        }
+        score_list = []
 
-        def _apply_aggregation(agg_method, df_subset, suffix):
+        def _apply_aggregation(norm_method, agg_method, df_subset):
             """
             Apply the aggregation method to a subset of the DataFrame and store results in the appropriate DataFrame.
             """
@@ -137,63 +131,39 @@ class MCDAWithoutRobustness:
                 AggregationFunctions.MINIMUM.value: agg.minimum,
             }.get(agg_method)
 
-            if agg_function:
-                aggregated_scores = agg_function(df_subset)
+            aggregated_scores = agg_function(df_subset)
 
-                if isinstance(aggregated_scores, pd.Series):
-                    aggregated_scores = aggregated_scores.to_frame()
+            if isinstance(aggregated_scores, pd.Series):
+                aggregated_scores = aggregated_scores.to_frame()
 
-                aggregated_scores.columns = [f"{col}_{agg_method}_{suffix}" for col in
-                                             df_subset.columns.unique(level=0)]
+            aggregated_scores.columns = [f"{norm_method}_{agg_method}"]
 
-        for base_col_name in self.normalized_indicators.columns.str.split("_").str[0].unique():
-            relevant_columns = self.normalized_indicators.filter(regex=f"^{base_col_name}_")
+            score_list.append(aggregated_scores)
 
-            for suffix in relevant_columns.columns.str.split("_", n=1).str[1].unique():
-                # Define the correct columns based on whether "without_zero" is in the suffix or not
-                if method is None or method == AggregationFunctions.WEIGHTED_SUM.value:
-                    if "without_zero" not in suffix:
-                        # Only select columns ending with the exact suffix that doesn't contain "without_zero"
-                        selected_columns = relevant_columns.filter(regex=f"_{suffix}$")
-                        _apply_aggregation(AggregationFunctions.WEIGHTED_SUM.value, selected_columns, suffix)
+        for norm_method in self.normalized_indicators.columns.str.split("_", n=1).str[1].unique():
 
-                elif method in [AggregationFunctions.GEOMETRIC.value, AggregationFunctions.HARMONIC.value]:
-                    if "without_zero" in suffix:
-                        selected_columns = relevant_columns.filter(regex=f"_{suffix}$")
-                        if method == AggregationFunctions.GEOMETRIC.value:
-                            _apply_aggregation(AggregationFunctions.GEOMETRIC.value, selected_columns, suffix)
-                        elif method == AggregationFunctions.HARMONIC.value:
-                            _apply_aggregation(AggregationFunctions.HARMONIC.value, selected_columns, suffix)
+            without_zero_columns = self.normalized_indicators.filter(regex="without_zero$")
+            with_zero_columns = self.normalized_indicators[self.normalized_indicators.columns.difference(without_zero_columns.columns)]
 
-                elif method == AggregationFunctions.MINIMUM.value:
-                    if "without_zero" not in suffix:
-                        selected_columns = relevant_columns.filter(regex=f"_{suffix}$")
-                        _apply_aggregation(AggregationFunctions.MINIMUM.value, selected_columns, suffix)
+            # Apply WEIGHTED_SUM only to columns with zero in the suffix
+            if method is None or method == AggregationFunctions.WEIGHTED_SUM.value:
+                _apply_aggregation(norm_method, AggregationFunctions.WEIGHTED_SUM.value,
+                                   with_zero_columns)
 
-        # Loop through all columns to detect normalization methods
-        # for normalization_col_name in self.normalized_indicators.columns.str.split("_").str[1].unique():
-        #     suffix = normalized_indicators.columns.str.split("_", n=1).str[1]
-        #     relevant_columns = self.normalized_indicators.filter(regex=f"_{normalization_col_name}(_|$)")
-        #
-        #      # weighted_sum
-        #     if method is None or method == AggregationFunctions.WEIGHTED_SUM.value:
-        #         if "without_zero" not in suffix:
-        #             _apply_aggregation(AggregationFunctions.WEIGHTED_SUM.value, relevant_columns, suffix)
-        #
-        #     # geometric or harmonic
-        #     if method in [AggregationFunctions.GEOMETRIC.value,
-        #                   AggregationFunctions.HARMONIC.value] and "without_zero" in suffix:
-        #     # minimum
-        #         if method == AggregationFunctions.GEOMETRIC.value:
-        #             _apply_aggregation(AggregationFunctions.GEOMETRIC.value, relevant_columns,
-        #                                    f"_geom_{suffix}")
-        #         elif method == AggregationFunctions.HARMONIC.value:
-        #             _apply_aggregation(AggregationFunctions.HARMONIC.value, relevant_columns, f"_harm_{suffix}")
-        #     if method == AggregationFunctions.MINIMUM.value:
-        #         if "without_zero" not in suffix:
-        #             _apply_aggregation(AggregationFunctions.MINIMUM.value, selected_columns, f"_min_{suffix}")
+            # Apply GEOMETRIC and HARMONIC only to columns without zero in the suffix
+            if method == AggregationFunctions.GEOMETRIC.value:
+                _apply_aggregation(norm_method, AggregationFunctions.GEOMETRIC.value,
+                                   without_zero_columns)
+            elif method == AggregationFunctions.HARMONIC.value:
+                _apply_aggregation(norm_method, AggregationFunctions.HARMONIC.value,
+                                   without_zero_columns)
+
+            # Apply MINIMUM only to columns with zero in the suffix
+            if method == AggregationFunctions.MINIMUM.value:
+                _apply_aggregation(norm_method, AggregationFunctions.MINIMUM.value,
+                                   with_zero_columns)
 
         # Concatenate all score DataFrames into a single DataFrame
-        scores = pd.concat([df for df in score_dfs.values() if not df.empty], axis=1)
+        scores = pd.concat(score_list, axis=1)
 
         return scores
