@@ -35,7 +35,6 @@ class ProMCDA:
         self.monte_carlo = monte_carlo
         self.output_path = output_path
 
-        # Check configuration dictionary keys and handle potential issues
         # TODO: revisit this logic when substitute classes to handle configuration settings
         try:
             check_configuration_keys(self.sensitivity, self.robustness, self.monte_carlo)
@@ -45,8 +44,10 @@ class ProMCDA:
 
         self.configuration_settings = extract_configuration_values(self.input_matrix, self.polarity, self.sensitivity,
                                                                    self.robustness, self.monte_carlo, self.output_path)
-        is_robustness_indicators, is_robustness_weights, polar, weights, configuration_settings = self.validate_inputs()
-        self.run_mcda(is_robustness_indicators, is_robustness_weights, weights)
+
+        # TODO: remove this line after implementing the method run_promcda
+        #is_robustness_indicators, is_robustness_weights, polar, weights, configuration_settings = self.validate_inputs()
+        #self.run_mcda(is_robustness_indicators, is_robustness_weights, weights)
 
         self.normalized_matrix = None
         self.aggregated_matrix = None
@@ -82,14 +83,7 @@ class ProMCDA:
         mcda_without_robustness = MCDAWithoutRobustness(self.configuration_settings, input_matrix_no_alternatives)
         normalized_values = mcda_without_robustness.normalize_indicators(method)
 
-        if method is None:
-            normalized_df = pd.concat(normalized_values, axis=1)
-            normalized_df.columns = [f"{col}_{method}" for method, cols in normalized_values.items() for col in
-                                     input_matrix_no_alternatives.columns]
-        else:
-            normalized_df = normalized_values
-
-        return normalized_df
+        return normalized_values
 
     def aggregate(self, normalization_method=None, aggregation_method=None, weights=None) -> pd.DataFrame:
         """
@@ -101,7 +95,7 @@ class ProMCDA:
         - weights: The weights to be used for aggregation. If None, they are set all the same.
 
         Returns:
-        - A DataFrame containing the aggregated scores.
+        - A DataFrame containing the aggregated scores per normalization and aggregation methods.
         """
 
         input_matrix_no_alternatives = check_input_matrix(self.input_matrix)
@@ -111,7 +105,7 @@ class ProMCDA:
         aggregated_scores = mcda_without_robustness.aggregate_indicators(
             normalized_indicators=normalized_indicators,
             weights=weights,
-            method=aggregation_method
+            agg_method=aggregation_method
         )
 
         return aggregated_scores

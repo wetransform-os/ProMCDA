@@ -34,7 +34,7 @@ class TestProMCDA(unittest.TestCase):
             'on_single_weights': 'yes',
             'on_all_weights': 'no',
             'on_indicators': 'no',
-            'given_weights': [0.6, 0.4]
+            'given_weights': [0.6, 0.7]
         }
 
         self.monte_carlo = {
