@@ -60,7 +60,7 @@ class MCDAWithoutRobustness:
         normalized_dataframes = []
 
         def add_normalized_df(df, method_name):
-            df.columns = [f"{col}_{method_name}" for col in df.columns]
+            df.columns = [f"{col}_{method_name}" for col in self._input_matrix.columns.tolist()]
             normalized_dataframes.append(df)
 
         if isinstance(method, NormalizationFunctions):
