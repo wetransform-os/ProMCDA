@@ -18,24 +18,20 @@ logger = logging.getLogger("ProMCDA")
 from typing import Dict, List, Any
 
 
-def check_configuration_keys(sensitivity: dict, robustness: dict, monte_carlo: dict) -> bool:
+def check_configuration_keys(robustness: dict, monte_carlo: dict) -> bool:
     """
     Checks for required keys in sensitivity, robustness, and monte_carlo dictionaries.
     TODO: revisit this logic when substitute classes to handle configuration settings.
 
-    :param sensitivity : dict
     :param robustness : dict
-    :param: monte_carlo : dict
+    :param monte_carlo: dict
     :rtype: bool
     """
 
     keys_of_dict_values = {
-        'sensitivity': ['sensitivity_on', 'normalization', 'aggregation'],
         'robustness': ['robustness_on', 'on_single_weights', 'on_all_weights', 'given_weights', 'on_indicators'],
         'monte_carlo': ['monte_carlo_runs', 'num_cores', 'random_seed', 'marginal_distribution_for_each_indicator']
     }
-
-    _check_dict_keys(sensitivity, keys_of_dict_values['sensitivity'])
     _check_dict_keys(robustness, keys_of_dict_values['robustness'])
     _check_dict_keys(monte_carlo, keys_of_dict_values['monte_carlo'])
 
@@ -51,8 +47,8 @@ def _check_dict_keys(dic: Dict[str, Any], expected_keys: List[str]) -> None:
             raise KeyError(f"The key '{key}' is missing in the provided dictionary")
 
 
-def extract_configuration_values(input_matrix: pd.DataFrame, polarity: Tuple[str], sensitivity: dict, robustness: dict,
-                                 monte_carlo: dict, output_path: str) -> dict:
+def extract_configuration_values(input_matrix: pd.DataFrame, polarity: Tuple[str], robustness: dict,
+                                 monte_carlo: dict) -> dict:
     """
     Extracts relevant configuration values required for running the ProMCDA process.
 
@@ -85,10 +81,6 @@ def extract_configuration_values(input_matrix: pd.DataFrame, polarity: Tuple[str
     extracted_values = {
         "input_matrix": input_matrix,
         "polarity": polarity,
-        # Sensitivity settings
-        "sensitivity_on": sensitivity["sensitivity_on"],
-        "normalization": None if sensitivity["sensitivity_on"] == 'yes' else sensitivity["normalization"],
-        "aggregation": None if sensitivity["sensitivity_on"] == 'yes' else sensitivity["aggregation"],
         # Robustness settings
         "robustness_on": robustness["robustness_on"],
         "robustness_on_single_weights": robustness["on_single_weights"],
@@ -99,8 +91,7 @@ def extract_configuration_values(input_matrix: pd.DataFrame, polarity: Tuple[str
         "monte_carlo_runs": monte_carlo["monte_carlo_runs"],
         "num_cores": monte_carlo["num_cores"],
         "random_seed": monte_carlo["random_seed"],
-        "marginal_distribution_for_each_indicator": monte_carlo["marginal_distribution_for_each_indicator"],
-        "output_path": output_path
+        "marginal_distribution_for_each_indicator": monte_carlo["marginal_distribution_for_each_indicator"]
     }
 
     return extracted_values
@@ -118,7 +109,6 @@ def check_configuration_values(extracted_values: dict) -> Tuple[int, int, List[s
     A dictionary containing configuration values extracted from the input parameters. It includes:
     - input_matrix (pd.DataFrame): The decision matrix for alternatives and indicators.
     - polarity (Tuple[str]): A tuple indicating the polarity of each indicator.
-    - sensitivity_on (str): Indicates whether sensitivity analysis is enabled ("yes" or "no").
     - normalization (str): The normalization method to be used if sensitivity analysis is enabled.
     - aggregation (str): The aggregation method to be used if sensitivity analysis is enabled.
     - robustness_on (str): Indicates whether robustness analysis is enabled ("yes" or "no").
@@ -149,8 +139,6 @@ def check_configuration_values(extracted_values: dict) -> Tuple[int, int, List[s
     # Access the values from the dictionary
     input_matrix = extracted_values["input_matrix"]
     polarity = extracted_values["polarity"]
-    sensitivity_on = extracted_values["sensitivity_on"]
-    normalization = extracted_values["normalization"]
     aggregation = extracted_values["aggregation"]
     robustness_on = extracted_values["robustness_on"]
     robustness_on_single_weights = extracted_values["robustness_on_single_weights"]
@@ -163,19 +151,8 @@ def check_configuration_values(extracted_values: dict) -> Tuple[int, int, List[s
     # Check for sensitivity-related configuration errors
     valid_norm_methods = [method.value for method in NormalizationFunctions]
     valid_agg_methods = [method.value for method in AggregationFunctions]
-    if isinstance(normalization, NormalizationFunctions):
-        normalization = normalization.value
     if isinstance(aggregation, AggregationFunctions):
         aggregation = aggregation.value
-
-    if sensitivity_on == "no":
-        check_config_error(normalization not in valid_norm_methods,
-                           f'Invalid normalization method: {normalization}. Available methods: {valid_norm_methods}')
-        check_config_error(aggregation not in valid_agg_methods,
-                           f'Invalid aggregation method: {aggregation}. Available methods: {valid_agg_methods}')
-        logger.info("ProMCDA will only use one pair of norm/agg functions: " + normalization + '/' + aggregation)
-    else:
-        logger.info("ProMCDA will use a set of different pairs of norm/agg functions")
 
     # Check for robustness-related configuration errors
     if robustness_on == "no":

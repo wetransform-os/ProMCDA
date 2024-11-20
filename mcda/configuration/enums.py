@@ -59,4 +59,15 @@ class OutputColumnNames4Sensitivity(Enum):
     MIN_STANDARDIZED_ANY = 'min-standardized_any'
 
 
+class PDFType(Enum):
+    """
+    Names of probability density functions, which describe the indicators in case of robustness analysis
+    """
+    EXACT = "exact"
+    UNIFORM = "uniform"
+    NORMAL = "normal"
+    LOGNORMAL = "lognormal"
+    POISSON = "poisson"
+
+
 

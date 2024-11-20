@@ -7,7 +7,7 @@ import pandas as pd
 
 from mcda.models.ProMCDA import ProMCDA
 from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions, OutputColumnNames4Sensitivity, \
-    NormalizationNames4Sensitivity
+    NormalizationNames4Sensitivity, PDFType
 
 
 class TestProMCDA(unittest.TestCase):
@@ -23,50 +23,48 @@ class TestProMCDA(unittest.TestCase):
         self.input_matrix.set_index('Alternatives', inplace=True)
         self.polarity = ('+', '-',)
 
-        self.sensitivity = {
-            'sensitivity_on': 'no',
-            'normalization': NormalizationFunctions.MINMAX,
-            'aggregation': AggregationFunctions.WEIGHTED_SUM
-        }
-
-        self.robustness = {
-            'robustness_on': 'no',
-            'on_single_weights': 'yes',
-            'on_all_weights': 'no',
-            'on_indicators': 'no',
-            'given_weights': [0.6, 0.7]
-        }
-
-        self.monte_carlo = {
-            'monte_carlo_runs': 1000,
-            'num_cores': 2,
-            'random_seed': 42,
-            'marginal_distribution_for_each_indicator': 'normal'
-        }
-
-        self.output_path = 'mock_output/'
+        # Define optional parameters
+        self.robustness_weights = False
+        self.robustness_indicators = False
+        self.marginal_distributions = (PDFType.NORMAL, PDFType.UNIFORM)
+        self.num_runs = 5000
+        self.num_cores = 2
+        self.random_seed = 123
 
     def test_init(self):
         """
         Test if ProMCDA initializes correctly.
         """
         # Given
-        promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
-                          self.output_path)
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix,
+            polarity=self.polarity,
+            robustness_weights=self.robustness_weights,
+            robustness_indicators=self.robustness_indicators,
+            marginal_distributions=self.marginal_distributions,
+            num_runs=self.num_runs,
+            num_cores=self.num_cores,
+            random_seed=self.random_seed
+        )
+
         # Then
         self.assertEqual(promcda.input_matrix.shape, (3, 2))
         self.assertEqual(promcda.polarity, self.polarity)
-        self.assertEqual(promcda.sensitivity, self.sensitivity)
-        self.assertEqual(promcda.robustness, self.robustness)
-        self.assertEqual(promcda.monte_carlo['monte_carlo_runs'], 1000)
+        self.assertFalse(promcda.robustness_weights)
+        self.assertFalse(promcda.robustness_indicators)
+        self.assertEqual(promcda.marginal_distributions, self.marginal_distributions)
+        self.assertEqual(promcda.num_runs, self.num_runs)
+        self.assertEqual(promcda.num_cores, self.num_cores)
+        self.assertEqual(promcda.random_seed, self.random_seed)
+        self.assertIsNone(promcda.normalized_matrix)
+        self.assertIsNone(promcda.scores)
 
     def test_validate_inputs(self):
         """
         Test if input validation works and returns the expected values.
         """
         # Given
-        promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
-                          self.output_path)
+        promcda = ProMCDA(self.input_matrix, self.polarity, self.robustness, self.monte_carlo)
         # When
         (is_robustness_indicators, is_robustness_weights, polar, weights, config) = promcda.validate_inputs()
 
@@ -154,12 +152,12 @@ class TestProMCDA(unittest.TestCase):
 
 
 
-    def tearDown(self):
-        """
-        Clean up temporary directories and files after each test.
-        """
-        if os.path.exists(self.output_path):
-            shutil.rmtree(self.output_path)
+#    def tearDown(self):
+#        """
+#        Clean up temporary directories and files after each test.
+#        """
+#        if os.path.exists(self.output_path):
+#            shutil.rmtree(self.output_path)
 
 if __name__ == '__main__':
     unittest.main()
