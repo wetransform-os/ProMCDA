@@ -4,6 +4,7 @@ from typing import Tuple, List, Union, Optional
 
 from mcda.configuration.configuration_validator import extract_configuration_values, check_configuration_values, \
     check_configuration_keys
+from mcda.configuration.enums import PDFType, NormalizationFunctions
 from mcda.models.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.utils.utils_for_main import run_mcda_without_indicator_uncertainty, run_mcda_with_indicator_uncertainty, \
     check_input_matrix
@@ -11,7 +12,8 @@ from mcda.utils.utils_for_main import run_mcda_without_indicator_uncertainty, ru
 
 class ProMCDA:
     def __init__(self, input_matrix: pd.DataFrame, polarity: Tuple[str, ...], robustness_weights: Optional[bool] = None,
-                 robustness_indicators: Optional[bool] = None, marginal_distributions: Optional[bool] = None,
+                 robustness_indicators: Optional[bool] = None,
+                 marginal_distributions: Optional[Tuple[PDFType, ...]] = None,
                  num_runs: Optional[int] = 10000, num_cores: Optional[int] = 1, random_seed: Optional[int] = 43):
         """
         Initialize the ProMCDA class with configuration parameters.
@@ -67,24 +69,23 @@ class ProMCDA:
         self.marginal_distributions = marginal_distributions
         self.num_cores = num_cores
         self.random_seed = random_seed
-        self.normalized_matrix = None
+        self.normalized_values = None
         self.scores = None
 
+    # def validate_inputs(self) -> Tuple[int, int, list, Union[list, List[list], dict], dict]:
+    #     """
+    #     Extract and validate input configuration parameters to ensure they are correct.
+    #     Return a flag indicating whether robustness analysis will be performed on indicators (1) or not (0).
+    #     """
+    #
+    #     configuration_values = extract_configuration_values(self.input_matrix, self.polarity,
+    #                                                         self.robustness, self.monte_carlo)
+    #     is_robustness_indicators, is_robustness_weights, polar, weights = check_configuration_values(
+    #         configuration_values)
+    #
+    #     return is_robustness_indicators, is_robustness_weights, polar, weights, configuration_values
 
-    def validate_inputs(self) -> Tuple[int, int, list, Union[list, List[list], dict], dict]:
-        """
-        Extract and validate input configuration parameters to ensure they are correct.
-        Return a flag indicating whether robustness analysis will be performed on indicators (1) or not (0).
-        """
-
-        configuration_values = extract_configuration_values(self.input_matrix, self.polarity,
-                                                            self.robustness, self.monte_carlo)
-        is_robustness_indicators, is_robustness_weights, polar, weights = check_configuration_values(
-            configuration_values)
-
-        return is_robustness_indicators, is_robustness_weights, polar, weights, configuration_values
-
-    def normalize(self, method=None) -> pd.DataFrame:
+    def normalize(self, method: Optional[NormalizationFunctions] = None) -> pd.DataFrame:
         """
         Normalize the input data using the specified method.
 
@@ -100,14 +101,16 @@ class ProMCDA:
         Returns:
         - A pd.DataFrame containing the normalized values of each indicator per normalization method.
 
-        :param method: str
+        :param method: NormalizationFunctions
         :return normalized_df: pd.DataFrame
         """
         input_matrix_no_alternatives = check_input_matrix(self.input_matrix)
-        mcda_without_robustness = MCDAWithoutRobustness(self.configuration_settings, input_matrix_no_alternatives)
-        normalized_values = mcda_without_robustness.normalize_indicators(method)
 
-        return normalized_values
+        if not self.robustness_weights and not self.robustness_indicators:
+            mcda_without_robustness = MCDAWithoutRobustness(self.polarity, input_matrix_no_alternatives)
+            self.normalized_values = mcda_without_robustness.normalize_indicators(method)
+
+        return self.normalized_values
 
     def aggregate(self, normalization_method=None, aggregation_method=None, weights=None) -> pd.DataFrame:
         """
@@ -139,7 +142,6 @@ class ProMCDA:
         )
 
         return aggregated_scores
-
 
     # def aggregate_with_robustness(self, normalization_method=None, aggregation_method=None, weights=None,
     #                polarity: list, robustness: dict, monte_carlo: dict) -> pd.DataFrame:
@@ -173,7 +175,6 @@ class ProMCDA:
     #     )
     #
     #     return aggregated_scores
-
 
     def run_mcda(self, is_robustness_indicators: int, is_robustness_weights: int,
                  weights: Union[list, List[list], dict]):

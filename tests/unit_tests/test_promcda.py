@@ -17,8 +17,8 @@ class TestProMCDA(unittest.TestCase):
         # Mock input data for testing
         self.input_matrix = pd.DataFrame({
             'Alternatives': ['A', 'B', 'C'],
-            'Criteria 1': [0.5, 0.2, 0.8],
-            'Criteria 2': [0.3, 0.6, 0.1]
+            'Criterion_1': [0.5, 0.2, 0.8],
+            'Criterion_2': [0.3, 0.6, 0.1]
         })
         self.input_matrix.set_index('Alternatives', inplace=True)
         self.polarity = ('+', '-',)
@@ -59,52 +59,64 @@ class TestProMCDA(unittest.TestCase):
         self.assertIsNone(promcda.normalized_matrix)
         self.assertIsNone(promcda.scores)
 
-    def test_validate_inputs(self):
-        """
-        Test if input validation works and returns the expected values.
-        """
-        # Given
-        promcda = ProMCDA(self.input_matrix, self.polarity, self.robustness, self.monte_carlo)
-        # When
-        (is_robustness_indicators, is_robustness_weights, polar, weights, config) = promcda.validate_inputs()
-
-        # Then
-        self.assertIsInstance(is_robustness_indicators, int)
-        self.assertIsInstance(is_robustness_weights, int)
-        self.assertIsInstance(polar, tuple)
-        self.assertIsInstance(weights, list)
-        self.assertIsInstance(config, dict)
-        self.assertEqual(is_robustness_indicators, 0)
-        self.assertEqual(is_robustness_weights, 0)
+    # def test_validate_inputs(self):
+    #     """
+    #     Test if input validation works and returns the expected values.
+    #     """
+    #     # Given
+    #     promcda = ProMCDA(self.input_matrix, self.polarity, self.robustness, self.monte_carlo)
+    #     # When
+    #     (is_robustness_indicators, is_robustness_weights, polar, weights, config) = promcda.validate_inputs()
+    #
+    #     # Then
+    #     self.assertIsInstance(is_robustness_indicators, int)
+    #     self.assertIsInstance(is_robustness_weights, int)
+    #     self.assertIsInstance(polar, tuple)
+    #     self.assertIsInstance(weights, list)
+    #     self.assertIsInstance(config, dict)
+    #     self.assertEqual(is_robustness_indicators, 0)
+    #     self.assertEqual(is_robustness_weights, 0)
 
     def test_normalize_all_methods(self):
         # Given
-        self.sensitivity['sensitivity_on'] = 'yes'
-        promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
-                          self.output_path)
-
-
-        # TODO: delete if return is not a dic
-        expected_suffixes = [method.value for method in NormalizationNames4Sensitivity]
+        normalization_method = None
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix,
+            polarity=self.polarity,
+            robustness_weights=self.robustness_weights,
+            robustness_indicators=self.robustness_indicators,
+            marginal_distributions=self.marginal_distributions,
+            num_runs=self.num_runs,
+            num_cores=self.num_cores,
+            random_seed=self.random_seed
+        )
 
         # When
-        normalized_values = promcda.normalize()
+        expected_suffixes = [method.value for method in NormalizationNames4Sensitivity]
+        normalized_values = promcda.normalize(normalization_method)
 
         # Then
-        # TODO: delete if return is not a dic
         actual_suffixes = {col.split('_',1)[1] for col in normalized_values.columns}
         self.assertCountEqual(actual_suffixes, expected_suffixes,
                               "Not all methods were applied or extra suffixes found in column names.")
 
     def test_normalize_specific_method(self):
         # Given
-        promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
-                          self.output_path)
-        method = 'minmax'
+        normalization_method = 'minmax'
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix,
+            polarity=self.polarity,
+            robustness_weights=self.robustness_weights,
+            robustness_indicators=self.robustness_indicators,
+            marginal_distributions=self.marginal_distributions,
+            num_runs=self.num_runs,
+            num_cores=self.num_cores,
+            random_seed=self.random_seed
+        )
 
         # When
-        normalized_values = promcda.normalize(method=method)
-        expected_keys = ['0_minmax_01', '1_minmax_01', '0_minmax_without_zero', '1_minmax_without_zero']
+        normalized_values = promcda.normalize(method=NormalizationFunctions.MINMAX)
+        expected_keys = ['Criterion_1_minmax_01', 'Criterion_2_minmax_01', 'Criterion_1_minmax_without_zero', 'Criterion_2_minmax_without_zero']
 
         # Then
         self.assertCountEqual(expected_keys, list(normalized_values.keys()))

@@ -1,12 +1,12 @@
 import sys
 import copy
 import logging
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
 
-from mcda.configuration.enums import NormalizationFunctions, OutputColumnNames4Sensitivity, \
-    NormalizationNames4Sensitivity, AggregationFunctions
+from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions
 from mcda.mcda_functions.normalization import Normalization
 from mcda.mcda_functions.aggregation import Aggregation
 
@@ -26,10 +26,10 @@ class MCDAWithoutRobustness:
     However, it's possible to have randomly sampled weights.
     """
 
-    def __init__(self, config: dict, input_matrix: pd.DataFrame):
+    def __init__(self, polarity: Tuple[str, ...], input_matrix: pd.DataFrame):
         self.normalized_indicators = None
         self.weights = None
-        self._config = copy.deepcopy(config)
+        self.polarity = polarity
         self._input_matrix = copy.deepcopy(input_matrix)
 
     import pandas as pd
@@ -55,7 +55,7 @@ class MCDAWithoutRobustness:
         - for the 'standardized' method, two sets of normalized indicators are returned: one with the range (-inf, +inf)
           and another with the range (0.1, +inf).
         """
-        norm = Normalization(self._input_matrix, self._config["polarity"])
+        norm = Normalization(self._input_matrix, self.polarity)
 
         normalized_dataframes = []
 
