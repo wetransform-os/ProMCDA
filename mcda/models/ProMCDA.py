@@ -2,12 +2,14 @@ import time
 import pandas as pd
 from typing import Tuple, List, Union, Optional
 
+from build.lib.mcda.mcda_with_robustness import MCDAWithRobustness
 from mcda.configuration.configuration_validator import extract_configuration_values, check_configuration_values, \
     check_configuration_keys
 from mcda.configuration.enums import PDFType, NormalizationFunctions
 from mcda.models.mcda_without_robustness import MCDAWithoutRobustness
+from mcda.utils import utils_for_parallelization
 from mcda.utils.utils_for_main import run_mcda_without_indicator_uncertainty, run_mcda_with_indicator_uncertainty, \
-    check_input_matrix
+    check_input_matrix, check_if_pdf_is_exact, check_if_pdf_is_poisson, check_parameters_pdf
 
 
 class ProMCDA:
@@ -69,7 +71,8 @@ class ProMCDA:
         self.marginal_distributions = marginal_distributions
         self.num_cores = num_cores
         self.random_seed = random_seed
-        self.normalized_values = None
+        self.normalized_values_without_robustness = None
+        self.normalized_values_with_robustness = None
         self.scores = None
 
     # def validate_inputs(self) -> Tuple[int, int, list, Union[list, List[list], dict], dict]:
@@ -89,17 +92,18 @@ class ProMCDA:
         """
         Normalize the input data using the specified method.
 
-        # TODO: for now normalize works only with indicators without uncertanties. Review this logic if needed.
         Notes:
         The normalizations methods are defined in the NormalizationFunctions enum class.
-        This method expects the input matrix to not have uncertainties on the indicators.
 
         Parameters:
         - method (optional): The normalization method to use. If None, all available methods will be applied for a
                              Sensitivity Analysis.
 
         Returns:
-        - A pd.DataFrame containing the normalized values of each indicator per normalization method.
+        - A pd.DataFrame containing the normalized values of each indicator per normalization method,
+          if no robustness on indicators is performed.
+        - A dictionary containing the normalized values of each indicator per normalization method,
+          if robustness on indicators is performed.
 
         :param method: NormalizationFunctions
         :return normalized_df: pd.DataFrame
@@ -108,9 +112,28 @@ class ProMCDA:
 
         if not self.robustness_weights and not self.robustness_indicators:
             mcda_without_robustness = MCDAWithoutRobustness(self.polarity, input_matrix_no_alternatives)
-            self.normalized_values = mcda_without_robustness.normalize_indicators(method)
+            self.normalized_values_without_robustness = mcda_without_robustness.normalize_indicators(method)
 
-        return self.normalized_values
+            return self.normalized_values_without_robustness
+
+        elif self.robustness_indicators is not None:
+            check_parameters_pdf(input_matrix_no_alternatives, self.marginal_distributions, for_testing=False)
+            is_exact_pdf_mask = check_if_pdf_is_exact(self.marginal_distributions)
+            is_poisson_pdf_mask = check_if_pdf_is_poisson(self.marginal_distributions)
+
+            mcda_with_robustness = MCDAWithRobustness(input_matrix_no_alternatives, self.marginal_distributions,
+                                                      self.num_runs, is_exact_pdf_mask, is_poisson_pdf_mask,
+                                                      self.random_seed)
+            n_random_input_matrices = mcda_with_robustness.create_n_randomly_sampled_matrices()
+
+            if not method:
+                n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(
+                    n_random_input_matrices, self.polarity)
+            else:
+                n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(
+                    n_random_input_matrices, self.polarity, method)
+
+                self.normalized_values_with_robustness = n_normalized_input_matrices
 
     def aggregate(self, normalization_method=None, aggregation_method=None, weights=None) -> pd.DataFrame:
         """

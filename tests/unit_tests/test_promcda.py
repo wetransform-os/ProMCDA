@@ -21,13 +21,23 @@ class TestProMCDA(unittest.TestCase):
             'Criterion_2': [0.3, 0.6, 0.1]
         })
         self.input_matrix.set_index('Alternatives', inplace=True)
+
+        self.input_matrix_with_uncertainty = pd.DataFrame({
+            'Alternatives': ['A', 'B', 'C'],
+            'Criterion_1_mean': [0.5, 0.2, 0.8],
+            'Criterion_1_std': [0.1, 0.02, 0.07],
+            'Criterion_2_mean': [0.3, 0.6, 0.1],
+            'Criterion_2_std': [0.03, 0.06, 0.01]
+        })
+        self.input_matrix_with_uncertainty.set_index('Alternatives', inplace=True)
+
         self.polarity = ('+', '-',)
 
         # Define optional parameters
         self.robustness_weights = False
         self.robustness_indicators = False
-        self.marginal_distributions = (PDFType.NORMAL, PDFType.UNIFORM)
-        self.num_runs = 5000
+        self.marginal_distributions = (PDFType.NORMAL, PDFType.NORMAL)
+        self.num_runs = 5
         self.num_cores = 2
         self.random_seed = 123
 
@@ -56,7 +66,8 @@ class TestProMCDA(unittest.TestCase):
         self.assertEqual(promcda.num_runs, self.num_runs)
         self.assertEqual(promcda.num_cores, self.num_cores)
         self.assertEqual(promcda.random_seed, self.random_seed)
-        self.assertIsNone(promcda.normalized_matrix)
+        self.assertIsNone(promcda.normalized_values_without_robustness)
+        self.assertIsNone(promcda.normalized_values_with_robustness)
         self.assertIsNone(promcda.scores)
 
     # def test_validate_inputs(self):
@@ -94,15 +105,14 @@ class TestProMCDA(unittest.TestCase):
         # When
         expected_suffixes = [method.value for method in NormalizationNames4Sensitivity]
         normalized_values = promcda.normalize(normalization_method)
+        actual_suffixes = {col.split('_', 2)[-1] for col in normalized_values.columns}
 
         # Then
-        actual_suffixes = {col.split('_',1)[1] for col in normalized_values.columns}
         self.assertCountEqual(actual_suffixes, expected_suffixes,
                               "Not all methods were applied or extra suffixes found in column names.")
 
     def test_normalize_specific_method(self):
         # Given
-        normalization_method = 'minmax'
         promcda = ProMCDA(
             input_matrix=self.input_matrix,
             polarity=self.polarity,
@@ -121,6 +131,28 @@ class TestProMCDA(unittest.TestCase):
         # Then
         self.assertCountEqual(expected_keys, list(normalized_values.keys()))
         self.assertEqual(list(normalized_values), expected_keys)
+
+    def test_normalization_with_robustness(self):
+            # Given
+            promcda = ProMCDA(
+                input_matrix=self.input_matrix_with_uncertainty,
+                polarity=self.polarity,
+                robustness_weights=self.robustness_weights,
+                robustness_indicators=True,
+                marginal_distributions=self.marginal_distributions,
+                num_runs=self.num_runs,
+                num_cores=self.num_cores,
+                random_seed=self.random_seed
+            )
+
+            # When
+            n_normalized_matrices = promcda.normalize(method=NormalizationFunctions.MINMAX)
+
+            print(n_normalized_matrices)
+
+            # Then
+            #self.assertEqual(your_instance.normalized_values_with_robustness,
+            #                 ['normalized_matrix1', 'normalized_matrix2'])
 
     def test_aggregate_all_methods(self):
         # Given

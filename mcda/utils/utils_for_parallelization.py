@@ -1,3 +1,4 @@
+from mcda.configuration.enums import PDFType, NormalizationFunctions
 from mcda.mcda_functions.aggregation import Aggregation
 from mcda.mcda_functions.normalization import Normalization
 import sys
@@ -52,13 +53,13 @@ def initialize_and_call_aggregation(args: Tuple[list, dict], method=None) -> pd.
     return scores_one_run
 
 
-def initialize_and_call_normalization(args: Tuple[pd.DataFrame, list, str]) -> dict:
+def initialize_and_call_normalization(args: Tuple[pd.DataFrame, Tuple[str, ...], NormalizationFunctions]) -> dict:
     """
     Initialize a Normalization object with given matrix and polarities, and call the normalization method to
     calculate normalized indicators.
 
     Parameters:
-    - args: a tuple containing a DataFrame of indicators, a list of polarities,
+    - args: a tuple containing a DataFrame of indicators, a tuple of polarities,
       and a string specifying the normalization method.
 
     Returns:
@@ -131,22 +132,22 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
     indicators_scaled_target_without_zero = None
     indicators_scaled_rank = None
 
-    if method is None or method == 'minmax':
+    if method is None or method == NormalizationFunctions.MINMAX:
         indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
         # for aggregation "geometric" and "harmonic" that accept no 0
         indicators_scaled_minmax_without_zero = norm.minmax(feature_range=(0.1, 1))
-    if method is None or method == 'target':
+    if method is None or method == NormalizationFunctions.TARGET:
         indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
         # for aggregation "geometric" and "harmonic" that accept no 0
         indicators_scaled_target_without_zero = norm.target(feature_range=(0.1, 1))
-    if method is None or method == 'standardized':
+    if method is None or method == NormalizationFunctions.STANDARDIZED:
         indicators_scaled_standardized_any = norm.standardized(
             feature_range=('-inf', '+inf'))
         indicators_scaled_standardized_without_zero = norm.standardized(
             feature_range=(0.1, '+inf'))
-    if method is None or method == 'rank':
+    if method is None or method == NormalizationFunctions.RANK:
         indicators_scaled_rank = norm.rank()
-    if method is not None and method not in ['minmax', 'target', 'standardized', 'rank']:
+    if method is not None and method not in [e for e in NormalizationFunctions]:
         logger.error('Error Message', stack_info=True)
         raise ValueError('The selected normalization method is not supported')
 
@@ -253,7 +254,7 @@ def parallelize_aggregation(args: List[tuple], method=None) -> List[pd.DataFrame
     return res
 
 
-def parallelize_normalization(input_matrices: List[pd.DataFrame], polar: list, method=None) -> List[dict]:
+def parallelize_normalization(input_matrices: List[pd.DataFrame], polar: Tuple[str, ...], method=None) -> List[dict]:
     """
     Parallelize the normalization process for multiple input matrices using multiprocessing.
 

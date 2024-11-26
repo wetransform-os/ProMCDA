@@ -6,7 +6,7 @@ import random
 import logging
 import sys
 from enum import Enum
-from typing import Union, Any, List
+from typing import Union, Any, List, Tuple
 from typing import Optional
 
 import numpy as np
@@ -17,6 +17,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 import mcda.utils.utils_for_parallelization as utils_for_parallelization
 import mcda.utils.utils_for_plotting as utils_for_plotting
+from mcda.configuration.enums import PDFType
 from mcda.models.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.models.mcda_with_robustness import MCDAWithRobustness
 
@@ -482,7 +483,8 @@ def pop_indexed_elements(indexes: np.ndarray, original_list: list) -> list:
     return new_list
 
 
-def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict, for_testing=False) -> Union[List[bool], None]:
+def check_parameters_pdf(input_matrix: pd.DataFrame, marginal_distributions: Tuple[PDFType, ...], for_testing=False) \
+        -> Union[List[bool], None]:
     """
     Check conditions on parameters based on the type of probability distribution function (PDF) for each indicator and
     raise logging information in case of any problem.
@@ -495,7 +497,7 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict, for_testing=F
 
     Parameters:
     - input_matrix: the input matrix containing uncertainties for indicators, no alternatives.
-    - config: configuration dictionary containing the Monte Carlo sampling information.
+    - marginal_distributions: the PDFs associated to each indicator.
     - for_testing: true only for unit testing
 
     Returns:
@@ -503,7 +505,7 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict, for_testing=F
     - None: default
 
     :param input_matrix: pd.DataFrame
-    :param config: dict
+    :param marginal_distributions: PDFType
     :param for_testing: bool
     :return: Union[list, None]
     """
@@ -511,7 +513,7 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict, for_testing=F
     satisfies_condition = False
     problem_logged = False
 
-    marginal_pdf = config["marginal_distribution_for_each_indicator"]
+    marginal_pdf = marginal_distributions
     is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
     is_poisson_pdf_mask = check_if_pdf_is_poisson(marginal_pdf)
     is_uniform_pdf_mask = check_if_pdf_is_uniform(marginal_pdf)
@@ -555,7 +557,7 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, config: dict, for_testing=F
         return list_of_satisfied_conditions
 
 
-def check_if_pdf_is_exact(marginal_pdf: list) -> list:
+def check_if_pdf_is_exact(marginal_pdf: tuple[PDFType, ...]) -> list:
     """
     Check if each indicator's probability distribution function (PDF) is of type 'exact'.
 
@@ -579,7 +581,7 @@ def check_if_pdf_is_exact(marginal_pdf: list) -> list:
     return exact_pdf_mask
 
 
-def check_if_pdf_is_poisson(marginal_pdf: list) -> list:
+def check_if_pdf_is_poisson(marginal_pdf: tuple[PDFType, ...]) -> list:
     """
     Check if each indicator's probability distribution function (PDF) is of type 'poisson'.
 

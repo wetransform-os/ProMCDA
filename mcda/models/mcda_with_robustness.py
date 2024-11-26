@@ -27,12 +27,11 @@ class MCDAWithRobustness:
     """
 
 
-    def __init__(self, config: dict, input_matrix: pd.DataFrame(), is_exact_pdf_mask=None, is_poisson_pdf_mask=None,
+    def __init__(self, input_matrix: pd.DataFrame(), is_exact_pdf_mask=None, is_poisson_pdf_mask=None,
                  random_seed=None):
         self.is_exact_pdf_mask = is_exact_pdf_mask
         self.is_poisson_pdf_mask = is_poisson_pdf_mask
         self.random_seed = random_seed
-        self._config = copy.deepcopy(config)
         self._input_matrix = copy.deepcopy(input_matrix)
 
     @staticmethod
