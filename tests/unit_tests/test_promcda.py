@@ -1,5 +1,3 @@
-import os
-import shutil
 import unittest
 import warnings
 
@@ -146,11 +144,12 @@ class TestProMCDA(unittest.TestCase):
             )
 
             # When
-            n_normalized_matrices = promcda.normalize(method=NormalizationFunctions.MINMAX)
-
+            promcda.normalize(method=NormalizationFunctions.MINMAX)
 
             # Then
-            self.assertCountEqual(n_normalized_matrices, self.num_runs)
+            normalized_values = promcda.get_normalized_values_with_robustness()
+            self.assertIsNotNone(normalized_values)
+            self.assertEqual(len(normalized_values), self.num_runs)
 
 
     def test_aggregate_all_methods(self):

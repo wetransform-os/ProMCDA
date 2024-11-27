@@ -135,6 +135,19 @@ class ProMCDA:
 
                 self.normalized_values_with_robustness = n_normalized_input_matrices
 
+            return f"{self.num_runs} normalized matrices have been normalized."
+
+
+    def get_normalized_values_with_robustness(self) -> Optional[pd.DataFrame]:
+        """
+        Getter method to access normalized values when robustness on indicators is performed.
+
+        Returns:
+            A dictionary containing normalized values if robustness is enabled; otherwise None.
+        """
+        return getattr(self, 'normalized_values_with_robustness', None)
+
+
     def aggregate(self, normalization_method=None, aggregation_method=None, weights=None) -> pd.DataFrame:
         """
         Aggregate normalized indicators using the specified method.
