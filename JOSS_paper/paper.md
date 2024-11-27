@@ -11,8 +11,10 @@ date: "15 May 2024"
 output:
   html_document: 
     fig_caption: yes
-  pdf_document: 
-    fig_caption: yes
+  pdf_document:
+    latex_engine: xelatex
+header-includes:
+  - \usepackage{graphicx} 
 authors:
 - name: Flaminia Catalli
   orcid: "0000-0003-0515-5282"
@@ -63,12 +65,9 @@ The tool is designed for use by both researchers and practitioners in operations
 
 \begin{figure}[!htb]
     \centering
-    \begin{minipage}{.56\textwidth}
-        \centering
-        \includegraphics[width=300px]{Table1.png}
-        \caption{Normalization functions used in \texttt{ProMCDA}.}
-        \label{fig:table1}
-    \end{minipage}
+    \includegraphics[width=300px]{Table1.png}
+    \caption{Normalization functions used in \texttt{ProMCDA}.}
+    \label{fig:table1}
 \end{figure}
 
 :::
@@ -88,12 +87,9 @@ The tool is designed for use by both researchers and practitioners in operations
 
 \begin{figure}[!htb]
     \centering
-    \begin{minipage}{.56\textwidth}
-        \centering
-        \includegraphics[width=300px]{Table2.png}
-        \caption{Aggregation functions used in \texttt{ProMCDA}. The sum of the weights is normalized to 1 as in @langhans_method_2014.}
-        \label{fig:table2}
-    \end{minipage}
+    \includegraphics[width=300px]{Table2.png}
+    \caption{Aggregation functions used in \texttt{ProMCDA}. The sum of the weights is normalized to 1.}
+    \label{fig:table2}
 \end{figure}
 
 :::
@@ -134,12 +130,9 @@ Finally, in all possible cases (i.e., a simple MCDA, MCDA with sensitivity analy
 
 \begin{figure}[!htb]
     \centering
-    \begin{minipage}{.56\textwidth}
-        \centering
-        \includegraphics[width=300px]{Table3.png}
-        \caption{Overview on the functionalities of \texttt{ProMCDA}.}
-        \label{fig:table3}
-    \end{minipage}
+    \includegraphics[width=300px]{Table3.png}
+    \caption{Overview on the functionalities of \texttt{ProMCDA}.}
+    \label{fig:table3}
 \end{figure}
 
 :::
