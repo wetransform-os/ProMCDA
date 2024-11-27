@@ -148,11 +148,10 @@ class TestProMCDA(unittest.TestCase):
             # When
             n_normalized_matrices = promcda.normalize(method=NormalizationFunctions.MINMAX)
 
-            print(n_normalized_matrices)
 
             # Then
-            #self.assertEqual(your_instance.normalized_values_with_robustness,
-            #                 ['normalized_matrix1', 'normalized_matrix2'])
+            self.assertCountEqual(n_normalized_matrices, self.num_runs)
+
 
     def test_aggregate_all_methods(self):
         # Given
