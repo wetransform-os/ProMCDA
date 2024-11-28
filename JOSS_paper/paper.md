@@ -7,7 +7,7 @@ tags:
 - probabilistic approach
 - sensitivity analysis
 - Monte Carlo sampling
-date: "15 May 2024"
+date: "28 November 2024"
 output:
   html_document: 
     fig_caption: yes
@@ -58,50 +58,49 @@ The tool is designed for use by both researchers and practitioners in operations
 - **Data Normalization:** Ensuring all data values are on the same scale.
 - **Data Aggregation:** Estimating a single composite indicator from all criteria.
 
-
-`ProMCDA` receives all necessary input information via a configuration file in JSON format (for more details, see the [README](https://github.com/wetransform-os/ProMCDA/blob/main/README.md)). The alternatives are represented as rows in an input matrix (CSV file format), with criteria values in columns. The tool offers the flexibility to conduct sensitivity analysis by comparing the different scores associated with alternatives using various combinations of normalization and aggregation functions. `ProMCDA` currently implements four normalization and four aggregation functions, as described in [Table 1](#Table1) and [Table 2](#Table2), respectively. However, the user can run `ProMCDA` with a specific pair of normalization and aggregation functions, thus switching off the sensitivity analysis. <br/>
+`ProMCDA` receives all necessary input information via a configuration file in JSON format (for more details, see the [README](https://github.com/wetransform-os/ProMCDA/blob/main/README.md)). The alternatives are represented as rows in an input matrix (CSV file format), with criteria values in columns. The tool offers the flexibility to conduct sensitivity analysis by comparing the different scores associated with alternatives using various combinations of normalization and aggregation functions. `ProMCDA` currently implements four normalization and four aggregation functions, as described in [Table 1](tab:table1) and [Table 2](tab:table2), respectively. However, the user can run `ProMCDA` with a specific pair of normalization and aggregation functions, thus switching off the sensitivity analysis. <br/>
 
 ::: {exclude-in="jats"}
 
-\begin{figure}[!htb]
+\begin{table}[!htb]
     \centering
+    \caption{Normalization functions used in \texttt{ProMCDA}.}    
     \includegraphics[width=300px]{Table1.png}
-    \caption{Normalization functions used in \texttt{ProMCDA}.}
-    \label{fig:table1}
-\end{figure}
+    \label{tab:table1}
+\end{table}
 
 :::
 
 ```{=jats}
-<fig id="figU003Atable1">
+<table-wrap id="tabU003Atable1">
   <caption><p>Normalization functions used in <monospace>ProMCDA</monospace>.</p></caption>
   <graphic mimetype="image" mime-subtype="png" xlink:href="Table1.png" xlink:title="Normalization functions table" />
-</fig>
+</table-wrap>
 
 ```
-<!-- ![Normalization functions used in ProMCDA.\label{fig:table1}](Table1.png){ width=60% } -->
+<!-- ![Normalization functions used in ProMCDA.\label{tab:table1}](Table1.png){ width=60% } -->
 
 <br/>
 
 ::: {exclude-in="jats"}
 
-\begin{figure}[!htb]
+\begin{table}[!htb]
     \centering
-    \includegraphics[width=300px]{Table2.png}
     \caption{Aggregation functions used in \texttt{ProMCDA}. The sum of the weights is normalized to 1.}
-    \label{fig:table2}
-\end{figure}
+    \includegraphics[width=300px]{Table2.png}
+    \label{tab:table2}
+\end{table}
 
 :::
 
 ```{=jats}
-<fig id="figU003Atable2">
+<table-wrap id="tabU003Atable2">
   <caption><p>Aggregation functions used in <monospace>ProMCDA</monospace>. The sum of the weights is normalized to 1 as in @langhans_method_2014.</p></caption>
   <graphic mimetype="image" mime-subtype="png" xlink:href="Table2.png" xlink:title="Aggregation functions table" />
-</fig>
+</table-wrap>
 
 ```
-<!-- ![Aggregation functions used in \texttt{ProMCDA}. The sum of the weights is normalized to 1 as in @langhans_method_2014.\label{fig:table2}](Table2.png){ width=60% } -->
+<!-- ![Aggregation functions used in \texttt{ProMCDA}. The sum of the weights is normalized to 1 as in @langhans_method_2014.\label{tab:table2}](Table2.png){ width=60% } -->
 
 The user can bypass both the sensitivity and robustness analysis when running `ProMCDA`.
 
@@ -124,28 +123,27 @@ Once the pdf for each criterion is selected and the input parameters are in plac
 
 Once the pdfs for each criterion are selected and the input parameters are in the input CSV file, `ProMCDA` randomly samples n-values of each criterion per alternative from the given pdf to evaluate the alternatives' scores and rankings, taking into account robustness at the criteria level.
 
-Finally, in all possible cases (i.e., a simple MCDA, MCDA with sensitivity analysis for the different normalization/aggregation functions used, MCDA with robustness investigation related either to randomness on the weights or on the indicators), `ProMCDA` will output a CSV file with the scores/average scores and their plots. For a quick overview of the functionality of `ProMCDA`, refer to  [Table 3](#Table3). For more details, refer to the [README](https://github.com/wetransform-os/ProMCDA/blob/main/README.md).
+Finally, in all possible cases (i.e., a simple MCDA, MCDA with sensitivity analysis for the different normalization/aggregation functions used, MCDA with robustness investigation related either to randomness on the weights or on the indicators), `ProMCDA` will output a CSV file with the scores/average scores and their plots. For a quick overview of the functionality of `ProMCDA`, refer to  [Table 3](tab:table3). For more details, refer to the [README](https://github.com/wetransform-os/ProMCDA/blob/main/README.md).
 
 ::: {exclude-in="jats"}
 
-\begin{figure}[!htb]
+\begin{table}[!htb]
     \centering
-    \includegraphics[width=300px]{Table3.png}
     \caption{Overview on the functionalities of \texttt{ProMCDA}.}
-    \label{fig:table3}
-\end{figure}
+    \includegraphics[width=300px]{Table3.png}
+    \label{tab:table3}
+\end{table}
 
 :::
 
 ```{=jats}
-<fig id="figU003Atable3">
+<table-wrap id="tabU003Atable3">
   <caption><p>Overview on the functionalities of <monospace>ProMCDA</monospace>. </p></caption>
   <graphic mimetype="image" mime-subtype="png" xlink:href="Table3.png" xlink:title="Functionalities table" />
-</fig>
+</table-wrap>
 
 ```
-<!-- ![Overview on the functionalities of \texttt{ProMCDA}. \label{fig:table3}](Table3.png){ width=60% } -->
-
+<!-- ![Overview on the functionalities of \texttt{ProMCDA}. \label{tab:table3}](Table3.png){ width=60% } -->
 
 # Acknowledgements
 
