@@ -1,5 +1,5 @@
-from mcda.mcda_functions.aggregation import Aggregation
-from mcda.mcda_functions.normalization import Normalization
+from ProMCDA.mcda.mcda_functions.aggregation import Aggregation
+from ProMCDA.mcda.mcda_functions.normalization import Normalization
 import sys
 import logging
 import pandas as pd
