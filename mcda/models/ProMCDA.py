@@ -88,7 +88,7 @@ class ProMCDA:
     #
     #     return is_robustness_indicators, is_robustness_weights, polar, weights, configuration_values
 
-    def normalize(self, method: Optional[NormalizationFunctions] = None) -> pd.DataFrame:
+    def normalize(self, method: Optional[NormalizationFunctions] = None) -> Union[pd.DataFrame, str]:
         """
         Normalize the input data using the specified method.
 
@@ -110,13 +110,13 @@ class ProMCDA:
         """
         input_matrix_no_alternatives = check_input_matrix(self.input_matrix)
 
-        if not self.robustness_weights and not self.robustness_indicators:
+        if not self.robustness_indicators:
             mcda_without_robustness = MCDAWithoutRobustness(self.polarity, input_matrix_no_alternatives)
             self.normalized_values_without_robustness = mcda_without_robustness.normalize_indicators(method)
 
             return self.normalized_values_without_robustness
 
-        elif self.robustness_indicators is not None:
+        elif self.robustness_indicators is not None and self.robustness_weights is None:
             check_parameters_pdf(input_matrix_no_alternatives, self.marginal_distributions, for_testing=False)
             is_exact_pdf_mask = check_if_pdf_is_exact(self.marginal_distributions)
             is_poisson_pdf_mask = check_if_pdf_is_poisson(self.marginal_distributions)
@@ -135,7 +135,11 @@ class ProMCDA:
 
                 self.normalized_values_with_robustness = n_normalized_input_matrices
 
-            return f"{self.num_runs} normalized matrices have been normalized."
+            return f"{self.num_runs} randomly sampled matrices have been normalized."
+
+        if self.robustness_weights and self.robustness_indicators:
+            raise ValueError(
+                "Inconsistent configuration: 'robustness_weights' and 'robustness_indicators' are both enabled.")
 
 
     def get_normalized_values_with_robustness(self) -> Optional[pd.DataFrame]:
@@ -148,18 +152,14 @@ class ProMCDA:
         return getattr(self, 'normalized_values_with_robustness', None)
 
 
-    def aggregate(self, normalization_method=None, aggregation_method=None, weights=None) -> pd.DataFrame:
+    def aggregate(self, aggregation_method=None, weights=None) -> pd.DataFrame:
         """
         Aggregate normalized indicators using the specified method.
 
-        # TODO: for now aggregate works only with indicators without uncertanties. Review this logic if needed.
         Notes:
         The aggregation methods are defined in the AggregationFunctions enum class.
-        This method expects the input matrix to not have uncertainties on the indicators.
 
         Parameters (optional):
-        - normalization_method: The normalization method to use. If None, all available methods will be applied for a
-                                Sensitivity Analysis.
         - aggregation_method: The aggregation method to use. If None, all available methods will be applied.
         - weights: The weights to be used for aggregation. If None, they are set all the same.
 
@@ -167,8 +167,6 @@ class ProMCDA:
         - A DataFrame containing the aggregated scores per normalization and aggregation methods.
         """
 
-        input_matrix_no_alternatives = check_input_matrix(self.input_matrix)
-        mcda_without_robustness = MCDAWithoutRobustness(self.configuration_settings, input_matrix_no_alternatives)
         normalized_indicators = self.normalize(normalization_method)
 
         aggregated_scores = mcda_without_robustness.aggregate_indicators(
