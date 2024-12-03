@@ -36,6 +36,9 @@ class Aggregation(object):
         :returns scores: pd.Series
         """
 
+        print("Normalized indicators shape:", norm_indicators.shape)
+        print("Weights:", self.weights if self.weights is not None else "Weights are None")
+
         scores = (norm_indicators * self.weights).sum(axis=1)
 
         return scores

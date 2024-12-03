@@ -111,17 +111,17 @@ class MCDAWithoutRobustness:
         Returns:
         - A DataFrame containing the aggregated scores for each alternative and normalization method.
         """
-        if isinstance(agg_method, AggregationFunctions):
-            method = agg_method.value
+        #if isinstance(agg_method, AggregationFunctions):
+        #    method = agg_method.value
 
         self.normalized_indicators = normalized_indicators
         self.weights = weights
 
-        agg= Aggregation(weights)
+        agg= Aggregation(self.weights)
 
         score_list = []
 
-        def _apply_aggregation(norm_method, agg_method, df_subset):
+        def _apply_aggregation(norm_function, agg_function, df_subset):
             """
             Apply the aggregation method to a subset of the DataFrame and store results in the appropriate DataFrame.
             """
@@ -132,10 +132,10 @@ class MCDAWithoutRobustness:
                 AggregationFunctions.MINIMUM.value: agg.minimum,
             }
 
-            agg_methods = list(agg_functions.keys()) if agg_method is None else [agg_method]
+            agg_methods = list(agg_functions.keys()) if agg_function is None else [agg_function]
 
-            for method in agg_methods:
-                agg_function = agg_functions[method]
+            for agg_function in agg_methods:
+                agg_function = agg_functions[agg_function.value]
                 aggregated_scores = agg_function(df_subset)
 
                 if isinstance(aggregated_scores, np.ndarray):
@@ -143,10 +143,11 @@ class MCDAWithoutRobustness:
                 elif isinstance(aggregated_scores, pd.Series):
                     aggregated_scores = aggregated_scores.to_frame()
 
-                aggregated_scores.columns = [f"{norm_method}_{method}"]
+                aggregated_scores.columns = [f"{norm_function}_{agg_method.value}"]
                 score_list.append(aggregated_scores)
 
         for norm_method in self.normalized_indicators.columns.str.split("_", n=0).str[1].unique():
+            print('Normalization method',norm_method)
 
             norm_method_columns = self.normalized_indicators.filter(regex=rf"{norm_method}")
 
@@ -154,21 +155,23 @@ class MCDAWithoutRobustness:
             with_zero_columns = norm_method_columns[norm_method_columns.columns.difference(without_zero_columns.columns)]
 
             # Apply WEIGHTED_SUM only to columns with zero in the suffix
-            if agg_method is None or agg_method == AggregationFunctions.WEIGHTED_SUM.value:
-                _apply_aggregation(norm_method, AggregationFunctions.WEIGHTED_SUM.value,
+            if agg_method is None or agg_method == AggregationFunctions.WEIGHTED_SUM:
+                print('Entering weighted sum')
+                print('Columns:', with_zero_columns)
+                _apply_aggregation(norm_method, AggregationFunctions.WEIGHTED_SUM,
                                    with_zero_columns)
 
             # Apply GEOMETRIC and HARMONIC only to columns without zero in the suffix
-            if agg_method is None or agg_method == AggregationFunctions.GEOMETRIC.value:
-                _apply_aggregation(norm_method, AggregationFunctions.GEOMETRIC.value,
+            if agg_method is None or agg_method == AggregationFunctions.GEOMETRIC:
+                _apply_aggregation(norm_method, AggregationFunctions.GEOMETRIC,
                                    without_zero_columns)
-            elif agg_method is None or agg_method == AggregationFunctions.HARMONIC.value:
-                _apply_aggregation(norm_method, AggregationFunctions.HARMONIC.value,
+            elif agg_method is None or agg_method == AggregationFunctions.HARMONIC:
+                _apply_aggregation(norm_method, AggregationFunctions.HARMONIC,
                                    without_zero_columns)
 
             # Apply MINIMUM only to columns with zero in the suffix
-            if agg_method is None or agg_method == AggregationFunctions.MINIMUM.value:
-                _apply_aggregation(norm_method, AggregationFunctions.MINIMUM.value,
+            if agg_method is None or agg_method == AggregationFunctions.MINIMUM:
+                _apply_aggregation(norm_method, AggregationFunctions.MINIMUM,
                                    with_zero_columns)
 
         # Concatenate all score DataFrames into a single DataFrame

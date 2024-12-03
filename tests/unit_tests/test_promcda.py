@@ -15,17 +15,17 @@ class TestProMCDA(unittest.TestCase):
         # Mock input data for testing
         self.input_matrix = pd.DataFrame({
             'Alternatives': ['A', 'B', 'C'],
-            'Criterion_1': [0.5, 0.2, 0.8],
-            'Criterion_2': [0.3, 0.6, 0.1]
+            'Criterion1': [0.5, 0.2, 0.8],
+            'Criterion2': [0.3, 0.6, 0.1]
         })
         self.input_matrix.set_index('Alternatives', inplace=True)
 
         self.input_matrix_with_uncertainty = pd.DataFrame({
             'Alternatives': ['A', 'B', 'C'],
-            'Criterion_1_mean': [0.5, 0.2, 0.8],
-            'Criterion_1_std': [0.1, 0.02, 0.07],
-            'Criterion_2_mean': [0.3, 0.6, 0.1],
-            'Criterion_2_std': [0.03, 0.06, 0.01]
+            'Criterion1_mean': [0.5, 0.2, 0.8],
+            'Criterion1_std': [0.1, 0.02, 0.07],
+            'Criterion2_mean': [0.3, 0.6, 0.1],
+            'Criterion2_std': [0.03, 0.06, 0.01]
         })
         self.input_matrix_with_uncertainty.set_index('Alternatives', inplace=True)
 
@@ -103,7 +103,8 @@ class TestProMCDA(unittest.TestCase):
         # When
         expected_suffixes = [method.value for method in NormalizationNames4Sensitivity]
         normalized_values = promcda.normalize(normalization_method)
-        actual_suffixes = {col.split('_', 2)[-1] for col in normalized_values.columns}
+        #actual_suffixes = {col.split('_', 2)[1] for col in normalized_values.columns}
+        actual_suffixes = {"_".join(col.split("_", 2)[1:]) for col in normalized_values.columns}
 
         # Then
         self.assertCountEqual(actual_suffixes, expected_suffixes,
@@ -124,42 +125,49 @@ class TestProMCDA(unittest.TestCase):
 
         # When
         normalized_values = promcda.normalize(method=NormalizationFunctions.MINMAX)
-        expected_keys = ['Criterion_1_minmax_01', 'Criterion_2_minmax_01', 'Criterion_1_minmax_without_zero', 'Criterion_2_minmax_without_zero']
+        expected_keys = ['Criterion1_minmax_01', 'Criterion2_minmax_01', 'Criterion1_minmax_without_zero', 'Criterion2_minmax_without_zero']
 
         # Then
         self.assertCountEqual(expected_keys, list(normalized_values.keys()))
         self.assertEqual(list(normalized_values), expected_keys)
 
     def test_normalization_with_robustness(self):
-            # Given
-            promcda = ProMCDA(
-                input_matrix=self.input_matrix_with_uncertainty,
-                polarity=self.polarity,
-                robustness_weights=self.robustness_weights,
-                robustness_indicators=True,
-                marginal_distributions=self.marginal_distributions,
-                num_runs=self.num_runs,
-                num_cores=self.num_cores,
-                random_seed=self.random_seed
-            )
+        # Given
+        robustness_indicators=True
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix_with_uncertainty,
+            polarity=self.polarity,
+            robustness_weights=self.robustness_weights,
+            robustness_indicators=robustness_indicators,
+            marginal_distributions=self.marginal_distributions,
+            num_runs=self.num_runs,
+            num_cores=self.num_cores,
+            random_seed=self.random_seed
+        )
 
-            # When
-            promcda.normalize(method=NormalizationFunctions.MINMAX)
+        # When
+        promcda.normalize(method=NormalizationFunctions.MINMAX)
 
-            # Then
-            normalized_values = promcda.get_normalized_values_with_robustness()
-            self.assertIsNotNone(normalized_values)
-            self.assertEqual(len(normalized_values), self.num_runs)
+        # Then
+        normalized_values = promcda.get_normalized_values_with_robustness()
+        self.assertIsNotNone(normalized_values)
+        self.assertEqual(len(normalized_values), self.num_runs)
 
 
     def test_aggregate_all_methods(self):
         # Given
-        self.sensitivity['sensitivity_on'] = 'yes'
-        promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
-                          self.output_path)
-        aggregated_scores = promcda.aggregate(normalization_method=None,
-                                              aggregation_method=None,
-                                              weights=self.robustness['given_weights'])
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix,
+            polarity=self.polarity,
+            robustness_weights=self.robustness_weights,
+            robustness_indicators=self.robustness_indicators,
+            marginal_distributions=self.marginal_distributions,
+            num_runs=self.num_runs,
+            num_cores=self.num_cores,
+            random_seed=self.random_seed
+        )
+        promcda.normalize()
+        aggregated_scores = promcda.aggregate()
 
         # When
         expected_columns = [
@@ -173,17 +181,24 @@ class TestProMCDA(unittest.TestCase):
         self.assertEqual(len(aggregated_scores), len(self.input_matrix),
                          "Number of alternatives does not match input matrix rows.")
 
-    def test_aggregate_with_specific_normalization_and_aggregation_methods(self):
+    def test_aggregate_with_specific_aggregation_method(self):
         # Given
-        normalization_method = 'minmax'
-        aggregation_method = 'weighted_sum'
-        promcda = ProMCDA(self.input_matrix, self.polarity, self.sensitivity, self.robustness, self.monte_carlo,
-                          self.output_path)
-        aggregated_scores = promcda.aggregate(normalization_method=normalization_method,
-                                              aggregation_method=aggregation_method,
-                                              weights=self.robustness['given_weights'])
+        normalization_method = NormalizationFunctions.MINMAX
+        aggregation_method = AggregationFunctions.WEIGHTED_SUM
 
         # When
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix,
+            polarity=self.polarity,
+            robustness_weights=self.robustness_weights,
+            robustness_indicators=self.robustness_indicators,
+            marginal_distributions=self.marginal_distributions,
+            num_runs=self.num_runs,
+            num_cores=self.num_cores,
+            random_seed=self.random_seed
+        )
+        promcda.normalize(normalization_method)
+        aggregated_scores = promcda.aggregate(aggregation_method=aggregation_method)
         expected_columns = ['minmax_weighted_sum']
 
         # Then
