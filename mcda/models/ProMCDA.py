@@ -90,7 +90,7 @@ class ProMCDA:
     #
     #     return is_robustness_indicators, is_robustness_weights, polar, weights, configuration_values
 
-    def normalize(self, method: Optional[NormalizationFunctions] = None) -> Union[pd.DataFrame, str]:
+    def normalize(self, normalization_method: Optional[NormalizationFunctions] = None) -> Union[pd.DataFrame, str]:
         """
         Normalize the input data using the specified method.
 
@@ -105,13 +105,13 @@ class ProMCDA:
         - A pd.DataFrame containing the normalized values of each indicator per normalization method,
           if no robustness on indicators is performed.
 
-        :param method: NormalizationFunctions
+        :param normalization_method: NormalizationFunctions
         :return normalized_df: pd.DataFrame or string
         """
 
         if not self.robustness_indicators:
             mcda_without_robustness = MCDAWithoutRobustness(self.polarity, self.input_matrix_no_alternatives)
-            self.normalized_values_without_robustness = mcda_without_robustness.normalize_indicators(method)
+            self.normalized_values_without_robustness = mcda_without_robustness.normalize_indicators(normalization_method)
 
             return self.normalized_values_without_robustness
 
@@ -125,12 +125,12 @@ class ProMCDA:
                                                       self.random_seed)
             n_random_input_matrices = mcda_with_robustness.create_n_randomly_sampled_matrices()
 
-            if not method:
+            if not normalization_method:
                 n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(
                     n_random_input_matrices, self.polarity)
             else:
                 n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(
-                    n_random_input_matrices, self.polarity, method)
+                    n_random_input_matrices, self.polarity, normalization_method)
 
                 self.normalized_values_with_robustness = n_normalized_input_matrices
 
@@ -152,15 +152,15 @@ class ProMCDA:
     def aggregate(self, aggregation_method: Optional[AggregationFunctions] = None, weights: Optional[None] = None) \
             -> Union[pd.DataFrame, str]:
         """
-        Aggregate normalized indicators using the specified method.
+        Aggregate normalized indicators using the specified agg_method.
 
         Notes:
         The aggregation methods are defined in the AggregationFunctions enum class.
-        This method should follow the normalization. It acquires the normalized
+        This agg_method should follow the normalization. It acquires the normalized
         values from the normalization step.
 
         Parameters (optional):
-        - aggregation_method: The aggregation method to use. If None, all available methods will be applied.
+        - aggregation_method: The aggregation agg_method to use. If None, all available methods will be applied.
         - weights: The weights to be used for aggregation. If None, they are set all the same. Or, if robustness on
           weights is enabled, then the weights are sampled from the Monte Carlo simulation.
 
@@ -192,7 +192,20 @@ class ProMCDA:
             normalized_indicators = self.normalized_values_without_robustness
             if normalized_indicators is None:
                 raise ValueError("Normalization must be performed before aggregation.")
-            aggregated_scores = mcda_without_robustness.aggregate_indicators(
+
+            if aggregation_method is None:
+                aggregated_scores = pd.DataFrame()
+                for agg_method in AggregationFunctions:
+                    result = mcda_without_robustness.aggregate_indicators(
+                        normalized_indicators=normalized_indicators,
+                        weights=weights,
+                        agg_method=agg_method
+                    )
+                    aggregated_scores = pd.concat([aggregated_scores, result], axis=1)
+                    #for col in result.columns:
+                    #    aggregated_scores[f"{col}"] = result[col]
+            else:
+                aggregated_scores = mcda_without_robustness.aggregate_indicators(
                 normalized_indicators=normalized_indicators,
                 weights=weights,
                 agg_method=aggregation_method

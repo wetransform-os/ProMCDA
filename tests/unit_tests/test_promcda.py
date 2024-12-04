@@ -167,13 +167,14 @@ class TestProMCDA(unittest.TestCase):
             random_seed=self.random_seed
         )
         promcda.normalize()
-        aggregated_scores = promcda.aggregate()
 
         # When
+        aggregated_scores = promcda.aggregate()
         expected_columns = [
             'minmax_weighted_sum', 'target_weighted_sum', 'standardized_weighted_sum', 'rank_weighted_sum',
-            'minmax_geometric', 'minmax_minimum', 'target_geometric', 'target_minimum', 'standardized_geometric',
-            'standardized_minimum', 'rank_geometric', 'rank_minimum']
+            'minmax_geometric', 'target_geometric', 'standardized_geometric', 'rank_geometric',
+            'minmax_harmonic', 'target_harmonic', 'standardized_harmonic', 'rank_harmonic',
+            'standardized_minimum']
 
         # Then
         self.assertCountEqual(aggregated_scores.columns, expected_columns,

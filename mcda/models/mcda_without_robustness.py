@@ -5,6 +5,7 @@ from typing import Tuple
 
 import numpy as np
 import pandas as pd
+from pandas import DataFrame
 
 from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions
 from mcda.mcda_functions.normalization import Normalization
@@ -119,7 +120,7 @@ class MCDAWithoutRobustness:
 
         agg= Aggregation(self.weights)
 
-        score_list = []
+        final_scores = pd.DataFrame()
 
         def _apply_aggregation(norm_function, agg_function, df_subset):
             """
@@ -144,37 +145,46 @@ class MCDAWithoutRobustness:
                     aggregated_scores = aggregated_scores.to_frame()
 
                 aggregated_scores.columns = [f"{norm_function}_{agg_method.value}"]
+
                 score_list.append(aggregated_scores)
 
         for norm_method in self.normalized_indicators.columns.str.split("_", n=0).str[1].unique():
-            print('Normalization method',norm_method)
+            score_list = []
 
             norm_method_columns = self.normalized_indicators.filter(regex=rf"{norm_method}")
 
             without_zero_columns = norm_method_columns.filter(regex="without_zero$")
             with_zero_columns = norm_method_columns[norm_method_columns.columns.difference(without_zero_columns.columns)]
+            rank_columns = norm_method_columns.filter(regex="rank$")
+            without_zero_columns_rank = pd.concat([without_zero_columns, rank_columns], axis=1)
 
             # Apply WEIGHTED_SUM only to columns with zero in the suffix
             if agg_method is None or agg_method == AggregationFunctions.WEIGHTED_SUM:
-                print('Entering weighted sum')
-                print('Columns:', with_zero_columns)
-                _apply_aggregation(norm_method, AggregationFunctions.WEIGHTED_SUM,
+                # Apply WEIGHTED_SUM to columns with zero in the suffix and only some normalization methods
+                if norm_method in [NormalizationFunctions.STANDARDIZED.value, NormalizationFunctions.MINMAX.value,
+                                   NormalizationFunctions.TARGET.value, NormalizationFunctions.RANK.value]:
+                    _apply_aggregation(norm_method, AggregationFunctions.WEIGHTED_SUM,
                                    with_zero_columns)
-
-            # Apply GEOMETRIC and HARMONIC only to columns without zero in the suffix
+            # Apply GEOMETRIC and HARMONIC only to columns without zero in the suffix and only some normalization methods
             if agg_method is None or agg_method == AggregationFunctions.GEOMETRIC:
-                _apply_aggregation(norm_method, AggregationFunctions.GEOMETRIC,
-                                   without_zero_columns)
+                if norm_method in [NormalizationFunctions.STANDARDIZED.value, NormalizationFunctions.MINMAX.value,
+                                   NormalizationFunctions.TARGET.value, NormalizationFunctions.RANK.value]:
+                    _apply_aggregation(norm_method, AggregationFunctions.GEOMETRIC,
+                                   without_zero_columns_rank)
             elif agg_method is None or agg_method == AggregationFunctions.HARMONIC:
-                _apply_aggregation(norm_method, AggregationFunctions.HARMONIC,
-                                   without_zero_columns)
-
-            # Apply MINIMUM only to columns with zero in the suffix
+                if norm_method in [NormalizationFunctions.STANDARDIZED.value, NormalizationFunctions.MINMAX.value,
+                                   NormalizationFunctions.TARGET.value, NormalizationFunctions.RANK.value]:
+                    _apply_aggregation(norm_method, AggregationFunctions.HARMONIC,
+                                   without_zero_columns_rank)
+            # Apply MINIMUM to columns with zero in the suffix and only some normalization methods
             if agg_method is None or agg_method == AggregationFunctions.MINIMUM:
-                _apply_aggregation(norm_method, AggregationFunctions.MINIMUM,
+                if norm_method in [NormalizationFunctions.STANDARDIZED.value]:
+                    _apply_aggregation(norm_method, AggregationFunctions.MINIMUM,
                                    with_zero_columns)
 
-        # Concatenate all score DataFrames into a single DataFrame
-        scores = pd.concat(score_list, axis=1)
+            # Concatenate all score DataFrames into a single DataFrame if there are any
+            if score_list:
+                scores: DataFrame = pd.concat(score_list, axis=1)
+                final_scores = pd.concat([final_scores, scores], axis=1)
 
-        return scores
+        return final_scores
