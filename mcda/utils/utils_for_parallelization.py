@@ -1,19 +1,21 @@
-from mcda.configuration.enums import PDFType, NormalizationFunctions
-from mcda.mcda_functions.aggregation import Aggregation
-from mcda.mcda_functions.normalization import Normalization
 import sys
 import logging
 import pandas as pd
 import multiprocessing
 from functools import partial
-from typing import List, Tuple
+from typing import List, Tuple, Optional
+
+from mcda.mcda_functions.aggregation import Aggregation
+from mcda.mcda_functions.normalization import Normalization
+from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("ProMCDA utils for parallelization")
 
 
-def initialize_and_call_aggregation(args: Tuple[list, dict], method=None) -> pd.DataFrame:
+def initialize_and_call_aggregation(args: Tuple[list, dict], method: Optional[AggregationFunctions] = None) \
+        -> pd.DataFrame:
     """
     Initialize an Aggregation object with given weights and call the aggregation method to calculate scores.
 

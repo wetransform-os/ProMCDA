@@ -124,7 +124,7 @@ class TestProMCDA(unittest.TestCase):
         )
 
         # When
-        normalized_values = promcda.normalize(method=NormalizationFunctions.MINMAX)
+        normalized_values = promcda.normalize(normalization_method=NormalizationFunctions.MINMAX)
         expected_keys = ['Criterion1_minmax_01', 'Criterion2_minmax_01', 'Criterion1_minmax_without_zero', 'Criterion2_minmax_without_zero']
 
         # Then
@@ -146,7 +146,7 @@ class TestProMCDA(unittest.TestCase):
         )
 
         # When
-        promcda.normalize(method=NormalizationFunctions.MINMAX)
+        promcda.normalize(normalization_method=NormalizationFunctions.MINMAX)
 
         # Then
         normalized_values = promcda.get_normalized_values_with_robustness()
@@ -208,6 +208,33 @@ class TestProMCDA(unittest.TestCase):
             (aggregated_scores['minmax_weighted_sum'] >= 0).all() and (aggregated_scores['minmax_weighted_sum'] <= 1).all(),
             "Values should be in the range [0, 1] for minmax normalization with weighted sum.")
 
+    def test_aggregate_with_robustness(self):
+        # Given
+        normalization_method = NormalizationFunctions.MINMAX
+        aggregation_method = AggregationFunctions.WEIGHTED_SUM
+
+        # When
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix_with_uncertainty,
+            polarity=self.polarity,
+            robustness_weights=self.robustness_weights,
+            robustness_indicators=True,
+            marginal_distributions=self.marginal_distributions,
+            num_runs=self.num_runs,
+            num_cores=self.num_cores,
+            random_seed=self.random_seed
+        )
+        promcda.normalize(normalization_method)
+        aggregated_scores = promcda.aggregate(aggregation_method=aggregation_method)
+        expected_columns = ['minmax_weighted_sum']
+
+        # Then
+        self.assertCountEqual(aggregated_scores.columns, expected_columns,
+                                  "Only specified methods should be applied.")
+        self.assertTrue(
+            (aggregated_scores['minmax_weighted_sum'] >= 0).all() and (
+             aggregated_scores['minmax_weighted_sum'] <= 1).all(),
+                "Values should be in the range [0, 1] for minmax normalization with weighted sum.")
 
 
 #    def tearDown(self):
@@ -216,6 +243,7 @@ class TestProMCDA(unittest.TestCase):
 #        """
 #        if os.path.exists(self.output_path):
 #            shutil.rmtree(self.output_path)
+
 
 if __name__ == '__main__':
     unittest.main()

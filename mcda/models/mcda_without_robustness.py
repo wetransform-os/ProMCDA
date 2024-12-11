@@ -111,6 +111,7 @@ class MCDAWithoutRobustness:
 
         Returns:
         - A DataFrame containing the aggregated scores for each alternative and normalization method.
+        :rtype: object
         """
         #if isinstance(agg_method, AggregationFunctions):
         #    method = agg_method.value

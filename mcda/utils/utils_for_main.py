@@ -454,7 +454,7 @@ def check_norm_sum_weights(weights: list) -> list:
         return weights
 
 
-def pop_indexed_elements(indexes: np.ndarray, original_list: list) -> list:
+def pop_indexed_elements(indexes: np.ndarray, original_list: List[str]) -> list:
     """
     Eliminate elements from a list at specified indexes.
 

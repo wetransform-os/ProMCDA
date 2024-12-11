@@ -1,20 +1,27 @@
+import logging
+import sys
 import time
 import pandas as pd
 from typing import Tuple, List, Union, Optional
 
 from build.lib.mcda.mcda_with_robustness import MCDAWithRobustness
 from mcda.configuration.configuration_validator import extract_configuration_values, check_configuration_values, \
-    check_configuration_keys
+    check_configuration_keys, check_indicator_weights_polarities, process_indicators_and_weights
 from mcda.configuration.enums import PDFType, NormalizationFunctions, AggregationFunctions
+from mcda.models import mcda_with_robustness
 from mcda.models.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.utils import utils_for_parallelization
 from mcda.utils.utils_for_main import run_mcda_without_indicator_uncertainty, run_mcda_with_indicator_uncertainty, \
-    check_input_matrix, check_if_pdf_is_exact, check_if_pdf_is_poisson, check_parameters_pdf
+    check_input_matrix, check_if_pdf_is_exact, check_if_pdf_is_poisson, check_parameters_pdf, rescale_minmax
 
+log = logging.getLogger(__name__)
+formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
+logger = logging.getLogger("ProMCDA")
 
 class ProMCDA:
     def __init__(self, input_matrix: pd.DataFrame, polarity: Tuple[str, ...], robustness_weights: Optional[bool] = None,
-                 robustness_indicators: Optional[bool] = None,
+                 robustness_single_weights: Optional[bool] = None, robustness_indicators: Optional[bool] = None,
                  marginal_distributions: Optional[Tuple[PDFType, ...]] = None,
                  num_runs: Optional[int] = 10000, num_cores: Optional[int] = 1, random_seed: Optional[int] = 43):
         """
@@ -27,6 +34,8 @@ class ProMCDA:
         # Optional parameters
         :param robustness_weights: Boolean flag indicating whether to perform robustness analysis on weights
                                    (True or False).
+        :param robustness_single_weights: Boolean flag indicating whether to perform robustness analysis on one single
+                                   weight at time (True or False).
         :param robustness_indicators: Boolean flag indicating whether to perform robustness analysis on indicators
                                       (True or False).
         :param marginal_distributions: Tuple of marginal distributions, which describe the indicators
@@ -66,6 +75,7 @@ class ProMCDA:
         self.input_matrix = input_matrix
         self.polarity = polarity
         self.robustness_weights = robustness_weights
+        self.robustness_single_weights = robustness_single_weights
         self.robustness_indicators = robustness_indicators
         self.num_runs = num_runs
         self.marginal_distributions = marginal_distributions
@@ -73,7 +83,11 @@ class ProMCDA:
         self.random_seed = random_seed
         self.normalized_values_without_robustness = None
         self.normalized_values_with_robustness = None
-        self.scores = None
+        self.aggregated_scores = None
+        self.all_indicators_scores_means = None
+        self.all_indicators_scores_stds = None
+        self.all_indicators_means_scores_normalized = None
+        self.all_indicators_scores_stds_normalized = None
 
         self.input_matrix_no_alternatives = check_input_matrix(self.input_matrix)
 
@@ -132,7 +146,7 @@ class ProMCDA:
                 n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(
                     n_random_input_matrices, self.polarity, normalization_method)
 
-                self.normalized_values_with_robustness = n_normalized_input_matrices
+            self.normalized_values_with_robustness = n_normalized_input_matrices
 
             return f"{self.num_runs} randomly sampled matrices have been normalized."
 
@@ -149,7 +163,7 @@ class ProMCDA:
         """
         return getattr(self, 'normalized_values_with_robustness', None)
 
-    def aggregate(self, aggregation_method: Optional[AggregationFunctions] = None, weights: Optional[None] = None) \
+    def aggregate(self, aggregation_method: Optional[AggregationFunctions] = None, weights: Optional[List[str]] = None) \
             -> Union[pd.DataFrame, str]:
         """
         Aggregate normalized indicators using the specified agg_method.
@@ -166,26 +180,36 @@ class ProMCDA:
 
         Returns:
         - A pd.DataFrame containing the aggregated scores per normalization and aggregation methods,
-          if no robustness on indicators is not performed.
+          if robustness on indicators is not performed.
 
         :param aggregation_method: AggregationFunctions
         :param weights : list or None
         :return scores_df: pd.DataFrame or string
         """
-        # TODO: 2. Check if robustness on weights is enabled, then sample the weights from the Monte Carlo simulation.
-        # TODO: 3. Check if aggregation_method is None, then apply all available methods.
+        num_indicators = self.input_matrix_no_alternatives.shape[1]
         if weights is None:
-            if not self.robustness_indicators:
-                num_indicators = self.input_matrix_no_alternatives.shape[1]
-            else:
+            if self.robustness_indicators:
                 num_non_indicators = (
                         len(self.marginal_distributions) - self.marginal_distributions.count('exact')
                         - self.marginal_distributions.count('poisson'))
                 num_indicators = (self.input_matrix_no_alternatives.shape[1] - num_non_indicators)
-            weights =  [0.5] * num_indicators
+                weights =  [0.5] * num_indicators
+            else:
+                weights = [0.5] * num_indicators
 
-        if self.robustness_weights is True:
-            raise ValueError("Robustness on weights is not yet implemented.")
+        # Process indicators and weights based on input parameters in the configuration
+        polar, weights = process_indicators_and_weights(self.input_matrix_no_alternatives,
+                                                        self.robustness_indicators,
+                                                        self.robustness_weights, self.robustness_single_weights,
+                                                        self.polarity, self.num_runs, num_indicators, weights)
+
+        # Check the number of indicators, weights, and polarities, assign random weights if uncertainty is enabled
+        try:
+            check_indicator_weights_polarities(num_indicators, polar, robustness_weights=self.robustness_weights,
+                                               weights=weights)
+        except ValueError as e:
+            logging.error(str(e), stack_info=True)
+            raise
 
         if not self.robustness_indicators:
             mcda_without_robustness = MCDAWithoutRobustness(self.polarity, self.input_matrix_no_alternatives)
@@ -202,8 +226,6 @@ class ProMCDA:
                         agg_method=agg_method
                     )
                     aggregated_scores = pd.concat([aggregated_scores, result], axis=1)
-                    #for col in result.columns:
-                    #    aggregated_scores[f"{col}"] = result[col]
             else:
                 aggregated_scores = mcda_without_robustness.aggregate_indicators(
                 normalized_indicators=normalized_indicators,
@@ -211,43 +233,51 @@ class ProMCDA:
                 agg_method=aggregation_method
             )
 
-        #elif self.robustness_indicators is not None and self.robustness_weights is None:
-        #    normalized_indicators = self.get_normalized_values_with_robustness
+            self.aggregated_scores = aggregated_scores
+            return self.aggregated_scores
 
-        return aggregated_scores
+        elif self.robustness_indicators and not self.robustness_weights:
+            all_indicators_scores_normalized = []
+            logger.info("Start ProMCDA with uncertainty on the indicators")
+            n_normalized_input_matrices = self.normalized_values_with_robustness
 
-    # def aggregate_with_robustness(self, normalization_method=None, aggregation_method=None, weights=None,
-    #                polarity: list, robustness: dict, monte_carlo: dict) -> pd.DataFrame:
-    #     """
-    #     Estimate scores of alternatives using the specified normalization and aggregation methods.
-    #
-    #
-    #     Notes:
-    #     The aggregation methods are defined in the AggregationFunctions enum class.
-    #
-    #     Parameters (optional):
-    #     - normalization_method: The normalization method to use. If None, all available methods will be applied.
-    #     - aggregation_method: The aggregation method to use. If None, all available methods will be applied.
-    #     - weights: The weights to be used for aggregation. If None, they are set all the same.
-    #     - polarity: List of polarity for each indicator (+ or -).
-    #     - robustness: Robustness analysis configuration.
-    #     - monte_carlo: Monte Carlo sampling configuration.
-    #
-    #     Returns:
-    #     - A DataFrame containing the aggregated scores per normalization and aggregation methods.
-    #     """
-    #
-    #     input_matrix_no_alternatives = check_input_matrix(self.input_matrix)
-    #     mcda_without_robustness = MCDAWithoutRobustness(self.configuration_settings, input_matrix_no_alternatives)
-    #     normalized_indicators = self.normalize(normalization_method)
-    #
-    #     aggregated_scores = mcda_without_robustness.aggregate_indicators(
-    #         normalized_indicators=normalized_indicators,
-    #         weights=weights,
-    #         agg_method=aggregation_method
-    #     )
-    #
-    #     return aggregated_scores
+            if self.num_runs <= 0:
+                logger.error('Error Message', stack_info=True)
+                raise ValueError('The number of MC runs should be larger than 0 for a robustness analysis')
+
+            if self.num_runs < 1000:
+                logger.info("The number of Monte-Carlo runs is only {}".format(self.num_runs))
+                logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
+
+            args_for_parallel_agg = [(weights, normalized_indicators)
+                                     for normalized_indicators in n_normalized_input_matrices]
+
+            if aggregation_method is None:
+                all_indicators_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg)
+            else:
+                all_indicators_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg,
+                                                                                          aggregation_method)
+
+            for matrix in all_indicators_scores:
+                normalized_matrix = rescale_minmax(matrix)
+                all_indicators_scores_normalized.append(normalized_matrix)
+
+            all_indicators_scores_means, all_indicators_scores_stds = \
+                utils_for_parallelization.estimate_runs_mean_std(all_indicators_scores)
+            all_indicators_means_scores_normalized, all_indicators_scores_stds_normalized = \
+                utils_for_parallelization.estimate_runs_mean_std(all_indicators_scores_normalized)
+
+            self.aggregated_scores = all_indicators_scores_normalized
+            self.all_indicators_scores_means = all_indicators_scores_means
+            self.all_indicators_scores_stds = all_indicators_scores_stds
+            self.all_indicators_means_scores_normalized = all_indicators_means_scores_normalized
+            self.all_indicators_scores_stds_normalized = all_indicators_scores_stds_normalized
+
+        else:
+            # write message error
+
+            return ("Aggregation considered uncertainty on indicators, resulsts are not explicitly shown.")
+
 
     def run_mcda(self, is_robustness_indicators: int, is_robustness_weights: int,
                  weights: Union[list, List[list], dict]):
