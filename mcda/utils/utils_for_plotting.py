@@ -54,7 +54,7 @@ def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
                       yaxis=dict(
                           range=[scores.iloc[:, 1:].values.min() - 0.5, scores.iloc[:, 1:].values.max() + 0.5])
                       )
-    fig.show()
+    # fig.show()
     return fig
 
 
@@ -95,7 +95,7 @@ def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
                           ticktext=scores[alternatives_column_name][:],
                           tickangle=45)
                       )
-    fig.show()
+    # fig.show() it triggers an open socket warning when on
     return fig
 
 
@@ -154,7 +154,7 @@ def plot_mean_scores(all_means: pd.DataFrame, plot_std: str, rand_on: str, all_s
                           ticktext=all_means[alternatives_column_name][:],
                           tickangle=45)
                       )
-    fig.show()
+    # fig.show()
     return fig
 
 

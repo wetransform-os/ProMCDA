@@ -50,7 +50,6 @@ def main(input_config: dict):
     f_norm = None
     f_agg = None
     marginal_pdf = []
-    num_unique = []
 
     t = time.time()
 

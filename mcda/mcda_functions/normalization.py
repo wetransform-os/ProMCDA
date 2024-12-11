@@ -16,7 +16,7 @@ class Normalization(object):
     Ratio: target.
     """
 
-    def __init__(self, input_matrix: pd.DataFrame, polarities: list):
+    def __init__(self, input_matrix: pd.DataFrame, polarities: tuple):
 
         self._input_matrix = copy.deepcopy(input_matrix)
         self.polarities = polarities
