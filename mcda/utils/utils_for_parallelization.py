@@ -168,7 +168,7 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
     return normalized_indicators
 
 
-def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, method=None) -> pd.DataFrame:
+def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, method: Optional[AggregationFunctions] = None) -> pd.DataFrame:
     """
     Aggregate normalized indicators in parallel using different aggregation methods.
 
@@ -209,22 +209,22 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, m
                  'harm-minmax_without_zero', 'harm-target_without_zero', 'harm-standardized_without_zero', 'harm-rank',
                  'min-standardized_any']  # same order as in the following loop
     for key, values in normalized_indicators.items():
-        if method is None or method == 'weighted_sum':
+        if method is None or method == AggregationFunctions.WEIGHTED_SUM:
             # ws goes only with some specific normalizations
             if key in ["standardized_any", "minmax_01", "target_01", "rank"]:
                 scores_weighted_sum[key] = agg.weighted_sum(values)
                 col_names_method.append("ws-" + key)
-        if method is None or method == 'geometric':
+        if method is None or method == AggregationFunctions.GEOMETRIC:
             # geom goes only with some specific normalizations
             if key in ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]:
                 scores_geometric[key] = pd.Series(agg.geometric(values))
                 col_names_method.append("geom-" + key)
-        if method is None or method == 'harmonic':
+        if method is None or method == AggregationFunctions.HARMONIC:
             # harm goes only with some specific normalizations
             if key in ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]:
                 scores_harmonic[key] = pd.Series(agg.harmonic(values))
                 col_names_method.append("harm-" + key)
-        if method is None or method == 'minimum':
+        if method is None or method == AggregationFunctions.MINIMUM:
             if key == "standardized_any":
                 scores_minimum[key] = pd.Series(agg.minimum(
                     normalized_indicators["standardized_any"]))

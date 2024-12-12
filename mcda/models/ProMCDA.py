@@ -273,10 +273,31 @@ class ProMCDA:
             self.all_indicators_means_scores_normalized = all_indicators_means_scores_normalized
             self.all_indicators_scores_stds_normalized = all_indicators_scores_stds_normalized
 
-        else:
-            # write message error
+            return "Aggregation considered uncertainty on indicators, resulsts are not explicitly shown."
 
-            return ("Aggregation considered uncertainty on indicators, resulsts are not explicitly shown.")
+        else:
+
+            logger.error('Error Message', stack_info=True)
+            raise ValueError('Inconsistent configuration: robustness_weights and robustness_indicators are both enabled.')
+
+
+    def get_aggregated_values_with_robustness(self) -> Optional[Tuple[pd.DataFrame, pd.DataFrame]]:
+        """
+        Getter method to access aggregated scores when robustness on indicators is performed.
+
+        Returns:
+        A tuple containing two DataFrames:
+        - The mean scores of the aggregated indicators.
+        - The standard deviations of the aggregated indicators.
+        If robustness is not enabled, returns None.
+        """
+
+        means = getattr(self, 'all_indicators_means_scores_normalized', None)
+        stds = getattr(self, 'all_indicators_scores_stds_normalized', None)
+
+        if means is not None and stds is not None:
+            return means, stds
+        return None
 
 
     def run_mcda(self, is_robustness_indicators: int, is_robustness_weights: int,
