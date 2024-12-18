@@ -134,21 +134,37 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
     indicators_scaled_target_without_zero = None
     indicators_scaled_rank = None
 
+    def _rename_columns(df, method_name):
+        """ Helper function to rename columns based on the normalization method """
+        if df is not None:
+            df.columns = [f"{col}_{method_name}" for col in df.columns.tolist()]
+        return df
+
     if method is None or method == NormalizationFunctions.MINMAX:
         indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
+        indicators_scaled_minmax_01 = _rename_columns(indicators_scaled_minmax_01, "minmax_01")
         # for aggregation "geometric" and "harmonic" that accept no 0
         indicators_scaled_minmax_without_zero = norm.minmax(feature_range=(0.1, 1))
+        indicators_scaled_minmax_without_zero = _rename_columns(indicators_scaled_minmax_without_zero,
+                                                               "minmax_without_zero")
     if method is None or method == NormalizationFunctions.TARGET:
         indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
+        indicators_scaled_target_01 = _rename_columns(indicators_scaled_target_01, "target_01")
         # for aggregation "geometric" and "harmonic" that accept no 0
         indicators_scaled_target_without_zero = norm.target(feature_range=(0.1, 1))
+        indicators_scaled_target_without_zero = _rename_columns(indicators_scaled_target_without_zero,
+                                                               "target_without_zero")
     if method is None or method == NormalizationFunctions.STANDARDIZED:
         indicators_scaled_standardized_any = norm.standardized(
             feature_range=('-inf', '+inf'))
+        indicators_scaled_standardized_any = _rename_columns(indicators_scaled_standardized_any, "standardized_any")
         indicators_scaled_standardized_without_zero = norm.standardized(
             feature_range=(0.1, '+inf'))
+        indicators_scaled_standardized_without_zero = _rename_columns(indicators_scaled_standardized_without_zero,
+                                                                     "standardized_without_zero")
     if method is None or method == NormalizationFunctions.RANK:
         indicators_scaled_rank = norm.rank()
+        indicators_scaled_rank = _rename_columns(indicators_scaled_rank, "rank")
     if method is not None and method not in [e for e in NormalizationFunctions]:
         logger.error('Error Message', stack_info=True)
         raise ValueError('The selected normalization method is not supported')
@@ -168,7 +184,8 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
     return normalized_indicators
 
 
-def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, method: Optional[AggregationFunctions] = None) -> pd.DataFrame:
+def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict,
+                                     method: Optional[AggregationFunctions] = None) -> pd.DataFrame:
     """
     Aggregate normalized indicators in parallel using different aggregation methods.
 
@@ -208,27 +225,63 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, m
                  'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
                  'harm-minmax_without_zero', 'harm-target_without_zero', 'harm-standardized_without_zero', 'harm-rank',
                  'min-standardized_any']  # same order as in the following loop
-    for key, values in normalized_indicators.items():
+
+    if isinstance(normalized_indicators, dict): # robustness on indicators
+        for key, values in normalized_indicators.items():
+            if method is None or method == AggregationFunctions.WEIGHTED_SUM:
+                # ws goes only with some specific normalizations
+                valid_suffixes = ["standardized_any", "minmax_01", "target_01", "rank"]
+                if any(substring in key for substring in valid_suffixes):
+                    scores_weighted_sum[key] = agg.weighted_sum(values)
+                    col_names_method.append("ws-" + key)
+            if method is None or method == AggregationFunctions.GEOMETRIC:
+                valid_suffixes = ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]
+                # geom goes only with some specific normalizations
+                if any(substring in key for substring in valid_suffixes):
+                    scores_geometric[key] = pd.Series(agg.geometric(values))
+                    col_names_method.append("geom-" + key)
+            if method is None or method == AggregationFunctions.HARMONIC:
+                valid_suffixes = ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]
+                # harm goes only with some specific normalizations
+                if any(substring in key for substring in valid_suffixes):
+                    scores_harmonic[key] = pd.Series(agg.harmonic(values))
+                    col_names_method.append("harm-" + key)
+            if method is None or method == AggregationFunctions.MINIMUM:
+                valid_suffixes = ["standardized_any"]
+                if any(substring in key for substring in valid_suffixes):
+                    scores_minimum[key] = pd.Series(agg.minimum(
+                        normalized_indicators["standardized_any"]))
+                    col_names_method.append("min-" + key)
+    elif isinstance(normalized_indicators, pd.DataFrame): # robustness on weights
         if method is None or method == AggregationFunctions.WEIGHTED_SUM:
             # ws goes only with some specific normalizations
-            if key in ["standardized_any", "minmax_01", "target_01", "rank"]:
-                scores_weighted_sum[key] = agg.weighted_sum(values)
-                col_names_method.append("ws-" + key)
+            valid_suffixes = ["standardized_any", "minmax_01", "target_01", "rank"]
+            for column in normalized_indicators.columns:
+                if any(substring in column for substring in valid_suffixes):
+                    scores_weighted_sum[column] = agg.weighted_sum(normalized_indicators[column])
+                    col_names_method.append("ws-" + column)
         if method is None or method == AggregationFunctions.GEOMETRIC:
             # geom goes only with some specific normalizations
-            if key in ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]:
-                scores_geometric[key] = pd.Series(agg.geometric(values))
-                col_names_method.append("geom-" + key)
+            valid_suffixes = ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]
+            for column in normalized_indicators.columns:
+                if any(substring in column for substring in valid_suffixes):
+                    scores_geometric[column] = pd.Series(agg.geometric(normalized_indicators[column]))
+                    col_names_method.append("geom-" + column)
         if method is None or method == AggregationFunctions.HARMONIC:
             # harm goes only with some specific normalizations
-            if key in ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]:
-                scores_harmonic[key] = pd.Series(agg.harmonic(values))
-                col_names_method.append("harm-" + key)
+            valid_suffixes = ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]
+            for column in normalized_indicators.columns:
+                if any(substring in column for substring in valid_suffixes):
+                    scores_harmonic[column] = pd.Series(agg.harmonic(normalized_indicators[column]))
+                    col_names_method.append("harm-" + column)
         if method is None or method == AggregationFunctions.MINIMUM:
-            if key == "standardized_any":
-                scores_minimum[key] = pd.Series(agg.minimum(
+            valid_suffixes = ["standardized_any"]
+            for column in normalized_indicators.columns:
+                if any(substring in column for substring in valid_suffixes):
+                    scores_minimum[column] = pd.Series(agg.minimum(
                     normalized_indicators["standardized_any"]))
-                col_names_method.append("min-" + key)
+                    col_names_method.append("min-" + column)
+
 
     dict_list = [scores_weighted_sum, scores_geometric,
                  scores_harmonic, scores_minimum]
@@ -245,8 +298,8 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict, m
     return scores
 
 
-def parallelize_aggregation(args: List[tuple], method=None) -> List[pd.DataFrame]:
-    partial_func = partial(initialize_and_call_aggregation, method=method)
+def parallelize_aggregation(args: List[tuple], aggregation_method=None) -> List[pd.DataFrame]:
+    partial_func = partial(initialize_and_call_aggregation, method=aggregation_method)
     # create a synchronous multiprocessing pool with the desired number of processes
     pool = multiprocessing.Pool()
     res = pool.map(partial_func, args)

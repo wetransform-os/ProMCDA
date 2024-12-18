@@ -17,7 +17,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 import mcda.utils.utils_for_parallelization as utils_for_parallelization
 import mcda.utils.utils_for_plotting as utils_for_plotting
-from mcda.configuration.enums import PDFType
+from mcda.configuration.enums import PDFType, AggregationFunctions
 from mcda.models.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.models.mcda_with_robustness import MCDAWithRobustness
 
@@ -685,10 +685,10 @@ def run_mcda_without_indicator_uncertainty(extracted_values: dict, is_robustness
         # ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)
         all_weights_score_means, all_weights_score_stds, \
             all_weights_score_means_normalized, all_weights_score_stds_normalized = \
-            _compute_scores_for_all_random_weights(normalized_indicators, is_sensitivity, weights, f_agg)
+            compute_scores_for_all_random_weights(normalized_indicators, is_sensitivity, weights, f_agg)
     elif (extracted_values["on_single_weights"] == "yes") and (extracted_values["robustness_on"] == "yes"):
         # ONE RANDOMLY SAMPLED WEIGHT A TIME (MCDA runs (num_samples * num_indicators) times)
-        iterative_random_weights_statistics: dict = _compute_scores_for_single_random_weight(
+        iterative_random_weights_statistics: dict = compute_scores_for_single_random_weight(
             normalized_indicators, weights, is_sensitivity, index_column_name, index_column_values, f_agg,
             input_matrix_no_alternatives)
         iterative_random_w_score_means = iterative_random_weights_statistics['score_means']
@@ -864,9 +864,10 @@ def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.Dat
         return input_matrix
 
 
-def _compute_scores_for_all_random_weights(indicators: pd.DataFrame, is_sensitivity: str,
-                                           weights: Union[List[str], List[pd.DataFrame], dict, None],
-                                           f_agg: str) -> tuple[Any, Any, Any, Any]:
+def compute_scores_for_all_random_weights(indicators: pd.DataFrame,
+                                          weights: Union[List[str], List[pd.DataFrame], dict, None],
+                                          aggregation_method: Optional[AggregationFunctions] = None) \
+                                           -> tuple[Any, Any, Any, Any]:
     """
     Computes the normalized mean scores and std of the alternatives in the case of randomly sampled weights.
     """
@@ -882,10 +883,10 @@ def _compute_scores_for_all_random_weights(indicators: pd.DataFrame, is_sensitiv
 
     args_for_parallel_agg = [(lst, indicators) for lst in random_weights]
 
-    if is_sensitivity == "yes":
+    if aggregation_method is None:
         all_weights_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg)
     else:
-        all_weights_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg, f_agg)
+        all_weights_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg, aggregation_method)
 
     for matrix in all_weights_scores:
         normalized_matrix = rescale_minmax(matrix)  # all score normalization
@@ -899,10 +900,11 @@ def _compute_scores_for_all_random_weights(indicators: pd.DataFrame, is_sensitiv
         all_weights_score_means_normalized, all_weights_score_stds_normalized
 
 
-def _compute_scores_for_single_random_weight(indicators: pd.DataFrame,
-                                             weights: Union[List[str], List[pd.DataFrame], dict, None],
-                                             is_sensitivity: str, index_column_name: str, index_column_values: list,
-                                             f_agg: str, input_matrix: pd.DataFrame) -> dict:
+def compute_scores_for_single_random_weight(indicators: pd.DataFrame,
+                                            weights: Union[List[str], List[pd.DataFrame], dict, None],
+                                            index_column_name: str, index_column_values: list,
+                                            input_matrix: pd.DataFrame,
+                                            aggregation_method: Optional[AggregationFunctions] = None) -> dict:
     """
     Computes the mean scores and std of the alternatives in the case of one randomly sampled weight at time.
     """
@@ -925,10 +927,11 @@ def _compute_scores_for_single_random_weight(indicators: pd.DataFrame,
     for index in range(num_indicators):
         norm_one_random_weight = rand_weight_per_indicator.get("indicator_{}".format(index + 1), [])
         args_for_parallel_agg = [(lst, indicators) for lst in norm_one_random_weight]
-        if is_sensitivity == "yes":
+        if aggregation_method is None:
             scores_one_random_weight = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg)
         else:
-            scores_one_random_weight = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg, f_agg)
+            scores_one_random_weight = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg,
+                                                                                         aggregation_method)
 
         scores_one_random_weight_normalized["indicator_{}".format(index + 1)] = []
         for matrix in scores_one_random_weight:

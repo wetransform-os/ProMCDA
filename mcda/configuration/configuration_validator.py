@@ -478,6 +478,8 @@ def check_indicator_weights_polarities(num_indicators: int, polar: List[str], ro
     Raises:
     - ValueError: if the conditions for indicator-polarity and fixed weights consistency are not met.
 
+    :param weights: List[int]
+    :param robustness_weights: bool
     :param num_indicators: int
     :param polar: List[str]
     :param config: dict

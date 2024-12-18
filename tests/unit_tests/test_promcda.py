@@ -66,7 +66,19 @@ class TestProMCDA(unittest.TestCase):
         self.assertEqual(promcda.random_seed, self.random_seed)
         self.assertIsNone(promcda.normalized_values_without_robustness)
         self.assertIsNone(promcda.normalized_values_with_robustness)
-        self.assertIsNone(promcda.scores)
+        self.assertIsNone(promcda.aggregated_scores)
+        self.assertIsNone(promcda.all_indicators_scores_means)
+        self.assertIsNone(promcda.all_indicators_scores_stds)
+        self.assertIsNone(promcda.all_indicators_means_scores_normalized)
+        self.assertIsNone(promcda.all_indicators_scores_stds_normalized)
+        self.assertIsNone(promcda.all_weights_score_means)
+        self.assertEqual(promcda.all_weights_score_stds, (None,))
+        self.assertEqual(promcda.all_weights_score_means_normalized, (None,))
+        self.assertEqual(promcda.all_weights_score_stds_normalized, (None,))
+        self.assertEqual(promcda.iterative_random_w_score_means, (None,))
+        self.assertEqual(promcda.iterative_random_w_score_stds, (None,))
+        self.assertIsNone(promcda.iterative_random_w_score_means_normalized)
+        #self.assertIsNone(promcda.scores)
 
     # def test_validate_inputs(self):
     #     """
@@ -103,7 +115,6 @@ class TestProMCDA(unittest.TestCase):
         # When
         expected_suffixes = [method.value for method in NormalizationNames4Sensitivity]
         normalized_values = promcda.normalize(normalization_method)
-        #actual_suffixes = {col.split('_', 2)[1] for col in normalized_values.columns}
         actual_suffixes = {"_".join(col.split("_", 2)[1:]) for col in normalized_values.columns}
 
         # Then
@@ -208,7 +219,7 @@ class TestProMCDA(unittest.TestCase):
             (aggregated_scores['minmax_weighted_sum'] >= 0).all() and (aggregated_scores['minmax_weighted_sum'] <= 1).all(),
             "Values should be in the range [0, 1] for minmax normalization with weighted sum.")
 
-    def test_aggregate_with_robustness(self):
+    def test_aggregate_with_robustness_indicators(self):
         # Given
         normalization_method = NormalizationFunctions.MINMAX
         aggregation_method = AggregationFunctions.WEIGHTED_SUM
@@ -226,7 +237,37 @@ class TestProMCDA(unittest.TestCase):
         )
         promcda.normalize(normalization_method)
         promcda.aggregate(aggregation_method=aggregation_method)
-        aggregated_scores, aggregated_stds = promcda.get_aggregated_values_with_robustness()
+        aggregated_scores, aggregated_scores_normalized, aggregated_stds = promcda.get_aggregated_values_with_robustness_indicators()
+        expected_columns = ['ws-minmax_01']
+
+        # Then
+        self.assertCountEqual(aggregated_scores.columns, expected_columns,
+                                  "Only specified methods should be applied.")
+        self.assertTrue(
+            (aggregated_scores['ws-minmax_01'] >= 0).all() and (
+             aggregated_scores['ws-minmax_01'] <= 1).all(),
+                "Values should be in the range [0, 1] for minmax normalization with weighted sum.")
+
+
+    def test_aggregate_with_robustness_weights(self):
+        # Given
+        normalization_method = NormalizationFunctions.MINMAX
+        aggregation_method = AggregationFunctions.WEIGHTED_SUM
+
+        # When
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix,
+            polarity=self.polarity,
+            robustness_weights=True,
+            robustness_indicators=self.robustness_indicators,
+            marginal_distributions=self.marginal_distributions,
+            num_runs=self.num_runs,
+            num_cores=self.num_cores,
+            random_seed=self.random_seed
+        )
+        promcda.normalize(normalization_method)
+        promcda.aggregate(aggregation_method=aggregation_method)
+        aggregated_scores, aggregated_stds = promcda.get_aggregated_values_with_robustness_weights()
         expected_columns = ['ws-minmax_01']
 
         # Then
