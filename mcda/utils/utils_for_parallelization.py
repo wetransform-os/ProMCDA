@@ -7,7 +7,7 @@ from typing import List, Tuple, Optional
 
 from mcda.mcda_functions.aggregation import Aggregation
 from mcda.mcda_functions.normalization import Normalization
-from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions
+from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions, OutputColumnNames4Sensitivity
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
@@ -221,10 +221,7 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict,
 
     scores = pd.DataFrame()
     col_names_method = []
-    col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                 'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero', 'geom-rank',
-                 'harm-minmax_without_zero', 'harm-target_without_zero', 'harm-standardized_without_zero', 'harm-rank',
-                 'min-standardized_any']  # same order as in the following loop
+    col_names = [member.value for member in OutputColumnNames4Sensitivity]
 
     if isinstance(normalized_indicators, dict): # robustness on indicators
         for key, values in normalized_indicators.items():
