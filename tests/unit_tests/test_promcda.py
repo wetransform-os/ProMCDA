@@ -267,7 +267,7 @@ class TestProMCDA(unittest.TestCase):
         )
         promcda.normalize(normalization_method)
         promcda.aggregate(aggregation_method=aggregation_method)
-        aggregated_scores, aggregated_stds = promcda.get_aggregated_values_with_robustness_weights()
+        aggregated_scores, aggregated_scores_normalized, aggregated_stds = promcda.get_aggregated_values_with_robustness_weights()
         expected_columns = ['ws-minmax_01']
 
         # Then
