@@ -63,7 +63,7 @@ The tool is designed for use by both researchers and practitioners in operations
 
 ::: {exclude-in="jats"}
 
-\begin{table}[!htb]
+\begin{table}[h!]
     \centering
     \caption{Normalization functions used in \texttt{ProMCDA}.}    
     \includegraphics[width=\textwidth]{Table1.pdf}
@@ -81,11 +81,15 @@ The tool is designed for use by both researchers and practitioners in operations
 ```
 <!-- ![Normalization functions used in ProMCDA.\label{tab:table1}](Table1.pdf){ width=80% } -->
 
-<br/>
+The user can bypass both the sensitivity and robustness analysis when running `ProMCDA`.
+
+**Sensitivity analysis:** `ProMCDA` provides a default sensitivity analysis based on the predefined normalization and aggregation pairs. However, users can specify the pair of functions they want to use and switch this analysis off.
+
+**Robustness analysis:** `ProMCDA` also allows for robustness analysis by introducing randomness to either the weights or the criteria in order to make the results as transparent as possible and avoid a lack of distinction between the effect of one or the other. Randomly sampling the weights or the criteria values is done using a Monte Carlo method.
 
 ::: {exclude-in="jats"}
 
-\begin{table}[!htb]
+\begin{table}[!ht]
     \centering
     \caption{Aggregation functions used in \texttt{ProMCDA}. The sum of the weights is normalized to 1.}
     \includegraphics[width=\textwidth]{Table2.pdf}
@@ -102,12 +106,6 @@ The tool is designed for use by both researchers and practitioners in operations
 
 ```
 <!-- ![Aggregation functions used in \texttt{ProMCDA}. The sum of the weights is normalized to 1.\label{tab:table2}](Table2.pdf){ width=80% } -->
-
-The user can bypass both the sensitivity and robustness analysis when running `ProMCDA`.
-
-**Sensitivity analysis:** `ProMCDA` provides a default sensitivity analysis based on the predefined normalization and aggregation pairs. However, users can specify the pair of functions they want to use and switch this analysis off.
-
-**Robustness analysis:** `ProMCDA` also allows for robustness analysis by introducing randomness to either the weights or the criteria in order to make the results as transparent as possible and avoid a lack of distinction between the effect of one or the other. Randomly sampling the weights or the criteria values is done using a Monte Carlo method.
 
 The randomness in the weights can be applied to one weight at a time or to all weights simultaneously. In both cases, by default, the weights are sampled from a uniform distribution [0-1]. If the user decides to analyse the robustness of the criteria, they have to provide the parameters defining the marginal distribution (i.e., a probability density function, pdf) that best describes the criteria rather than the criteria values. This means that if a pdf described by 2 parameters characterizes a criterion, two columns should be allocated in the input CSV file for it.
 In `ProMCDA` 4 different pdfs describing the criteria uncertainty are considered:
@@ -128,7 +126,7 @@ Finally, in all possible cases (i.e., a simple MCDA, MCDA with sensitivity analy
 
 ::: {exclude-in="jats"}
 
-\begin{table}[!htb]
+\begin{table}[h!]
     \centering
     \caption{Overview on the functionalities of \texttt{ProMCDA}.}
     \includegraphics[width=\textwidth]{Table3.pdf}
