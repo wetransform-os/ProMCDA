@@ -73,7 +73,7 @@ The tool is designed for use by both researchers and practitioners in operations
 :::
 
 ```{=jats}
-<table-wrap id="tabU003Atable1">
+<table-wrap>
   <caption><p>Normalization functions used in <monospace>ProMCDA</monospace>.</p></caption>
   <graphic mimetype="image" mime-subtype="png" xlink:href="Table1.pdf" xlink:title="Normalization functions table" />
 </table-wrap>
@@ -99,7 +99,7 @@ The user can bypass both the sensitivity and robustness analysis when running `P
 :::
 
 ```{=jats}
-<table-wrap id="tabU003Atable2">
+<table-wrap>
   <caption><p>Aggregation functions used in <monospace>ProMCDA</monospace>. The sum of the weights is normalized to 1.</p></caption>
   <graphic mimetype="image" mime-subtype="png" xlink:href="Table2.pdf" xlink:title="Aggregation functions table" />
 </table-wrap>
@@ -136,7 +136,7 @@ Finally, in all possible cases (i.e., a simple MCDA, MCDA with sensitivity analy
 :::
 
 ```{=jats}
-<table-wrap id="tabU003Atable3">
+<table-wrap>
   <caption><p>Overview on the functionalities of <monospace>ProMCDA</monospace>. </p></caption>
   <graphic mimetype="image" mime-subtype="png" xlink:href="Table3.pdf" xlink:title="Functionalities table" />
 </table-wrap>
