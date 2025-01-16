@@ -9,7 +9,7 @@
 ![PyPI](https://img.shields.io/pypi/v/ProMCDA?label=pypi%20package)
 [![pytest](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app-tests.yml/badge.svg)](https://github.com/wetransform-os/ProMCDA/actions/workflows/python-app-tests.yml)
 ![License](https://img.shields.io/badge/license-EPL%202.0-blue)
-[![status](https://joss.theoj.org/papers/cd66aa1ed9ff89b5519d977f4a16379d/status.svg)](https://joss.theoj.org/papers/cd66aa1ed9ff89b5519d977f4a16379d)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.06190/status.svg)](https://doi.org/10.21105/joss.06190)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/ProMCDA)
 [![Downloads](https://static.pepy.tech/badge/ProMCDA)](https://pepy.tech/project/ProMCDA)
 
