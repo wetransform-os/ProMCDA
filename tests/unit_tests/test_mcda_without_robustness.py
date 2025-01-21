@@ -4,7 +4,7 @@ import pandas as pd
 from unittest import TestCase
 
 
-from mcda.mcda_without_robustness import MCDAWithoutRobustness
+from mcda.models.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.configuration.config import Config
 from mcda.mcda_functions.aggregation import Aggregation
 import mcda.utils.utils_for_main as utils_for_main

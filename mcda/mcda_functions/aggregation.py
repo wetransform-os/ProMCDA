@@ -21,9 +21,12 @@ class Aggregation(object):
     """
 
     def __init__(self, weights: list):
-
         self.weights = weights
-        if sum(self.weights) != 1:
+        if isinstance(self.weights, list) and all(isinstance(i, list) for i in self.weights):
+            for i in range(len(self.weights)):
+                if sum(self.weights[i]) != 1:
+                    self.weights[i] = [val / sum(self.weights[i]) for val in self.weights[i]]
+        elif sum(self.weights) != 1:
             self.weights = [val / sum(self.weights) for val in self.weights]
 
     def weighted_sum(self, norm_indicators: pd.DataFrame) -> pd.Series(dtype='object'):
@@ -40,7 +43,7 @@ class Aggregation(object):
 
         return scores
 
-    def geometric(self, norm_indicators: pd.DataFrame) -> np.ndarray:
+    def geometric(self, norm_indicators: pd.DataFrame) -> pd.Series(dtype='object'):
         """
         The weighted geometric mean works only with strictly positive normalized indicator values
         (i.e. not with minmax and target with feature range (0,1); and not with standardized with feature range
@@ -56,12 +59,13 @@ class Aggregation(object):
             raise ValueError(
                 'Weighted geometric mean cannot work with non-positive values in normalized indicators')
         else:
-            scores = stats.mstats.gmean(norm_indicators.astype(
+            scores_array = stats.mstats.gmean(norm_indicators.astype(
                 float), axis=1, weights=self.weights)
+            scores = pd.Series(scores_array, index=norm_indicators.index)
 
         return scores
 
-    def harmonic(self, norm_indicators: pd.DataFrame) -> np.ndarray:
+    def harmonic(self, norm_indicators: pd.DataFrame) -> pd.Series(dtype='object'):
         """
         The weighted harmonic mean works only with strictly positive normalized indicator values
         (i.e. not with minmax, and target with feature range (0,1); and not with standardized with feature range
@@ -78,7 +82,8 @@ class Aggregation(object):
             raise ValueError(
                 'With 0 values normalized indicators, the weighted harmonic mean will output 0s')
         else:
-            scores = stats.hmean(norm_indicators, axis=1, weights=self.weights)
+            scores_array = stats.hmean(norm_indicators, axis=1, weights=self.weights)
+            scores = pd.Series(scores_array, index=norm_indicators.index)
 
         return scores
 
