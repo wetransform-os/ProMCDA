@@ -249,61 +249,68 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict,
                     scores_minimum[key] = pd.Series(agg.minimum(
                         normalized_indicators["standardized_any"]))
                     col_names_method.append("min-" + key)
+
     elif isinstance(normalized_indicators, pd.DataFrame): # robustness on weights
         if method is None or method == AggregationFunctions.WEIGHTED_SUM:
             # ws goes only with some specific normalizations
             valid_suffixes = ["standardized_any", "minmax_01", "target_01", "rank"]
-            selected_columns = [
-                column for column in normalized_indicators.columns
-                if any(substring in column for substring in valid_suffixes)
-            ]
-            if selected_columns:
-                scores_weighted_sum = agg.weighted_sum(normalized_indicators[selected_columns])
-                col_names_method.extend(
-                    ["ws-" + suffix for suffix in valid_suffixes
-                     if any(column.endswith("_" + suffix) for column in normalized_indicators.columns)])
+            scores_weighted_sum = pd.DataFrame()
+            for suffix in valid_suffixes:
+                selected_columns = [
+                    column for column in normalized_indicators.columns
+                    if column.endswith("_" + suffix)
+                ]
+                if selected_columns:
+                    partial_scores = agg.weighted_sum(normalized_indicators[selected_columns])
+                    scores_weighted_sum = pd.concat([scores_weighted_sum, partial_scores], axis=1)
+                    col_names_method.extend([f"ws-{suffix}"])
         if method is None or method == AggregationFunctions.GEOMETRIC:
             # geom goes only with some specific normalizations
             valid_suffixes = ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]
-            selected_columns = [
-                column for column in normalized_indicators.columns
-                if any(substring in column for substring in valid_suffixes)
-            ]
-            if selected_columns:
-                scores_weighted_sum = agg.geometric(normalized_indicators[selected_columns])
-                col_names_method.extend(
-                    ["ws-" + suffix for suffix in valid_suffixes
-                     if any(column.endswith("_" + suffix) for column in normalized_indicators.columns)])
+            scores_geometric = pd.DataFrame()
+            for suffix in valid_suffixes:
+                selected_columns = [
+                    column for column in normalized_indicators.columns
+                    if column.endswith("_" + suffix)
+                ]
+                if selected_columns:
+                    partial_scores = agg.geometric(normalized_indicators[selected_columns])
+                    scores_geometric = pd.concat([scores_geometric, partial_scores], axis=1)
+                    col_names_method.extend([f"geom-{suffix}"])
         if method is None or method == AggregationFunctions.HARMONIC:
             # harm goes only with some specific normalizations
             valid_suffixes = ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]
-            selected_columns = [
-                column for column in normalized_indicators.columns
-                if any(substring in column for substring in valid_suffixes)
-            ]
-            if selected_columns:
-                scores_weighted_sum = agg.harmonic(normalized_indicators[selected_columns])
-                col_names_method.extend(
-                    ["ws-" + suffix for suffix in valid_suffixes
-                     if any(column.endswith("_" + suffix) for column in normalized_indicators.columns)])
+            scores_harmonic = pd.DataFrame()
+            for suffix in valid_suffixes:
+                selected_columns = [
+                    column for column in normalized_indicators.columns
+                    if column.endswith("_" + suffix)
+                ]
+                if selected_columns:
+                    partial_scores = agg.harmonic(normalized_indicators[selected_columns])
+                    scores_harmonic = pd.concat([scores_harmonic, partial_scores], axis=1)
+                    col_names_method.extend([f"harm-{suffix}"])
         if method is None or method == AggregationFunctions.MINIMUM:
+            # min goes only with specific normalizations
             valid_suffixes = ["standardized_any"]
-            selected_columns = [
-                column for column in normalized_indicators.columns
-                if any(substring in column for substring in valid_suffixes)
-            ]
-            if selected_columns:
-                scores_weighted_sum = agg.minimum(normalized_indicators[selected_columns])
-                col_names_method.extend(
-                    ["ws-" + suffix for suffix in valid_suffixes
-                     if any(column.endswith("_" + suffix) for column in normalized_indicators.columns)])
+            scores_minimum = pd.DataFrame()
+            for suffix in valid_suffixes:
+                selected_columns = [
+                    column for column in normalized_indicators.columns
+                    if column.endswith("_" + suffix)
+                ]
+                if selected_columns:
+                    partial_scores = agg.minimum(normalized_indicators[selected_columns])
+                    scores_minimum = pd.concat([scores_minimum, partial_scores], axis=1)
+                    col_names_method.extend([f"min-{suffix}"])
 
     dict_list = [scores_weighted_sum, scores_geometric,
                  scores_harmonic, scores_minimum]
 
     for d in dict_list:
-        if isinstance(d, pd.Series): # Robustness weights
-            scores = pd.concat([scores, d.to_frame()], axis=1)
+        if isinstance(d, pd.DataFrame): # Robustness weights
+            scores = pd.concat([scores, d], axis=1)
+
         elif isinstance(d, dict): # Robustness indicators
             scores = pd.concat([scores, pd.DataFrame.from_dict(d)], axis=1)
 
@@ -311,7 +318,6 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict,
         scores.columns = col_names
     else:
         scores.columns = col_names_method
-
     return scores
 
 

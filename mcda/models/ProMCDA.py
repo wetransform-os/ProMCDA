@@ -19,8 +19,10 @@ formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("ProMCDA")
 
+
 class ProMCDA:
-    def __init__(self, input_matrix: pd.DataFrame, polarity: Tuple[str, ...], robustness_weights: Optional[bool] = False,
+    def __init__(self, input_matrix: pd.DataFrame, polarity: Tuple[str, ...],
+                 robustness_weights: Optional[bool] = False,
                  robustness_single_weights: Optional[bool] = False, robustness_indicators: Optional[bool] = False,
                  marginal_distributions: Optional[Tuple[PDFType, ...]] = None,
                  num_runs: Optional[int] = 10000, num_cores: Optional[int] = 1, random_seed: Optional[int] = 43):
@@ -132,7 +134,8 @@ class ProMCDA:
 
         if not self.robustness_indicators:
             mcda_without_robustness = MCDAWithoutRobustness(self.polarity, self.input_matrix_no_alternatives)
-            self.normalized_values_without_robustness = mcda_without_robustness.normalize_indicators(normalization_method)
+            self.normalized_values_without_robustness = mcda_without_robustness.normalize_indicators(
+                normalization_method)
 
             return self.normalized_values_without_robustness
 
@@ -203,7 +206,7 @@ class ProMCDA:
                         len(self.marginal_distributions) - self.marginal_distributions.count('exact')
                         - self.marginal_distributions.count('poisson'))
                 num_indicators = (self.input_matrix_no_alternatives.shape[1] - num_non_indicators)
-                weights =  [0.5] * num_indicators
+                weights = [0.5] * num_indicators
             else:
                 weights = [0.5] * num_indicators
 
@@ -250,9 +253,9 @@ class ProMCDA:
         elif self.robustness_weights and not self.robustness_single_weights and not self.robustness_indicators:
             logger.info("Start ProMCDA with uncertainty on the weights")
             all_weights_score_means, all_weights_score_stds, \
-            all_weights_score_means_normalized, all_weights_score_stds_normalized = \
-                        compute_scores_for_all_random_weights(self.normalized_values_without_robustness, weights,
-                                                              aggregation_method)
+                all_weights_score_means_normalized, all_weights_score_stds_normalized = \
+                compute_scores_for_all_random_weights(self.normalized_values_without_robustness, weights,
+                                                      aggregation_method)
             self.all_weights_score_means = all_weights_score_means
             self.all_weights_score_stds = all_weights_score_stds
             self.all_weights_score_means_normalized = all_weights_score_means_normalized
@@ -309,7 +312,8 @@ class ProMCDA:
             return "Aggregation considered uncertainty on indicators, results are not explicitly shown."
         else:
             logger.error('Error Message', stack_info=True)
-            raise ValueError('Inconsistent configuration: robustness_weights and robustness_indicators are both enabled.')
+            raise ValueError(
+                'Inconsistent configuration: robustness_weights and robustness_indicators are both enabled.')
 
     def get_aggregated_values_with_robustness_indicators(self) \
             -> Optional[Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]]:

@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions
+from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions, OutputColumnNames4Sensitivity
 from mcda.mcda_functions.normalization import Normalization
 from mcda.mcda_functions.aggregation import Aggregation
 
@@ -145,8 +145,11 @@ class MCDAWithoutRobustness:
                 elif isinstance(aggregated_scores, pd.Series):
                     aggregated_scores = aggregated_scores.to_frame()
 
-                aggregated_scores.columns = [f"{norm_function}_{agg_method.value}"]
-
+                column_name = f"{norm_function}_{agg_function.value}"
+                if column_name in [e.value for e in OutputColumnNames4Sensitivity]:
+                    aggregated_scores.columns = [column_name]
+                else:
+                    raise ValueError(f"Column name '{column_name}' not found in OutputColumnNames4Sensitivity")
                 score_list.append(aggregated_scores)
 
         for norm_method in self.normalized_indicators.columns.str.split("_", n=0).str[1].unique():
