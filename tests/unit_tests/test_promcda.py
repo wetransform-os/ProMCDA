@@ -194,11 +194,7 @@ class TestProMCDA(unittest.TestCase):
 
         # When
         aggregated_scores = promcda.aggregate()
-        expected_columns = [
-            'minmax_weighted_sum', 'target_weighted_sum', 'standardized_weighted_sum', 'rank_weighted_sum',
-            'minmax_geometric', 'target_geometric', 'standardized_geometric', 'rank_geometric',
-            'minmax_harmonic', 'target_harmonic', 'standardized_harmonic', 'rank_harmonic',
-            'standardized_minimum']
+        expected_columns = [e.value for e in OutputColumnNames4Sensitivity]
 
         # Then
         self.assertCountEqual(aggregated_scores.columns, expected_columns,
@@ -330,6 +326,8 @@ class TestProMCDA(unittest.TestCase):
             (aggregated_scores_normalized['ws-minmax_01'] >= 0).all() and (
                     aggregated_scores_normalized['ws-minmax_01'] <= 1).all(),
             "Values should be in the range [0, 1] for minmax normalization with weighted sum.")
+
+        # TODO: clarify why "aggregated_scores" do not range within 0 and 1 but show values < 1 for 'ws-minmax_01'
 
 
 #    def tearDown(self):

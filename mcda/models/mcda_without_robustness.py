@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
+from mcda.configuration.output_column_mapping import output_column_mapping
 from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions, OutputColumnNames4Sensitivity
 from mcda.mcda_functions.normalization import Normalization
 from mcda.mcda_functions.aggregation import Aggregation
@@ -123,29 +124,23 @@ class MCDAWithoutRobustness:
 
         final_scores = pd.DataFrame()
 
-        def _apply_aggregation(norm_function, agg_function, df_subset):
+        def _apply_aggregation(norm_function, method, df_subset):
             """
             Apply the aggregation method to a subset of the DataFrame and store results in the appropriate DataFrame.
             """
-            agg_functions = {
-                AggregationFunctions.WEIGHTED_SUM.value: agg.weighted_sum,
-                AggregationFunctions.GEOMETRIC.value: agg.geometric,
-                AggregationFunctions.HARMONIC.value: agg.harmonic,
-                AggregationFunctions.MINIMUM.value: agg.minimum,
-            }
+            agg_methods = [e.value for e in AggregationFunctions] if method is None else [method.value]
 
-            agg_methods = list(agg_functions.keys()) if agg_function is None else [agg_function]
-
-            for agg_function in agg_methods:
-                agg_function = agg_functions[agg_function.value]
-                aggregated_scores = agg_function(df_subset)
+            for method in agg_methods:
+                aggregation_function = getattr(agg, method)
+                aggregated_scores = aggregation_function(df_subset)
 
                 if isinstance(aggregated_scores, np.ndarray):
                     aggregated_scores = pd.DataFrame(aggregated_scores, index=df_subset.index)
                 elif isinstance(aggregated_scores, pd.Series):
                     aggregated_scores = aggregated_scores.to_frame()
 
-                column_name = f"{norm_function}_{agg_function.value}"
+                column_name = output_column_mapping.get((method, norm_function))
+
                 if column_name in [e.value for e in OutputColumnNames4Sensitivity]:
                     aggregated_scores.columns = [column_name]
                 else:

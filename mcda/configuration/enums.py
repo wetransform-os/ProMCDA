@@ -43,6 +43,7 @@ class NormalizationNames4Sensitivity(Enum):
 class OutputColumnNames4Sensitivity(Enum):
     """
     Names of output columns in case of sensitivity analysis
+    aggregation name + normalization name
     """
     WS_MINMAX_01 = 'ws-minmax_01'
     WS_TARGET_01 = 'ws-target_01'

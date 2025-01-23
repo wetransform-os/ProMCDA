@@ -390,7 +390,7 @@ def _handle_polarities_and_weights(robustness_indicators: bool,
     logger.info("Polarities: {}".format(polarity))
 
     # Managing weights
-    if robustness_weights is False:
+    if robustness_weights is False and robustness_single_weights is False:
         fixed_weights = weights
         if any(value == 1 for value in num_unique):
             fixed_weights = pop_indexed_elements(col_to_drop_indexes, fixed_weights)
@@ -400,7 +400,7 @@ def _handle_polarities_and_weights(robustness_indicators: bool,
         return polarity, norm_fixed_weights, None, None
         #  Return None for norm_random_weights and rand_weight_per_indicator
     else:
-        output_weights = _handle_robustness_weights(mc_runs, num_indicators, robustness_indicators, robustness_weights,
+        output_weights = _handle_robustness_weights(mc_runs, num_indicators, robustness_weights,
                                                     robustness_single_weights)
         if output_weights is not None:
             norm_random_weights, rand_weight_per_indicator = output_weights
@@ -411,7 +411,7 @@ def _handle_polarities_and_weights(robustness_indicators: bool,
         #  Return None for norm_fixed_weights and one of the other two cases of randomness
 
 
-def _handle_robustness_weights(mc_runs: int, num_indicators: int, robustness_indicators: bool, robustness_weights: bool,
+def _handle_robustness_weights(mc_runs: int, num_indicators: int, robustness_weights: bool,
                                robustness_single_weight: bool) -> Tuple[Union[List[list], None], Union[dict, None]]:
     """
     Handle the generation and normalization of random weights based on the specified settings

@@ -22,6 +22,7 @@ logger = logging.getLogger("ProMCDA")
 
 class ProMCDA:
     def __init__(self, input_matrix: pd.DataFrame, polarity: Tuple[str, ...],
+                 weights: Optional[float] = None,
                  robustness_weights: Optional[bool] = False,
                  robustness_single_weights: Optional[bool] = False, robustness_indicators: Optional[bool] = False,
                  marginal_distributions: Optional[Tuple[PDFType, ...]] = None,
@@ -45,6 +46,12 @@ class ProMCDA:
         :param num_runs: Number of Monte Carlo sampling runs (default: 10000).
         :param num_cores: Number of cores used for the calculations (default: 1).
         :param random_seed: The random seed used for the sampling (default: 43).
+
+        Notes:
+        - The input_matrix should contain the alternatives as rows and the criteria as columns.
+        - If weights are not provided, they are set to 0.5 for each criterion.
+        - If robustness_weights is enabled, the robustness_single_weights should be disabled, and viceversa.
+        - If robustness_indicators is enabled, the robustness on weights should be disabled.
 
         # Example of instantiating the class and using its methods:
         from promcda import ProMCDA
@@ -76,6 +83,7 @@ class ProMCDA:
         """
         self.input_matrix = input_matrix
         self.polarity = polarity
+        self.weights = weights
         self.robustness_weights = robustness_weights
         self.robustness_single_weights = robustness_single_weights
         self.robustness_indicators = robustness_indicators
@@ -173,7 +181,7 @@ class ProMCDA:
         """
         return getattr(self, 'normalized_values_with_robustness', None)
 
-    def aggregate(self, aggregation_method: Optional[AggregationFunctions] = None, weights: Optional[List[str]] = None) \
+    def aggregate(self, aggregation_method: Optional[AggregationFunctions] = None) \
             -> Union[pd.DataFrame, str]:
         """
         Aggregate normalized indicators using the specified agg_method.
@@ -182,25 +190,25 @@ class ProMCDA:
         The aggregation methods are defined in the AggregationFunctions enum class.
         This agg_method should follow the normalization. It acquires the normalized
         values from the normalization step.
+        The weights are used for aggregation. If None in the intialization of ProMCDA, they are set all the same.
+        Or, if robustness on weights is enabled, then the weights are sampled from the Monte Carlo simulation.
 
         Parameters (optional):
         - aggregation_method: The aggregation agg_method to use. If None, all available methods will be applied.
-        - weights: The weights to be used for aggregation. If None, they are set all the same. Or, if robustness on
-          weights is enabled, then the weights are sampled from the Monte Carlo simulation.
 
         Returns:
         - A pd.DataFrame containing the aggregated scores per normalization and aggregation methods,
           if robustness on indicators is not performed.
 
         :param aggregation_method: AggregationFunctions
-        :param weights : list or None
         :return scores_df: pd.DataFrame or string
         """
         num_indicators = self.input_matrix_no_alternatives.shape[1]
         index_column_name = self.input_matrix.index.name
         index_column_values = self.input_matrix.index.tolist()
+        weights = self.weights
         # Assign values to weights when they are None
-        if weights is None and self.robustness_weights is False and self.robustness_single_weights is False:
+        if weights is None and self.robustness_weights is False:
             if self.robustness_indicators:
                 num_non_indicators = (
                         len(self.marginal_distributions) - self.marginal_distributions.count('exact')
@@ -380,7 +388,6 @@ class ProMCDA:
         """
         Execute the full ProMCDA process, either with or without uncertainties on the indicators.
         """
-        start_time = time.time()
 
         # Normalize
         # self.normalize()
@@ -396,7 +403,6 @@ class ProMCDA:
         else:
             run_mcda_with_indicator_uncertainty(self.configuration_settings)
 
-        elapsed_time = time.time() - start_time
 
     # def get_results(self):
     #     """
