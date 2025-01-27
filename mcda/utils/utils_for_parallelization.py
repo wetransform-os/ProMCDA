@@ -5,9 +5,11 @@ import multiprocessing
 from functools import partial
 from typing import List, Tuple, Optional
 
+from mcda.configuration import output_column_mapping
 from mcda.mcda_functions.aggregation import Aggregation
 from mcda.mcda_functions.normalization import Normalization
-from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions, OutputColumnNames4Sensitivity
+from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions, NormalizationNames4Sensitivity
+from mcda.configuration.output_column_mapping import output_column_mapping
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
@@ -221,39 +223,118 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict,
 
     scores = pd.DataFrame()
     col_names_method = []
-    col_names = [member.value for member in OutputColumnNames4Sensitivity]
 
     if isinstance(normalized_indicators, dict): # robustness on indicators
         for key, values in normalized_indicators.items():
             if method is None or method == AggregationFunctions.WEIGHTED_SUM:
+                initial_method_is_none = method is None
+                if method is None:
+                    method = AggregationFunctions.WEIGHTED_SUM
                 # ws goes only with some specific normalizations
-                valid_suffixes = ["standardized_any", "minmax_01", "target_01", "rank"]
+                allowed_suffixes = {"standardized_any", "minmax_01", "target_01", "rank"}
+                valid_suffixes = [
+                    member.value for member in NormalizationNames4Sensitivity if member.value in allowed_suffixes
+                ]
+                if not valid_suffixes:
+                    raise ValueError(
+                        "No matching normalization names were found in the allowed_suffixes. "
+                        "Please check weather the column names in normalization are conform to the configuration."
+                    )
+                matching_suffixes = [suffix.split('_')[0] for suffix in valid_suffixes if suffix in key]
+                col_names = [
+                    output_column_mapping.get(((method.value if method else AggregationFunctions.WEIGHTED_SUM), suffix))
+                    for suffix in matching_suffixes
+                ]
                 if any(substring in key for substring in valid_suffixes):
                     scores_weighted_sum[key] = agg.weighted_sum(values)
-                    col_names_method.append("ws-" + key)
+                    col_names_method.append(col_names)
+                if initial_method_is_none:
+                    method = None
             if method is None or method == AggregationFunctions.GEOMETRIC:
-                valid_suffixes = ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]
+                initial_method_is_none = method is None
+                if method is None:
+                    method = AggregationFunctions.GEOMETRIC
                 # geom goes only with some specific normalizations
+                allowed_suffixes = {"standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"}
+                valid_suffixes = [
+                    member.value for member in NormalizationNames4Sensitivity if member.value in allowed_suffixes
+                ]
+                if not valid_suffixes:
+                    raise ValueError(
+                        "No matching normalization names were found in the allowed_suffixes. "
+                        "Please check weather the column names in normalization are conform to the configuration."
+                    )
+                matching_suffixes = [suffix.split('_')[0] for suffix in valid_suffixes if suffix in key]
+                col_names = [
+                    output_column_mapping.get(((method.value if method else AggregationFunctions.GEOMETRIC), suffix))
+                    for suffix in matching_suffixes
+                ]
                 if any(substring in key for substring in valid_suffixes):
                     scores_geometric[key] = pd.Series(agg.geometric(values))
-                    col_names_method.append("geom-" + key)
+                    col_names_method.append(col_names)
+                if initial_method_is_none:
+                    method = None
             if method is None or method == AggregationFunctions.HARMONIC:
-                valid_suffixes = ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]
+                initial_method_is_none = method is None
+                if method is None:
+                    method = AggregationFunctions.HARMONIC
                 # harm goes only with some specific normalizations
+                allowed_suffixes = {"standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"}
+                valid_suffixes = [
+                    member.value for member in NormalizationNames4Sensitivity if member.value in allowed_suffixes
+                ]
+                if not valid_suffixes:
+                    raise ValueError(
+                        "No matching normalization names were found in the allowed_suffixes. "
+                        "Please check weather the column names in normalization are conform to the configuration."
+                    )
+                matching_suffixes = [suffix.split('_')[0] for suffix in valid_suffixes if suffix in key]
+                col_names = [
+                    output_column_mapping.get(((method.value if method else AggregationFunctions.HARMONIC), suffix))
+                    for suffix in matching_suffixes
+                ]
                 if any(substring in key for substring in valid_suffixes):
                     scores_harmonic[key] = pd.Series(agg.harmonic(values))
-                    col_names_method.append("harm-" + key)
+                    col_names_method.append(col_names)
+                if initial_method_is_none:
+                    method = None
             if method is None or method == AggregationFunctions.MINIMUM:
-                valid_suffixes = ["standardized_any"]
+                if method is None:
+                    method = AggregationFunctions.MINIMUM
+                allowed_suffixes = {"standardized_any"}
+                valid_suffixes = [
+                    member.value for member in NormalizationNames4Sensitivity if member.value in allowed_suffixes
+                ]
+                if not valid_suffixes:
+                    raise ValueError(
+                        "No matching normalization names were found in the allowed_suffixes. "
+                        "Please check weather the column names in normalization are conform to the configuration."
+                    )
+                matching_suffixes = [suffix.split('_')[0] for suffix in valid_suffixes if suffix in key]
+                col_names = [
+                    output_column_mapping.get(((method.value if method else AggregationFunctions.MINIMUM), suffix))
+                    for suffix in matching_suffixes
+                ]
                 if any(substring in key for substring in valid_suffixes):
-                    scores_minimum[key] = pd.Series(agg.minimum(
-                        normalized_indicators["standardized_any"]))
-                    col_names_method.append("min-" + key)
+                    scores_minimum[key] = pd.Series(agg.minimum(values))
+                    col_names_method.append(col_names)
+                if initial_method_is_none:
+                    method = None
+
+        col_names_method = [item for sublist in col_names_method for item in sublist]
 
     elif isinstance(normalized_indicators, pd.DataFrame): # robustness on weights
         if method is None or method == AggregationFunctions.WEIGHTED_SUM:
             # ws goes only with some specific normalizations
-            valid_suffixes = ["standardized_any", "minmax_01", "target_01", "rank"]
+            allowed_suffixes = {"standardized_any", "minmax_01", "target_01", "rank"}
+            valid_suffixes = [
+                member.value for member in NormalizationNames4Sensitivity if member.value in allowed_suffixes
+            ]
+            if not valid_suffixes:
+                raise ValueError(
+                    "No matching normalization names were found in the allowed_suffixes. "
+                    "Please check weather the column names in normalization are conform to the configuration."
+                )
             scores_weighted_sum = pd.DataFrame()
             for suffix in valid_suffixes:
                 selected_columns = [
@@ -266,7 +347,15 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict,
                     col_names_method.extend([f"ws-{suffix}"])
         if method is None or method == AggregationFunctions.GEOMETRIC:
             # geom goes only with some specific normalizations
-            valid_suffixes = ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]
+            allowed_suffixes = {"standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"}
+            valid_suffixes = [
+                member.value for member in NormalizationNames4Sensitivity if member.value in allowed_suffixes
+            ]
+            if not valid_suffixes:
+                raise ValueError(
+                    "No matching normalization names were found in the allowed_suffixes. "
+                    "Please check weather the column names in normalization are conform to the configuration."
+                )
             scores_geometric = pd.DataFrame()
             for suffix in valid_suffixes:
                 selected_columns = [
@@ -279,7 +368,15 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict,
                     col_names_method.extend([f"geom-{suffix}"])
         if method is None or method == AggregationFunctions.HARMONIC:
             # harm goes only with some specific normalizations
-            valid_suffixes = ["standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"]
+            allowed_suffixes = {"standardized_without_zero", "minmax_without_zero", "target_without_zero", "rank"}
+            valid_suffixes = [
+                member.value for member in NormalizationNames4Sensitivity if member.value in allowed_suffixes
+            ]
+            if not valid_suffixes:
+                raise ValueError(
+                    "No matching normalization names were found in the allowed_suffixes. "
+                    "Please check weather the column names in normalization are conform to the configuration."
+                )
             scores_harmonic = pd.DataFrame()
             for suffix in valid_suffixes:
                 selected_columns = [
@@ -292,7 +389,15 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict,
                     col_names_method.extend([f"harm-{suffix}"])
         if method is None or method == AggregationFunctions.MINIMUM:
             # min goes only with specific normalizations
-            valid_suffixes = ["standardized_any"]
+            allowed_suffixes = {"standardized_any"}
+            valid_suffixes = [
+                member.value for member in NormalizationNames4Sensitivity if member.value in allowed_suffixes
+            ]
+            if not valid_suffixes:
+                raise ValueError(
+                    "No matching normalization names were found in the allowed_suffixes. "
+                    "Please check weather the column names in normalization are conform to the configuration."
+                )
             scores_minimum = pd.DataFrame()
             for suffix in valid_suffixes:
                 selected_columns = [
@@ -314,10 +419,8 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict,
         elif isinstance(d, dict): # Robustness indicators
             scores = pd.concat([scores, pd.DataFrame.from_dict(d)], axis=1)
 
-    if method is None:
-        scores.columns = col_names
-    else:
-        scores.columns = col_names_method
+    scores.columns = col_names_method
+
     return scores
 
 

@@ -8,6 +8,16 @@ from mcda.configuration.enums import NormalizationFunctions, AggregationFunction
     NormalizationNames4Sensitivity, PDFType
 
 
+def _remove_empty_levels_from_multiindex(multi_index: pd.MultiIndex) -> pd.MultiIndex:
+    empty_levels = [level for level in range(multi_index.nlevels)
+                    if all(multi_index.get_level_values(level) == '')]
+
+    for level in empty_levels:
+        multi_index = multi_index.droplevel(level)
+
+    return multi_index
+
+
 class TestProMCDA(unittest.TestCase):
 
     def setUp(self):
@@ -258,11 +268,14 @@ class TestProMCDA(unittest.TestCase):
         expected_columns = [OutputColumnNames4Sensitivity.WS_MINMAX_01.value]
 
         # Then
-        self.assertCountEqual(aggregated_scores.columns, expected_columns,
+        columns = _remove_empty_levels_from_multiindex(aggregated_scores.columns) # delete the first empty level of the MultiIndex
+        if isinstance(columns, pd.MultiIndex):
+            columns = columns.get_level_values(-1).tolist()
+        self.assertCountEqual(columns, expected_columns,
                               "Only specified methods should be applied.")
         self.assertTrue(
-            (aggregated_scores['ws-minmax_01'] >= 0).all() and (
-                    aggregated_scores['ws-minmax_01'] <= 1).all(),
+            (aggregated_scores['ws-minmax_01'] >= 0).all().all() and (
+                    aggregated_scores['ws-minmax_01'] <= 1).all().all(),
             "Values should be in the range [0, 1] for minmax normalization with weighted sum.")
 
     def test_aggregate_with_robustness_weights_no_sensitivity(self):
@@ -291,6 +304,7 @@ class TestProMCDA(unittest.TestCase):
         expected_columns = [OutputColumnNames4Sensitivity.WS_MINMAX_01.value]
 
         # Then
+        columns = _remove_empty_levels_from_multiindex(aggregated_scores.columns) # delete the first empty level of the MultiIndex
         self.assertCountEqual(aggregated_scores.columns, expected_columns,
                               "Only specified methods should be applied.")
         self.assertTrue(
