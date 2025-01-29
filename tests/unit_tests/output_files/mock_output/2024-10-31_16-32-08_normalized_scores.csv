@@ -1,0 +1,4 @@
+,ws-minmax_01,ws-target_01,ws-standardized_any,ws-rank,geom-minmax_without_zero,geom-target_without_zero,geom-standardized_without_zero,geom-rank,harm-minmax_without_zero,harm-target_without_zero,harm-standardized_without_zero,harm-rank,min-standardized_any
+A,0.5399999999999999,0.5425531914893618,0.5398411630511055,0.5,0.5381914170217845,0.5613282308359406,0.5379950590291959,0.4999999999999999,0.5364238410596026,0.5784202253954451,0.5361937446347577,0.5,0.5333333333333333
+B,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+C,1.0,1.0000000000000002,1.0,1.0,1.0,1.0,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,1.0

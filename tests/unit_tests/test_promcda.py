@@ -3,8 +3,7 @@ import warnings
 
 import pandas as pd
 
-from mcda.models.ProMCDA import ProMCDA
-from mcda.configuration.enums import NormalizationFunctions, AggregationFunctions, OutputColumnNames4Sensitivity, \
+from promcda.enums import NormalizationFunctions, AggregationFunctions, OutputColumnNames4Sensitivity, \
     NormalizationNames4Sensitivity, PDFType
 
 
@@ -53,6 +52,8 @@ class TestProMCDA(unittest.TestCase):
         """
         Test if ProMCDA initializes correctly.
         """
+        from promcda.models.ProMCDA import ProMCDA
+
         # Given
         promcda = ProMCDA(
             input_matrix=self.input_matrix,
@@ -90,28 +91,12 @@ class TestProMCDA(unittest.TestCase):
         self.assertIsNone(promcda.iterative_random_w_score_means_normalized)
         #TODO: self.assertIsNone(promcda.scores)
 
-    # def test_validate_inputs(self):
-    #     """
-    #     Test if input validation works and returns the expected values.
-    #     """
-    #     # Given
-    #     promcda = ProMCDA(self.input_matrix, self.polarity, self.robustness, self.monte_carlo)
-    #     # When
-    #     (is_robustness_indicators, is_robustness_weights, polar, weights, config) = promcda.validate_inputs()
-    #
-    #     # Then
-    #     self.assertIsInstance(is_robustness_indicators, int)
-    #     self.assertIsInstance(is_robustness_weights, int)
-    #     self.assertIsInstance(polar, tuple)
-    #     self.assertIsInstance(weights, list)
-    #     self.assertIsInstance(config, dict)
-    #     self.assertEqual(is_robustness_indicators, 0)
-    #     self.assertEqual(is_robustness_weights, 0)
 
     def test_normalize_all_methods(self):
         """
         Test normalization under sensitivity analysis (all methods are used).
         """
+        from promcda.models.ProMCDA import ProMCDA
         # Given
         normalization_method = None
         promcda = ProMCDA(
@@ -138,6 +123,7 @@ class TestProMCDA(unittest.TestCase):
         """
         Test normalization when a specific method is selected (MINMAX).
         """
+        from promcda.models.ProMCDA import ProMCDA
         # Given
         promcda = ProMCDA(
             input_matrix=self.input_matrix,
@@ -164,6 +150,7 @@ class TestProMCDA(unittest.TestCase):
         Test normalization when a specific method is selected (MINMAX) and
         under robustness analysis (criteria with uncertainty).
         """
+        from promcda.models.ProMCDA import ProMCDA
         # Given
         robustness_indicators = True
         promcda = ProMCDA(
@@ -189,6 +176,7 @@ class TestProMCDA(unittest.TestCase):
         """
         Test aggregation under sensitivity analysis (all methods are used).
         """
+        from promcda.models.ProMCDA import ProMCDA
         # Given
         promcda = ProMCDA(
             input_matrix=self.input_matrix,
@@ -216,6 +204,7 @@ class TestProMCDA(unittest.TestCase):
         """
         Test aggregation when a specific method is selected (MINMAX/WEIGHTED_SUM).
         """
+        from promcda.models.ProMCDA import ProMCDA
         # Given
         normalization_method = NormalizationFunctions.MINMAX
         aggregation_method = AggregationFunctions.WEIGHTED_SUM
@@ -247,6 +236,7 @@ class TestProMCDA(unittest.TestCase):
         Test aggregation when a specific method is selected (MINMAX/WEIGHTED_SUM) and
         under robustness analysis (criteria with uncertainty).
         """
+        from promcda.models.ProMCDA import ProMCDA
         # Given
         normalization_method = NormalizationFunctions.MINMAX
         aggregation_method = AggregationFunctions.WEIGHTED_SUM
@@ -283,6 +273,7 @@ class TestProMCDA(unittest.TestCase):
         Test aggregation when a specific method is selected (MINMAX/WEIGHTED_SUM) and
         under robustness analysis on the weights.
         """
+        from promcda.models.ProMCDA import ProMCDA
         # Given
         normalization_method = NormalizationFunctions.MINMAX
         aggregation_method = AggregationFunctions.WEIGHTED_SUM
@@ -316,7 +307,7 @@ class TestProMCDA(unittest.TestCase):
         """
         Test aggregation under sensitivity and robustness analysis on the weights.
         """
-
+        from promcda.models.ProMCDA import ProMCDA
         # When
         promcda = ProMCDA(
             input_matrix=self.input_matrix,

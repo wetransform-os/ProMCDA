@@ -1,6 +1,6 @@
 import unittest
 import pandas as pd
-from mcda.configuration.configuration_validator import validate_configuration, PDFType
+from promcda.configuration.configuration_validator import validate_configuration, PDFType
 
 class TestConfigurationValidator(unittest.TestCase):
 

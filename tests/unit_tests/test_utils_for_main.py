@@ -2,8 +2,8 @@ import unittest
 from unittest import TestCase
 from unittest.mock import patch
 
-from mcda.utils.utils_for_main import *
-from mcda.utils.utils_for_main import _check_and_rescale_negative_indicators
+from promcda.utils.utils_for_main import *
+from promcda.utils.utils_for_main import _check_and_rescale_negative_indicators
 
 
 class TestUtils(unittest.TestCase):

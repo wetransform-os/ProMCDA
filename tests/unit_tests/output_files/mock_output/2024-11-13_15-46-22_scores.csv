@@ -1,0 +1,4 @@
+Alternatives,minmax_weighted_sum,target_weighted_sum,standardized_weighted_sum,rank_weighted_sum
+A,0.5399999999999999,0.575,0.052981294282601746,2.0
+B,0.0,0.15,-1.023850354260814,1.0
+C,1.0,0.9333333333333333,0.9708690599782123,3.0

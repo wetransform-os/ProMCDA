@@ -4,12 +4,6 @@ import pandas as pd
 from unittest import TestCase
 
 
-from mcda.models.mcda_without_robustness import MCDAWithoutRobustness
-from mcda.configuration.config import Config
-from mcda.mcda_functions.aggregation import Aggregation
-import mcda.utils.utils_for_main as utils_for_main
-import mcda.utils.utils_for_parallelization as utils_for_parallelization
-
 current_directory = os.path.dirname(os.path.abspath(__file__))
 resources_directory = os.path.join(current_directory, '..', 'resources')
 
@@ -110,6 +104,7 @@ class TestMCDA_without_robustness(unittest.TestCase):
 
     @staticmethod
     def get_input_matrix():
+        import promcda.utils.utils_for_main as utils_for_main
         input_matrix_file_path = os.path.join(resources_directory, 'input_matrix_without_uncert.csv')
         input_matrix = utils_for_main.read_matrix(input_matrix_file_path)
 
@@ -122,6 +117,8 @@ class TestMCDA_without_robustness(unittest.TestCase):
         return list_df
 
     def test_normalize_indicators(self):
+        from promcda.models.mcda_without_robustness import MCDAWithoutRobustness
+
         # Given
         config_general = TestMCDA_without_robustness.get_test_config()
         config_general = Config(config_general)
@@ -161,6 +158,8 @@ class TestMCDA_without_robustness(unittest.TestCase):
             assert (res_simple_mcda[key].shape == input_matrix.shape)
 
     def test_aggregate_indicators(self):
+        from promcda.models.mcda_without_robustness import MCDAWithoutRobustness
+
         # Given
         config = TestMCDA_without_robustness.get_test_config()
         config = Config(config)
@@ -202,6 +201,10 @@ class TestMCDA_without_robustness(unittest.TestCase):
         assert res_simple_mcda.shape[1] == len(simple_mcda_col_names)
 
     def test_aggregate_indicators_in_parallel(self):
+        from promcda.models.mcda_without_robustness import MCDAWithoutRobustness
+        from promcda.mcda_functions.aggregation import Aggregation
+        import promcda.utils.utils_for_parallelization as utils_for_parallelization
+
         # Given
         config = TestMCDA_without_robustness.get_test_config_randomness()
         config = Config(config)
@@ -242,6 +245,8 @@ class TestMCDA_without_robustness(unittest.TestCase):
         assert res_simple_mcda.shape[1] == len(simple_mcda_col_names)
 
     def test_estimate_runs_mean_std(self):
+        import promcda.utils.utils_for_parallelization as utils_for_parallelization
+
         # Given
         list_of_df = TestMCDA_without_robustness.get_list_of_df()
 

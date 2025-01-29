@@ -6,5 +6,5 @@ package_path = '/Users/flaminia/Documents/work/ProMCDA'
 sys.path.append(package_path)
 
 # Now import ProMCDA from models
-from mcda.models.ProMCDA import ProMCDA
+from promcda.models.ProMCDA import ProMCDA
 print("Import successful!")

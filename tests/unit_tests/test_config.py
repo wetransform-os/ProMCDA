@@ -1,7 +1,7 @@
 import unittest
 import pytest
 
-from mcda.configuration.config import Config
+from promcda.configuration.config import Config
 
 
 class TestConfig(unittest.TestCase):

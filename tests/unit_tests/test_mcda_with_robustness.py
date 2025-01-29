@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import unittest
 
-from mcda.models.mcda_with_robustness import MCDAWithRobustness
-from mcda.configuration.config import Config
+from promcda.models.mcda_with_robustness import MCDAWithRobustness
+from promcda.configuration.config import Config
 
 
 class TestMCDA_with_robustness(unittest.TestCase):
