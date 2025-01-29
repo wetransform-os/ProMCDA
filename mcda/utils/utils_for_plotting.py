@@ -8,10 +8,9 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
 from PIL import Image
+import altair as alt
 
 import mcda.utils.utils_for_main as utils_for_main
-
-DEFAULT_OUTPUT_DIRECTORY_PATH = './output_files'  # root directory of ProMCDA
 
 
 def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
@@ -56,6 +55,52 @@ def plot_norm_scores_without_uncert(scores: pd.DataFrame) -> object:
                       )
     # fig.show()
     return fig
+
+
+def plot_non_norm_scores_with_altair(scores: pd.DataFrame) -> alt.Chart:
+    """
+    Plot the non-normalized scores without uncertainty as grouped horizontal bars using Altair.
+
+    Parameters:
+    - scores: DataFrame containing the non-normalized scores. The first column is alternatives.
+
+    Returns:
+    - Altair Chart object.
+    """
+    # Converting DataFrame to a long format for Altair
+    alternatives_column_name = scores.columns[0]
+    melted_scores = scores.melt(id_vars=[alternatives_column_name],
+                                var_name="Method",
+                                value_name="Score")
+
+    # Creating the Altair grouped bar chart
+    chart = alt.Chart(melted_scores).mark_bar().encode(
+        x=alt.X("Score:Q", title="MCDA Rough Score"),
+        y=alt.Y(f"{alternatives_column_name}:N", title="Alternatives"),
+        color=alt.Color("Method:N", title="Aggregation Method"),
+        tooltip=[
+            alt.Tooltip(f"{alternatives_column_name}:N", title="Alternative"),
+            alt.Tooltip("Method:N", title="Method"),
+            alt.Tooltip("Score:Q", title="Score")
+        ]
+    ).properties(
+        title="MCDA Analysis: Non-Normalized Scores",
+        width=800,
+        height=400
+    ).configure_title(
+        fontSize=18,
+        font="Arial",
+        anchor="start",
+        color="black"
+    ).configure_axis(
+        labelFontSize=12,
+        titleFontSize=14
+    ).configure_legend(
+        titleFontSize=14,
+        labelFontSize=12
+    )
+
+    return chart
 
 
 def plot_non_norm_scores_without_uncert(scores: pd.DataFrame) -> object:

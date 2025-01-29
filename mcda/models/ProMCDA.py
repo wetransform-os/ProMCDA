@@ -1,18 +1,19 @@
 import logging
 import sys
-import time
 import pandas as pd
 from typing import Tuple, List, Union, Optional
 
 from build.lib.mcda.mcda_with_robustness import MCDAWithRobustness
 from mcda.configuration.configuration_validator import (check_indicator_weights_polarities,
-                                                        process_indicators_and_weights)
+                                                        process_indicators_and_weights, validate_configuration)
 from mcda.configuration.enums import PDFType, NormalizationFunctions, AggregationFunctions
 from mcda.models.mcda_without_robustness import MCDAWithoutRobustness
 from mcda.utils import utils_for_parallelization
 from mcda.utils.utils_for_main import run_mcda_without_indicator_uncertainty, run_mcda_with_indicator_uncertainty, \
     check_input_matrix, check_if_pdf_is_exact, check_if_pdf_is_poisson, check_parameters_pdf, rescale_minmax, \
     compute_scores_for_all_random_weights, compute_scores_for_single_random_weight
+from mcda.utils.utils_for_plotting import plot_norm_scores_without_uncert, plot_non_norm_scores_without_uncert, \
+    plot_non_norm_scores_with_altair
 
 log = logging.getLogger(__name__)
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
@@ -22,7 +23,7 @@ logger = logging.getLogger("ProMCDA")
 
 class ProMCDA:
     def __init__(self, input_matrix: pd.DataFrame, polarity: Tuple[str, ...],
-                 weights: Optional[float] = None,
+                 weights: Optional[list] = None,
                  robustness_weights: Optional[bool] = False,
                  robustness_single_weights: Optional[bool] = False, robustness_indicators: Optional[bool] = False,
                  marginal_distributions: Optional[Tuple[PDFType, ...]] = None,
@@ -81,6 +82,7 @@ class ProMCDA:
         df_aggregated = promcda.aggregate()
         promcda.run_mcda()
         """
+
         self.input_matrix = input_matrix
         self.polarity = polarity
         self.weights = weights
@@ -108,18 +110,17 @@ class ProMCDA:
 
         self.input_matrix_no_alternatives = check_input_matrix(self.input_matrix)
 
-    # def validate_inputs(self) -> Tuple[int, int, list, Union[list, List[list], dict], dict]:
-    #     """
-    #     Extract and validate input configuration parameters to ensure they are correct.
-    #     Return a flag indicating whether robustness analysis will be performed on indicators (1) or not (0).
-    #     """
-    #
-    #     configuration_values = extract_configuration_values(self.input_matrix, self.polarity,
-    #                                                         self.robustness, self.monte_carlo)
-    #     is_robustness_indicators, is_robustness_weights, polar, weights = check_configuration_values(
-    #         configuration_values)
-    #
-    #     return is_robustness_indicators, is_robustness_weights, polar, weights, configuration_values
+        validate_configuration(
+            input_matrix=self.input_matrix,
+            polarity=self.polarity,
+            weights=self.weights,
+            marginal_distributions=self.marginal_distributions,
+            num_runs=self.num_runs,
+            num_cores=self.num_cores,
+            random_seed=self.random_seed,
+            robustness_weights=self.robustness_weights,
+            robustness_single_weights=self.robustness_weights,
+            robustness_indicators=self.robustness_indicators)
 
     def normalize(self, normalization_method: Optional[NormalizationFunctions] = None) -> Union[pd.DataFrame, str]:
         """
@@ -139,6 +140,13 @@ class ProMCDA:
         :param normalization_method: NormalizationFunctions
         :return normalized_df: pd.DataFrame or string
         """
+
+        # Configuration parameters' validation
+        if normalization_method is not None:
+            if normalization_method not in vars(NormalizationFunctions).values():
+                raise ValueError(
+                    f"Invalid 'normalization_method'. Expected one of {list(vars(NormalizationFunctions).values())}, "
+                    f"got '{normalization_method}'.")
 
         if not self.robustness_indicators:
             mcda_without_robustness = MCDAWithoutRobustness(self.polarity, self.input_matrix_no_alternatives)
@@ -203,6 +211,14 @@ class ProMCDA:
         :param aggregation_method: AggregationFunctions
         :return scores_df: pd.DataFrame or string
         """
+
+        # Configuration parameters' validation
+        if aggregation_method is not None:
+            if aggregation_method not in vars(AggregationFunctions).values():
+                raise ValueError(
+                    f"Invalid 'aggregation_method'. Expected one of {list(vars(AggregationFunctions).values())}, "
+                    f"got '{aggregation_method}'.")
+
         num_indicators = self.input_matrix_no_alternatives.shape[1]
         index_column_name = self.input_matrix.index.name
         index_column_values = self.input_matrix.index.tolist()
@@ -383,6 +399,8 @@ class ProMCDA:
             return means, normalized_means, stds
         return None
 
+
+
     def run_mcda(self, is_robustness_indicators: int, is_robustness_weights: int,
                  weights: Union[list, List[list], dict]):
         """
@@ -397,12 +415,53 @@ class ProMCDA:
 
         # Run
         # no uncertainty
-        if is_robustness_indicators == 0:
-            run_mcda_without_indicator_uncertainty(self.configuration_settings, is_robustness_weights, weights)
+        # TODO
         # uncertainty
-        else:
-            run_mcda_with_indicator_uncertainty(self.configuration_settings)
+        # TODO
 
+
+    def plot_results(self, data: Union[pd.DataFrame, dict], plot_type: str, **kwargs):
+        """
+        Plot the results based on the specified type of plot.
+
+        Parameters:
+        - data (pd.DataFrame or dictionary): The data to be plotted.
+        - plot_type (str): The type of plot to generate. Must be one of:
+            - "normalized_scores"
+            - "non_normalized_scores"
+            - "average_scores"
+            - "iterative_average_scores"
+        - **kwargs: Additional keyword arguments for customization, such as labels, titles, or styles.
+
+        Returns:
+        None
+        """
+        #TODO: what if plot_results is used within a Python environment from the Terminal?
+
+        if plot_type == "normalized_scores":
+           plot_norm_scores_without_uncert(self.aggregated_scores)
+        elif plot_type == "non_normalized_scores":
+           #return(plot_non_norm_scores_without_uncert(self.aggregated_scores))
+           return(plot_non_norm_scores_with_altair(self.aggregated_scores))
+        #     # Implement the logic for non-normalized scores without uncertainty
+        #     plt.plot(data, linestyle='--', **kwargs)
+        #     plt.title("Non-Normalized Scores Without Uncertainty")
+        # elif plot_type == "mean_scores":
+        #     # Implement the logic for mean scores
+        #     data.mean().plot(kind='bar', **kwargs)
+        #     plt.title("Mean Scores")
+        # elif plot_type == "mean_scores_iterative":
+        #     # Implement the logic for iterative mean scores
+        #     data.cumsum().mean().plot(kind='line', **kwargs)
+        #     plt.title("Mean Scores (Iterative)")
+        # else:
+        #     raise ValueError(f"Invalid plot_type: {plot_type}. Must be one of: "
+        #                      f"'norm_scores_without_uncert', 'non_norm_scores_without_uncert', 'mean_scores', 'mean_scores_iterative'")
+        #
+        # plt.xlabel(kwargs.get("xlabel", "X-axis"))
+        # plt.ylabel(kwargs.get("ylabel", "Y-axis"))
+        # plt.grid(kwargs.get("grid", True))
+        # plt.show()
 
     # def get_results(self):
     #     """
