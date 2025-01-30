@@ -97,7 +97,7 @@ def validate_configuration(
 
     if marginal_distributions is not None and len(marginal_distributions) != num_indicators:
         raise ValueError("'marginal_distributions' must have the same number of elements as 'num_indicators'.")
-    if not isinstance(marginal_distributions, (tuple, None)):
+    if not (marginal_distributions is None or isinstance(marginal_distributions, tuple)):
         raise TypeError(
             f"Expected 'marginal_distributions' to be a Tuple or None, got {type(marginal_distributions).__name__}")
     if marginal_distributions is not None and not all(isinstance(pdf, PDFType) for pdf in marginal_distributions):
