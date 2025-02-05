@@ -3,3 +3,4 @@
 .ipynb_checkpoints/
 __pycache__/
 output_files
+.venv

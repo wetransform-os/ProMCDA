@@ -103,7 +103,7 @@ def get_polar_and_weights(config, input_matrix_no_alternatives, is_robustness_in
     return polar, weights
 
 
-def read_matrix_from_file(column_names_list: list[str], file_from_stream) -> {}:
+def convert_csv_to_json(column_names_list: list[str], file_from_stream) -> {}:
     result_dict = utils_for_main.read_matrix_from_file(file_from_stream).to_dict()
     if len(column_names_list) != len(result_dict.keys()):
         return {"error": "Number of provided column names does not match the CSV columns"}, 400

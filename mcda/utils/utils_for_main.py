@@ -1011,14 +1011,14 @@ def run_mcda_without_indicator_uncertainty(config: Configuration, index_column_n
                                   index_column_name=index_column_name, index_column_values=index_column_values,
                                   config=config)
 
-    _plot_and_save_charts(scores=scores, normalized_scores=normalized_scores,
-                          score_means=all_weights_score_means, score_stds=all_weights_score_stds,
-                          score_means_normalized=all_weights_score_means_normalized,
-                          iterative_random_w_score_means=iterative_random_w_score_means,
-                          iterative_random_w_score_stds=iterative_random_w_score_stds,
-                          iterative_random_w_score_means_normalized=iterative_random_w_score_means_normalized,
-                          input_matrix=input_matrix, config=config,
-                          is_robustness_weights=is_robustness_weights)
+    # _plot_and_save_charts(scores=scores, normalized_scores=normalized_scores,
+    #                       score_means=all_weights_score_means, score_stds=all_weights_score_stds,
+    #                       score_means_normalized=all_weights_score_means_normalized,
+    #                       iterative_random_w_score_means=iterative_random_w_score_means,
+    #                       iterative_random_w_score_stds=iterative_random_w_score_stds,
+    #                       iterative_random_w_score_means_normalized=iterative_random_w_score_means_normalized,
+    #                       input_matrix=input_matrix, config=config,
+    #                       is_robustness_weights=is_robustness_weights)
     return response
 
 
@@ -1108,14 +1108,14 @@ def run_mcda_with_indicator_uncertainty(config: Configuration, input_matrix: pd.
                                   config=config,
                                   index_column_name=index_column_name, index_column_values=index_column_values)
 
-    _plot_and_save_charts(scores=None, normalized_scores=None,
-                          score_means=all_indicators_scores_means, score_stds=all_indicators_scores_stds,
-                          score_means_normalized=all_indicators_means_scores_normalized,
-                          iterative_random_w_score_means=None,
-                          iterative_random_w_score_stds=None,
-                          iterative_random_w_score_means_normalized=None,
-                          input_matrix=input_matrix, config=config,
-                          is_robustness_indicators=is_robustness_indicators)
+    # _plot_and_save_charts(scores=None, normalized_scores=None,
+    #                       score_means=all_indicators_scores_means, score_stds=all_indicators_scores_stds,
+    #                       score_means_normalized=all_indicators_means_scores_normalized,
+    #                       iterative_random_w_score_means=None,
+    #                       iterative_random_w_score_stds=None,
+    #                       iterative_random_w_score_means_normalized=None,
+    #                       input_matrix=input_matrix, config=config,
+    #                       is_robustness_indicators=is_robustness_indicators)
 
     return response
 
