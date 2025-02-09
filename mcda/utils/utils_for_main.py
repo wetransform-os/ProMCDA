@@ -521,24 +521,25 @@ def save_df(df: pd.DataFrame, folder_path: str, filename: str) -> {}:
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     new_filename = f"{timestamp}_{filename}"
 
-    if not os.path.isdir(folder_path):
-        logging.error(f"The provided folder path '{folder_path}' is not a valid directory.")
-        return
+    "Not saving output to save memory and unmanaged files"
+    # if not os.path.isdir(folder_path):
+    #     logging.error(f"The provided folder path '{folder_path}' is not a valid directory.")
+    #     return
 
-    full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
-    logger.info("Saving results in {}".format(full_output_path))
-    try:
-        ensure_directory_exists(os.path.dirname(full_output_path))
-    except Exception as e:
-        logging.error(f"Error while saving data frame: {e}")
-        return
+    # full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
+    # logger.info("Saving results in {}".format(full_output_path))
+    # try:
+    #     ensure_directory_exists(os.path.dirname(full_output_path))
+    # except Exception as e:
+    #     logging.error(f"Error while saving data frame: {e}")
+    #     return
 
     try:
-        df.to_csv(path_or_buf=full_output_path, index=False)
+        # df.to_csv(path_or_buf=full_output_path, index=False)
         df_modified = df.set_index(df.columns[0])
         return df_modified[df.columns[1]].to_dict()
     except IOError as e:
-        logging.error(f"Error while writing data frame into a CSV file: {e}")
+        logging.error(f"Error while converting data frame to required format: {e}")
 
 
 def save_dict(dictionary: dict, folder_path: str, filename: str) -> {}:
