@@ -1,5 +1,5 @@
 {
- "input_matrix_path": "toy_example/car_data.csv",
+ "input_matrix_path": "ProMCDA/input_files/toy_example/car_data.csv",
   "polarity_for_each_indicator": ["+","+","-","+","+","+"],
 
   "sensitivity": {
@@ -21,5 +21,5 @@
       "marginal_distribution_for_each_indicator": ["normal", "normal", "normal", "normal", "normal", "normal"]},
 
 
-  "output_directory_path": "toy_example"
+  "output_directory_path": "ProMCDA/input_files/toy_example"
 }
