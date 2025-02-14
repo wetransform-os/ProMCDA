@@ -225,6 +225,7 @@ class TestProMCDA(unittest.TestCase):
         expected_columns = [OutputColumnNames4Sensitivity.WS_MINMAX_01.value]
 
         # Then
+        self.assertEqual(aggregated_scores.shape[0], self.input_matrix.shape[0])
         self.assertCountEqual(aggregated_scores.columns, expected_columns, "Only specified methods should be applied.")
         self.assertTrue(
             (aggregated_scores['ws-minmax_01'] >= 0).all() and (
