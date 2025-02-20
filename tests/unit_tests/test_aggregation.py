@@ -3,8 +3,8 @@ import pytest
 
 from pandas.testing import assert_series_equal
 
-from mcda.utils.utils_for_main import *
-from mcda.mcda_functions.aggregation import Aggregation
+from promcda.utils.utils_for_main import *
+from promcda.mcda_functions.aggregation import Aggregation
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 resources_directory = os.path.join(current_directory, '..', 'resources')
