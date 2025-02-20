@@ -19,7 +19,6 @@ class Aggregation(object):
     Partially compensatory: geometric; harmonic.
     Non-compensatory: minimum.
     """
-
     def __init__(self, weights: list):
         self.weights = weights
         if isinstance(self.weights, list) and all(isinstance(i, list) for i in self.weights):
@@ -28,6 +27,7 @@ class Aggregation(object):
                     self.weights[i] = [val / sum(self.weights[i]) for val in self.weights[i]]
         elif sum(self.weights) != 1:
             self.weights = [val / sum(self.weights) for val in self.weights]
+
 
     def weighted_sum(self, norm_indicators: pd.DataFrame) -> pd.Series(dtype='object'):
         """
@@ -38,7 +38,6 @@ class Aggregation(object):
         :param norm_indicators: pd.DataFrame
         :returns scores: pd.Series
         """
-
         scores = (norm_indicators * self.weights).sum(axis=1)
 
         return scores

@@ -4,6 +4,8 @@ import pandas as pd
 from typing import Tuple, List, Union, Optional
 
 from promcda.enums import PDFType, NormalizationFunctions, AggregationFunctions
+from promcda.utils import check_parameters_pdf, check_if_pdf_is_exact, check_if_pdf_is_poisson, rescale_minmax, \
+    compute_scores_for_single_random_weight, compute_scores_for_all_random_weights
 
 log = logging.getLogger(__name__)
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
@@ -20,9 +22,7 @@ class ProMCDA:
                  num_runs: Optional[int] = 10000, num_cores: Optional[int] = 1, random_seed: Optional[int] = 43):
 
         from promcda.configuration.configuration_validator import validate_configuration
-        from promcda.utils.utils_for_main import check_input_matrix, check_if_pdf_is_exact, check_if_pdf_is_poisson, \
-            check_parameters_pdf, rescale_minmax, \
-            compute_scores_for_all_random_weights, compute_scores_for_single_random_weight
+        from promcda.utils.utils_for_main import check_input_matrix
         """
         Initialize the ProMCDA class with configuration parameters.
 
@@ -80,7 +80,7 @@ class ProMCDA:
 
         self.input_matrix = input_matrix
         self.polarity = polarity
-        self.weights = weights
+        self.weights = weights.copy()
         self.robustness_weights = robustness_weights
         self.robustness_single_weights = robustness_single_weights
         self.robustness_indicators = robustness_indicators
@@ -117,6 +117,7 @@ class ProMCDA:
             robustness_single_weights=self.robustness_weights,
             robustness_indicators=self.robustness_indicators)
 
+
     def normalize(self, normalization_method: Optional[NormalizationFunctions] = None) -> Union[pd.DataFrame, str]:
         """
         Normalize the input data using the specified method.
@@ -138,6 +139,7 @@ class ProMCDA:
         from promcda.models import MCDAWithRobustness
         from promcda.models.mcda_without_robustness import MCDAWithoutRobustness
         from promcda.utils import utils_for_parallelization
+        from promcda.configuration import process_indicators_and_weights
 
         # Configuration parameters' validation
         if normalization_method is not None:
@@ -146,29 +148,37 @@ class ProMCDA:
                     f"Invalid 'normalization_method'. Expected one of {list(vars(NormalizationFunctions).values())}, "
                     f"got '{normalization_method}'.")
 
+        # Process indicators and weights based on input parameters in the configuration
+        input_matrix_no_alternatives, num_indicators, polarity, norm_weights = process_indicators_and_weights(self.input_matrix_no_alternatives,
+                                                                        self.robustness_indicators,
+                                                                        self.robustness_weights,
+                                                                        self.robustness_single_weights,
+                                                                        self.polarity, self.num_runs,
+                                                                        self.weights)
+
         if not self.robustness_indicators:
-            mcda_without_robustness = MCDAWithoutRobustness(self.polarity, self.input_matrix_no_alternatives)
+            mcda_without_robustness = MCDAWithoutRobustness(polarity, input_matrix_no_alternatives)
             self.normalized_values_without_robustness = mcda_without_robustness.normalize_indicators(
                 normalization_method)
 
             return self.normalized_values_without_robustness
 
         elif self.robustness_indicators and not self.robustness_weights:
-            check_parameters_pdf(self.input_matrix_no_alternatives, self.marginal_distributions, for_testing=False)
+            check_parameters_pdf(input_matrix_no_alternatives, self.marginal_distributions, for_testing=False)
             is_exact_pdf_mask = check_if_pdf_is_exact(self.marginal_distributions)
             is_poisson_pdf_mask = check_if_pdf_is_poisson(self.marginal_distributions)
 
-            mcda_with_robustness = MCDAWithRobustness(self.input_matrix_no_alternatives, self.marginal_distributions,
+            mcda_with_robustness = MCDAWithRobustness(input_matrix_no_alternatives, self.marginal_distributions,
                                                       self.num_runs, is_exact_pdf_mask, is_poisson_pdf_mask,
                                                       self.random_seed)
             n_random_input_matrices = mcda_with_robustness.create_n_randomly_sampled_matrices()
 
             if not normalization_method:
                 n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(
-                    n_random_input_matrices, self.polarity)
+                    n_random_input_matrices, polarity)
             else:
                 n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(
-                    n_random_input_matrices, self.polarity, normalization_method)
+                    n_random_input_matrices, polarity, normalization_method)
 
             self.normalized_values_with_robustness = n_normalized_input_matrices
 
@@ -221,39 +231,38 @@ class ProMCDA:
                     f"Invalid 'aggregation_method'. Expected one of {list(vars(AggregationFunctions).values())}, "
                     f"got '{aggregation_method}'.")
 
-        num_indicators = self.input_matrix_no_alternatives.shape[1]
         index_column_name = self.input_matrix.index.name
         index_column_values = self.input_matrix.index.tolist()
-        weights = self.weights
+
+        # Process indicators and weights based on input parameters in the configuration
+        input_matrix_no_alternatives, num_indicators, polarity, weights = process_indicators_and_weights(self.input_matrix_no_alternatives,
+                                                        self.robustness_indicators,
+                                                        self.robustness_weights, self.robustness_single_weights,
+                                                        self.polarity, self.num_runs, self.weights)
+
+        # Check the number of indicators, weights, and polarities, assign random weights if uncertainty is enabled
+        try:
+            check_indicator_weights_polarities(num_indicators, polarity, robustness_weights=self.robustness_weights,
+                                               weights=weights)
+        except ValueError as e:
+            logging.error(str(e), stack_info=True)
+            raise
+
         # Assign values to weights when they are None
         if weights is None and self.robustness_weights is False:
             if self.robustness_indicators:
                 num_non_indicators = (
                         len(self.marginal_distributions) - self.marginal_distributions.count('exact')
                         - self.marginal_distributions.count('poisson'))
-                num_indicators = (self.input_matrix_no_alternatives.shape[1] - num_non_indicators)
+                num_indicators = (input_matrix_no_alternatives.shape[1] - num_non_indicators)
                 weights = [0.5] * num_indicators
             else:
                 weights = [0.5] * num_indicators
 
-        # Process indicators and weights based on input parameters in the configuration
-        polar, weights = process_indicators_and_weights(self.input_matrix_no_alternatives,
-                                                        self.robustness_indicators,
-                                                        self.robustness_weights, self.robustness_single_weights,
-                                                        self.polarity, self.num_runs, num_indicators, weights)
-
-        # Check the number of indicators, weights, and polarities, assign random weights if uncertainty is enabled
-        try:
-            check_indicator_weights_polarities(num_indicators, polar, robustness_weights=self.robustness_weights,
-                                               weights=weights)
-        except ValueError as e:
-            logging.error(str(e), stack_info=True)
-            raise
-
         # Apply aggregation in the different configuration settings
         # NO UNCERTAINTY ON INDICATORS AND WEIGHTS
         if not self.robustness_indicators and not self.robustness_weights and not self.robustness_single_weights:
-            mcda_without_robustness = MCDAWithoutRobustness(self.polarity, self.input_matrix_no_alternatives)
+            mcda_without_robustness = MCDAWithoutRobustness(self.polarity, input_matrix_no_alternatives)
             normalized_indicators = self.normalized_values_without_robustness
             if normalized_indicators is None:
                 raise ValueError("Normalization must be performed before aggregation.")
@@ -314,7 +323,7 @@ class ProMCDA:
             if self.num_runs < 1000:
                 logger.info("The number of Monte-Carlo runs is only {}".format(self.num_runs))
                 logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
-            args_for_parallel_agg = [(weights, normalized_indicators)
+            args_for_parallel_agg = [(norm_weights, normalized_indicators)
                                      for normalized_indicators in n_normalized_input_matrices]
             if aggregation_method is None:
                 all_indicators_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg)

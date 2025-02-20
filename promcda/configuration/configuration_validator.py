@@ -110,9 +110,8 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
                                    robustness_single_weights: bool,
                                    polarity: Tuple[str, ...],
                                    mc_runs: int,
-                                   num_indicators: int,
                                    weights: List[str]) \
-        -> Tuple[List[str], Union[list, List[list], dict]]:
+        -> Tuple[pd.DataFrame, int, List[str], Union[list, List[list], dict]]:
     """
     Process indicators and weights based on input parameters in the configuration.
 
@@ -125,7 +124,6 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
       at time (True or False).
     - polarity: a tuple containing the original polarity associated to each indicator.
     - mc_runs: number of Monte Carlo runs for robustness analysis.
-    - num_indicators: the number of indicators in the input matrix.
     - weights: a list containing the assigned weights.
 
     Raises:
@@ -159,7 +157,6 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
     :param robustness_indicators: bool
     :param polarity: List[str]
     :param mc_runs: int
-    :param num_indicators: int
     :param weights: List[str]
     :rtype: Tuple[List[str], Union[List[list], dict]]
     """
@@ -168,11 +165,14 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
     col_to_drop_indexes = input_matrix.columns.get_indexer(cols_to_drop)
 
     if robustness_indicators is False:
-        _handle_no_robustness_indicators(input_matrix)
+        input_matrix = _handle_no_robustness_indicators(input_matrix)
+        logger.info("Number of indicators: {}".format(input_matrix.shape[1]))
     else:  # matrix with uncertainty on indicators
         logger.info("Number of alternatives: {}".format(input_matrix.shape[0]))
-        logger.info("Number of indicators: {}".format(num_indicators))
-        # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional
+        logger.info("Number of indicators: {}".format(input_matrix.shape[1]))
+        # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional - see TODO below
+
+    num_indicators = input_matrix.shape[1]
 
     polarities_and_weights = _handle_polarities_and_weights(robustness_indicators, robustness_weights,
                                                             robustness_single_weights, num_unique,
@@ -181,7 +181,7 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
 
     polar, norm_weights = tuple(item for item in polarities_and_weights if item is not None)
 
-    return polar, norm_weights
+    return input_matrix, num_indicators, polar, norm_weights
 
 
 def _handle_polarities_and_weights(robustness_indicators: bool,
@@ -202,24 +202,25 @@ def _handle_polarities_and_weights(robustness_indicators: bool,
     norm_random_weights = []
     rand_weight_per_indicator = {}
 
-    # Managing polarities
-    if robustness_indicators is False:
-        if any(value == 1 for value in num_unique):
-            polarity = pop_indexed_elements(col_to_drop_indexes, polarity)
-    logger.info("Polarities: {}".format(polarity))
+    # Managing polarity
+    polarity = pop_indexed_elements(col_to_drop_indexes, polarity)
+    logger.info("Polarities are checked: {}".format(polarity))
 
-    # Managing weights
-    if robustness_weights is False and robustness_single_weights is False:
-        fixed_weights = weights
+    # Managing weights for no robustness indicators
+    if robustness_indicators is False:
+    # TODO: what happens when robustness_indicators is True? Apparently no dropping
         if any(value == 1 for value in num_unique):
-            fixed_weights = pop_indexed_elements(col_to_drop_indexes, fixed_weights)
-        norm_fixed_weights = check_norm_sum_weights(fixed_weights)
-        logger.info("Weights: {}".format(fixed_weights))
-        logger.info("Normalized weights: {}".format(norm_fixed_weights))
-        return polarity, norm_fixed_weights, None, None
-        #  Return None for norm_random_weights and rand_weight_per_indicator
-    else:
-        output_weights = _handle_robustness_weights(mc_runs, num_indicators, robustness_weights,
+           weights = pop_indexed_elements(col_to_drop_indexes, weights)
+        # Managing weights for no robustness weights
+        if robustness_weights is False and robustness_single_weights is False:
+            fixed_weights = weights
+            norm_fixed_weights = check_norm_sum_weights(fixed_weights)
+            logger.info("Weights: {}".format(fixed_weights))
+            logger.info("Normalized weights: {}".format(norm_fixed_weights))
+            return polarity, norm_fixed_weights, None, None
+            #  Return None for norm_random_weights and rand_weight_per_indicator
+        else:
+            output_weights = _handle_robustness_weights(mc_runs, num_indicators, robustness_weights,
                                                     robustness_single_weights)
         if output_weights is not None:
             norm_random_weights, rand_weight_per_indicator = output_weights
@@ -262,10 +263,11 @@ def _handle_robustness_weights(mc_runs: int, num_indicators: int, robustness_wei
         return None, rand_weight_per_indicator  # Return None for norm_random_weights, and rand_weight_per_indicator
 
 
-def _handle_no_robustness_indicators(input_matrix: pd.DataFrame):
+def _handle_no_robustness_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame:
     """
     Handle the indicators in case of no robustness analysis required.
     (The input matrix is without the alternative column)
+    Return modified matrix if some columns are dropped, or the original one.
     """
     num_unique = input_matrix.nunique()
     cols_to_drop = num_unique[num_unique == 1].index
@@ -274,9 +276,7 @@ def _handle_no_robustness_indicators(input_matrix: pd.DataFrame):
         logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
         input_matrix = input_matrix.drop(cols_to_drop, axis=1)
 
-    num_indicators = input_matrix.shape[1]
-    logger.info("Number of alternatives: {}".format(input_matrix.shape[0]))
-    logger.info("Number of indicators: {}".format(num_indicators))
+    return input_matrix
 
 
 def check_indicator_weights_polarities(num_indicators: int, polar: List[str], robustness_weights: bool,

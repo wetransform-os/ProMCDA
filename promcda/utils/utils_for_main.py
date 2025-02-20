@@ -450,7 +450,8 @@ def check_norm_sum_weights(weights: list) -> list:
         return weights
 
 
-def pop_indexed_elements(indexes: np.ndarray, original_list: List[str]) -> list:
+def pop_indexed_elements(indexes: np.ndarray, original_list: Union[List[str], Tuple[str, ...]]) \
+        -> Union[List[str], Tuple[str, ...]]:
     """
     Eliminate elements from a list at specified indexes.
 
@@ -468,15 +469,19 @@ def pop_indexed_elements(indexes: np.ndarray, original_list: List[str]) -> list:
     :param original_list: list
     :return new_list: list
     """
-    for i in range(len(indexes)):
-        index = indexes[i]
-        if i == 0:
-            original_list.pop(index)
-        else:
-            original_list.pop(index - i)
-    new_list = original_list
+    is_tuple = isinstance(original_list, tuple)
+    if is_tuple: original_list = list(original_list)
 
-    return new_list
+    copy_original_list = original_list.copy() # avoid overwriting the variable
+
+    for i, index in enumerate(indexes):
+        if i == 0:
+            copy_original_list.pop(index)
+        else:
+            copy_original_list.pop(index - i)
+    new_list = copy_original_list
+
+    return tuple(new_list) if is_tuple else new_list
 
 
 def check_parameters_pdf(input_matrix: pd.DataFrame, marginal_distributions: Tuple[PDFType, ...], for_testing=False) \
