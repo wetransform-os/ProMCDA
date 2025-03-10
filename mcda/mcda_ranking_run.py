@@ -93,7 +93,7 @@ def main(input_config: dict) -> dict:
 def get_polar_and_weights(config, input_matrix_no_alternatives, is_robustness_indicators, is_robustness_weights,
                           mc_runs, num_indicators, polar):
     # Process indicators and weights based on input parameters in the configuration
-    polar, weights = process_indicators_and_weights(config, input_matrix_no_alternatives, is_robustness_indicators,
+    polar, weights, num_indicators = process_indicators_and_weights(config, input_matrix_no_alternatives, is_robustness_indicators,
                                                     is_robustness_weights, polar, mc_runs, num_indicators)
     try:
         check_indicator_weights_polarities(num_indicators, polar, config)
