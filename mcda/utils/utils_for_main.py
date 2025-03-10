@@ -73,7 +73,7 @@ def check_config_error(condition: bool, error_message: str):
 def process_indicators_and_weights(config: Configuration, input_matrix: pd.DataFrame,
                                    is_robustness_indicators: int, is_robustness_weights: int, polar: List[str],
                                    mc_runs: int, num_indicators: int) \
-        -> Tuple[List[str], Union[list, List[list], dict]]:
+        -> Tuple[List[str], Union[list, List[list], dict], int]:
     """
     Process indicators and weights based on input parameters in the configuration.
 
@@ -127,7 +127,7 @@ def process_indicators_and_weights(config: Configuration, input_matrix: pd.DataF
     col_to_drop_indexes = input_matrix.columns.get_indexer(cols_to_drop)
 
     if is_robustness_indicators == 0:
-        _handle_no_robustness_indicators(input_matrix)
+        num_indicators = _handle_no_robustness_indicators(input_matrix)
     else:  # matrix with uncertainty on indicators
         logger.info("Number of alternatives: {}".format(input_matrix.shape[0]))
         logger.info("Number of indicators: {}".format(num_indicators))
@@ -136,9 +136,10 @@ def process_indicators_and_weights(config: Configuration, input_matrix: pd.DataF
     polarities_and_weights = _handle_polarities_and_weights(is_robustness_indicators, is_robustness_weights, num_unique,
                                                             col_to_drop_indexes, polar, config, mc_runs, num_indicators)
 
+
     polar, norm_weights = tuple(item for item in polarities_and_weights if item is not None)
 
-    return polar, norm_weights
+    return polar, norm_weights, num_indicators
 
 
 def _handle_polarities_and_weights(is_robustness_indicators: int, is_robustness_weights: int, num_unique,
@@ -210,7 +211,7 @@ def _handle_robustness_weights(config: Configuration, mc_runs: int, num_indicato
         return None, rand_weight_per_indicator  # Return None for norm_random_weights, and rand_weight_per_indicator
 
 
-def _handle_no_robustness_indicators(input_matrix: pd.DataFrame):
+def _handle_no_robustness_indicators(input_matrix: pd.DataFrame) -> int:
     """
     Handle the indicators in case of no robustness analysis required.
     (The input matrix is without the alternative column)
@@ -220,11 +221,12 @@ def _handle_no_robustness_indicators(input_matrix: pd.DataFrame):
 
     if any(value == 1 for value in num_unique):
         logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
-        input_matrix = input_matrix.drop(cols_to_drop, axis=1)
+        input_matrix.drop(cols_to_drop, axis=1, inplace=True)
 
     num_indicators = input_matrix.shape[1]
     logger.info("Number of alternatives: {}".format(input_matrix.shape[0]))
     logger.info("Number of indicators: {}".format(num_indicators))
+    return num_indicators
 
 
 def check_indicator_weights_polarities(num_indicators: int, polar: List[str], config: Configuration):
@@ -249,6 +251,7 @@ def check_indicator_weights_polarities(num_indicators: int, polar: List[str], co
     :param config: dict
     :return: None
     """
+
     if num_indicators != len(polar):
         raise ValueError('The number of polarities does not correspond to the no. of indicators')
 
@@ -777,13 +780,14 @@ def pop_indexed_elements(indexes: np.ndarray, original_list: list) -> list:
     :param original_list: list
     :return new_list: list
     """
+    modified_list = original_list
     for i in range(len(indexes)):
         index = indexes[i]
         if i == 0:
-            original_list.pop(index)
+            modified_list.pop(index)
         else:
-            original_list.pop(index - i)
-    new_list = original_list
+            modified_list.pop(index - i)
+    new_list = modified_list
 
     return new_list
 
