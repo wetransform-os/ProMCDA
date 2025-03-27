@@ -114,10 +114,10 @@ class ProMCDA:
             num_cores=self.num_cores,
             random_seed=self.random_seed,
             robustness_weights=self.robustness_weights,
-            robustness_single_weights=self.robustness_weights,
+            robustness_single_weights=self.robustness_single_weights,
             robustness_indicators=self.robustness_indicators)
 
-
+    # noinspection PyArgumentList
     def normalize(self, normalization_method: Optional[NormalizationFunctions] = None) -> Union[pd.DataFrame, str]:
         """
         Normalize the input data using the specified method.
@@ -235,7 +235,7 @@ class ProMCDA:
         index_column_values = self.input_matrix.index.tolist()
 
         # Process indicators and weights based on input parameters in the configuration
-        input_matrix_no_alternatives, num_indicators, polarity, weights = process_indicators_and_weights(self.input_matrix_no_alternatives,
+        input_matrix_no_alternatives, num_indicators, polarity, norm_weights = process_indicators_and_weights(self.input_matrix_no_alternatives,
                                                         self.robustness_indicators,
                                                         self.robustness_weights, self.robustness_single_weights,
                                                         self.polarity, self.num_runs, self.weights)
@@ -243,13 +243,13 @@ class ProMCDA:
         # Check the number of indicators, weights, and polarities, assign random weights if uncertainty is enabled
         try:
             check_indicator_weights_polarities(num_indicators, polarity, robustness_weights=self.robustness_weights,
-                                               weights=weights)
+                                               weights=norm_weights)
         except ValueError as e:
             logging.error(str(e), stack_info=True)
             raise
 
         # Assign values to weights when they are None
-        if weights is None and self.robustness_weights is False:
+        if norm_weights is None and self.robustness_weights is False:
             if self.robustness_indicators:
                 num_non_indicators = (
                         len(self.marginal_distributions) - self.marginal_distributions.count('exact')
@@ -271,14 +271,14 @@ class ProMCDA:
                 for agg_method in AggregationFunctions:
                     result = mcda_without_robustness.aggregate_indicators(
                         normalized_indicators=normalized_indicators,
-                        weights=weights,
+                        weights=norm_weights,
                         agg_method=agg_method
                     )
                     aggregated_scores = pd.concat([aggregated_scores, result], axis=1)
             else:
                 aggregated_scores = mcda_without_robustness.aggregate_indicators(
                     normalized_indicators=normalized_indicators,
-                    weights=weights,
+                    weights=norm_weights,
                     agg_method=aggregation_method
                 )
             self.aggregated_scores = aggregated_scores
@@ -289,7 +289,7 @@ class ProMCDA:
             logger.info("Start ProMCDA with uncertainty on the weights")
             all_weights_score_means, all_weights_score_stds, \
                 all_weights_score_means_normalized, all_weights_score_stds_normalized = \
-                compute_scores_for_all_random_weights(self.normalized_values_without_robustness, weights,
+                compute_scores_for_all_random_weights(self.normalized_values_without_robustness, norm_weights,
                                                       aggregation_method)
             self.all_weights_score_means = all_weights_score_means
             self.all_weights_score_stds = all_weights_score_stds
@@ -301,7 +301,7 @@ class ProMCDA:
         elif self.robustness_single_weights and not self.robustness_weights and not self.robustness_indicators:
             logger.info("Start ProMCDA with uncertainty on one weight at time")
             iterative_random_weights_statistics: dict = compute_scores_for_single_random_weight(
-                self.normalized_values_without_robustness, weights, index_column_name, index_column_values,
+                self.normalized_values_without_robustness, norm_weights, index_column_name, index_column_values,
                 self.input_matrix, aggregation_method)
             iterative_random_w_score_means = iterative_random_weights_statistics['score_means']
             iterative_random_w_score_stds = iterative_random_weights_statistics['score_stds']
@@ -455,7 +455,7 @@ class ProMCDA:
            plot_norm_scores_without_uncert(self.aggregated_scores)
         elif plot_type == "non_normalized_scores":
            #return(plot_non_norm_scores_without_uncert(self.aggregated_scores))
-           return(plot_non_norm_scores_with_altair(self.aggregated_scores))
+           return plot_non_norm_scores_with_altair(self.aggregated_scores)
         #     # Implement the logic for non-normalized scores without uncertainty
         #     plt.plot(data, linestyle='--', **kwargs)
         #     plt.title("Non-Normalized Scores Without Uncertainty")

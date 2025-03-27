@@ -222,6 +222,7 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict,
 
     scores = pd.DataFrame()
     col_names_method = []
+    initial_method_is_none = None
 
     if isinstance(normalized_indicators, dict): # robustness on indicators
         for key, values in normalized_indicators.items():

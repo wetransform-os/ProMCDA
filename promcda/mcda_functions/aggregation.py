@@ -1,7 +1,6 @@
 import sys
 import logging
 import pandas as pd
-import numpy as np
 from scipy import stats
 
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
@@ -86,7 +85,8 @@ class Aggregation(object):
 
         return scores
 
-    def minimum(self, norm_indicators: pd.DataFrame) -> pd.Series(dtype='object'):
+    @staticmethod
+    def minimum(norm_indicators: pd.DataFrame) -> pd.Series(dtype='object'):
         """
         Minimum aggregation function. It does not consider the weights.
         It gets as input the normalized values of the indicators in a matrix and estimates the scores over the

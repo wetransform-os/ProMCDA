@@ -1,10 +1,12 @@
 import copy
 import logging
 import sys
-from typing import List
+from typing import List, Tuple
 
 import pandas as pd
 import numpy as np
+
+from promcda.enums import PDFType
 
 log = logging.getLogger(__name__)
 
@@ -27,11 +29,13 @@ class MCDAWithRobustness:
     """
 
 
-    def __init__(self, input_matrix: pd.DataFrame(), is_exact_pdf_mask=None, is_poisson_pdf_mask=None,
+    def __init__(self, input_matrix: pd.DataFrame(), marginal_pdf:Tuple[PDFType, ...], num_runs: int, is_exact_pdf_mask=None, is_poisson_pdf_mask=None,
                  random_seed=None):
         self.is_exact_pdf_mask = is_exact_pdf_mask
         self.is_poisson_pdf_mask = is_poisson_pdf_mask
         self.random_seed = random_seed
+        self.marginal_pdf = marginal_pdf
+        self.num_runs = num_runs
         self._input_matrix = copy.deepcopy(input_matrix)
 
     @staticmethod
@@ -96,8 +100,11 @@ class MCDAWithRobustness:
 
         :return list_random_matrix: List[pd.DataFrame]
         """
-        marginal_pdf = self._config["marginal_distribution_for_each_indicator"]
-        num_runs = self._config["monte_carlo_runs"]  # N
+        parameter1 = None
+        parameter2 = None
+
+        marginal_pdf = self.marginal_distributions
+        num_runs = self.num_runs  # N
         input_matrix = self._input_matrix  # (AxnI)
         is_exact_pdf_mask = self.is_exact_pdf_mask
         is_poisson_pdf_mask = self.is_poisson_pdf_mask

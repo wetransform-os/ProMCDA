@@ -3,7 +3,6 @@ import numpy as np
 import unittest
 
 from promcda.models.mcda_with_robustness import MCDAWithRobustness
-from promcda.configuration.config import Config
 
 
 class TestMCDA_with_robustness(unittest.TestCase):

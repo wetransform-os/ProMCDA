@@ -1,4 +1,3 @@
-import os
 import sys
 
 # Set the package path to the parent directory

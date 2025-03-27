@@ -11,4 +11,4 @@ Pillow~=11.0.0
 kaleido
 networkx~=2.7.1
 matplotlib~=3.9.3
-setuptools~=68.2.0
+setuptools~=70.0.0

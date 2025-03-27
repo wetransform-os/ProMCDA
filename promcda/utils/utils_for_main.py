@@ -658,7 +658,7 @@ def run_mcda_without_indicator_uncertainty(extracted_values: dict, is_robustness
     all_weights_score_stds = pd.DataFrame
     all_weights_score_means_normalized = pd.DataFrame
     iterative_random_w_score_means_normalized = {}
-    iterative_random_weights_statistics = {}
+    {}
     iterative_random_w_score_means = {}
     iterative_random_w_score_stds = {}
 
@@ -698,8 +698,7 @@ def run_mcda_without_indicator_uncertainty(extracted_values: dict, is_robustness
         iterative_random_w_score_stds = iterative_random_weights_statistics['score_stds']
         iterative_random_w_score_means_normalized = iterative_random_weights_statistics['score_means_normalized']
 
-    ranks = _compute_ranks(scores, index_column_name, index_column_values,
-                           all_weights_score_means, iterative_random_w_score_means)
+    ranks = _compute_ranks(scores, all_weights_score_means, iterative_random_w_score_means)
 
     _save_output_files(scores=scores, normalized_scores=normalized_scores, ranks=ranks,
                        score_means=all_weights_score_means, score_stds=all_weights_score_stds,
@@ -974,8 +973,7 @@ def compute_scores_for_single_random_weight(indicators: pd.DataFrame,
     }
 
 
-def _compute_ranks(scores: Optional[pd.DataFrame], index_column_name: str, index_column_values: list,
-                   all_weights_means: Optional[pd.DataFrame], iterative_random_w_means: Optional[dict]) -> pd.DataFrame:
+def _compute_ranks(scores: Optional[pd.DataFrame], all_weights_means: Optional[pd.DataFrame], iterative_random_w_means: Optional[dict]) -> pd.DataFrame:
     """
     Compute ranks based on the computed scores, mean scores with random weights, and mean scores for each random weight.
     """
@@ -1051,6 +1049,9 @@ def _plot_and_save_charts(scores: Optional[pd.DataFrame],
     Generate plots based on the computed scores and save them.
     """
     import promcda.utils.utils_for_plotting as utils_for_plotting
+
+    chart_mean_scores = None
+    chart_mean_scores_norm = None
 
     output_path = config["output_path"]
     num_indicators = input_matrix.shape[1]

@@ -111,7 +111,7 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
                                    polarity: Tuple[str, ...],
                                    mc_runs: int,
                                    weights: List[str]) \
-        -> Tuple[pd.DataFrame, int, List[str], Union[list, List[list], dict]]:
+        -> Tuple[pd.DataFrame, int, Tuple[str, ...], Union[list, List[list], dict]]:
     """
     Process indicators and weights based on input parameters in the configuration.
 
@@ -130,8 +130,8 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
     - ValueError: If there are duplicated rows in the input matrix or if there is an issue with the configuration.
 
     Returns:
-    - a shorter list of polarities if one has been dropped together with the relative indicator,
-      which brings no information. Otherwise, the same list.
+    - a shorter Tuple of polarities if one has been dropped together with the relative indicator,
+      which brings no information. Otherwise, the same Tuple.
     - the normalised weights (either fixed or random sampled weights, depending on the settings)
 
     Notes:
@@ -194,7 +194,7 @@ def _handle_polarities_and_weights(robustness_indicators: bool,
                                    num_indicators: int,
                                    weights: List[str]) \
         -> Union[Tuple[List[str], list, None, None], Tuple[List[str], None, List[List], None],
-        Tuple[List[str], None, None, dict]]:
+        Tuple[Tuple[str, ...], None, None, dict]]:
     """
     Manage polarities and weights based on the specified robustness settings, ensuring that the appropriate adjustments
     and normalizations are applied before returning the necessary data structures.
@@ -279,7 +279,7 @@ def _handle_no_robustness_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame
     return input_matrix
 
 
-def check_indicator_weights_polarities(num_indicators: int, polar: List[str], robustness_weights: bool,
+def check_indicator_weights_polarities(num_indicators: int, polar: Tuple[str, ...], robustness_weights: bool,
                                        weights: List[int]):
     """
     Check the consistency of indicators, polarities, and fixed weights in a configuration.
@@ -301,7 +301,6 @@ def check_indicator_weights_polarities(num_indicators: int, polar: List[str], ro
     :param robustness_weights: bool
     :param num_indicators: int
     :param polar: List[str]
-    :param config: dict
     :return: None
     """
     if num_indicators != len(polar):

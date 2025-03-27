@@ -1,11 +1,10 @@
-import os
 import unittest
-import pandas as pd
 
-from pandas.testing import assert_frame_equal
 from numpy.testing import assert_almost_equal
-from promcda.utils.utils_for_main import *
+from pandas.testing import assert_frame_equal
+
 from promcda.mcda_functions.normalization import Normalization
+from promcda.utils.utils_for_main import *
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 resources_directory = os.path.join(current_directory, '..', 'resources')
