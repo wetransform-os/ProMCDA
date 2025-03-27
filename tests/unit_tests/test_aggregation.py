@@ -74,7 +74,7 @@ class TestAggregation(unittest.TestCase):
         expected_res = reset_index_if_needed(expected_res)
 
         # Then
-        assert isinstance(res, np.ndarray)
+        assert isinstance(res, pd.Series)
         assert_series_equal(result, expected_res, check_like=True)
         with pytest.raises(ValueError):
             agg.geometric(wrong_normalized_matrix)
@@ -96,7 +96,7 @@ class TestAggregation(unittest.TestCase):
         expected_res = reset_index_if_needed(expected_res)
 
         # Then
-        assert isinstance(res, np.ndarray)
+        assert isinstance(res, pd.Series)
         assert_series_equal(result, expected_res, check_like=True)
         with pytest.raises(ValueError):
             agg.harmonic(wrong_normalized_matrix)
