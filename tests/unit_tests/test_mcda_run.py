@@ -5,7 +5,7 @@ import os
 
 from unittest.mock import patch
 
-from mcda.mcda_run import main
+from ProMCDA.mcda.mcda_run import main
 
 tests_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))  # Get the tests root directory
 
@@ -63,7 +63,7 @@ class TestMCDA(unittest.TestCase):
                 "monte_carlo_runs": 0,
                 "num_cores": 4,
                 "random_seed": 42,
-                "marginal_distribution_for_each_indicator": ["norm", "exact", "lnorm", "exact", "poisson", "exact"]},
+                "marginal_distribution_for_each_indicator": ["norm", "exact", "lognormal", "exact", "poisson", "exact"]},
 
             "output_directory_path": "/path/to/output"
         }
@@ -115,7 +115,7 @@ class TestMCDA(unittest.TestCase):
                 "num_cores": 1,
                 "random_seed": 42,
                 "marginal_distribution_for_each_indicator": ['uniform', 'exact', 'normal', 'normal', 'exact',
-                                                             'lnorm']},
+                                                             'lognormal']},
             "output_directory_path": "/path/to/output"
         }
 
@@ -123,12 +123,12 @@ class TestMCDA(unittest.TestCase):
         # Set up logger in the test
         self.logger = logging.getLogger(__name__)
 
-    @patch('mcda.utils.utils_for_main.check_path_exists', side_effect=None)
-    @patch('mcda.utils.utils_for_main.save_config', side_effect=None)
-    @patch('mcda.utils.utils_for_main._plot_and_save_charts', side_effect=None)
-    @patch('mcda.utils.utils_for_main._save_output_files', side_effect=None)
-    @patch('mcda.utils.utils_for_main.save_df', side_effect=None)
-    @patch('mcda.utils.utils_for_plotting.save_figure', side_effect=None)
+    @patch('ProMCDA.mcda.utils.utils_for_main.check_path_exists', side_effect=None)
+    @patch('ProMCDA.mcda.utils.utils_for_main.save_config', side_effect=None)
+    @patch('ProMCDA.mcda.utils.utils_for_main._plot_and_save_charts', side_effect=None)
+    @patch('ProMCDA.mcda.utils.utils_for_main._save_output_files', side_effect=None)
+    @patch('ProMCDA.mcda.utils.utils_for_main.save_df', side_effect=None)
+    @patch('ProMCDA.mcda.utils.utils_for_plotting.save_figure', side_effect=None)
     def test_main_continue(self, mock_check_path_exists,
                            mock_save_config,
                            mock_plot_and_save_charts,

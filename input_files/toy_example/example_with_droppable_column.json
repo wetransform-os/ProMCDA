@@ -1,0 +1,68 @@
+{
+    "inputMatrix": {
+        "VOL_M3": {
+            "00": 564.3037719726562,
+            "01": 562.0375366210938,
+            "02": 614.499755859375
+        },
+        "HARVEST_M3_ACC": {
+            "00": 1,
+            "01": 0,
+            "02": 0
+        },
+        "CARBON_KG_PERYEAR": {
+            "00": 0,
+            "01": 0,
+            "02": 0
+        },
+        "SHANNON_INDEX_SPECIES": {
+            "00": 1.0633457899093628,
+            "01": 1.402553677558899,
+            "02": 1.4598218202590942
+        },
+        "SHANNON_INDEX_HEIGHT_CLASSES": {
+            "00": 1.610153317451477,
+            "01": 1.3799891471862793,
+            "02": 1.4996689558029175
+        }
+    },
+    "monteCarloSampling": {
+        "marginalDistributions": [
+            "normal",
+            "normal",
+            "normal",
+            "normal",
+            "normal"
+        ],
+        "monteCarloRuns": 0
+    },
+    "polarity": [
+        "+",
+        "+",
+        "+",
+        "+",
+        "+"
+    ],
+    "robustness": {
+        "robustness": "none",
+        "givenWeights": [
+            33,
+            33,
+            33,
+            33,
+            33
+        ]
+    },
+    "sensitivity": {
+        "aggregation": "weighted_sum",
+        "normalization": "minmax",
+        "sensitivityOn": "no"
+    },
+    "weights": [
+        33,
+        33,
+        33,
+        33,
+        33
+    ]
+}
