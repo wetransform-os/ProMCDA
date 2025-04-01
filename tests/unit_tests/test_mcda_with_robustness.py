@@ -2,33 +2,61 @@ import pandas as pd
 import numpy as np
 import unittest
 
+from promcda.enums import PDFType
 from promcda.models.mcda_with_robustness import MCDAWithRobustness
 
 
 class TestMCDA_with_robustness(unittest.TestCase):
 
     @staticmethod
-    def get_test_config():
-        return {
-            "input_matrix_path": "/path/to/input_matrix.csv",
-            "polarity_for_each_indicator": ["-", "-", "+", "+"],
-            "sensitivity": {
-                "sensitivity_on": "yes",
-                "normalization": "minmax",
-                "aggregation": "weighted_sum"},
-            "robustness": {
-                "robustness_on": "yes",
-                "on_single_weights": "no",
-                "on_all_weights": "no",
-                "given_weights": [0.5, 0.5, 0.5, 0.5],
-                "on_indicators": "yes"},
-            "monte_carlo_sampling": {
-                "monte_carlo_runs": 100,
-                "num_cores": 1,
-                "random_seed": 42,
-                "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal', 'poisson']},
-            "output_directory_path": "/path/to/output"
+    def setup():
+
+        polarity = ("-", "-", "+", "+")
+        weights = [0.5, 0.5, 0.5, 0.5]
+
+        robustness_weights = False
+        robustness_single_weights = False
+        robustness_indicators = True
+
+        # Return the setup parameters as a dictionary
+        setup = {
+            'input_matrix': None, # will be give later
+            'polarity': polarity,
+            'weights': weights,
+            'robustness_weights': robustness_weights,
+            'robustness_single_weights': robustness_single_weights,
+            'robustness_indicators': robustness_indicators,
+            'monte_carlo_runs': 100,
+            "num_cores": 1,
+            "random_seed": 42,
+            "num_runs": 100,
+            "marginal_distributions": tuple([PDFType.EXACT, PDFType.UNIFORM, PDFType.NORMAL, PDFType.POISSON])
         }
+
+        return (setup)
+
+    # @staticmethod
+    # def get_test_config():
+    #     return {
+    #         "input_matrix_path": "/path/to/input_matrix.csv",
+    #         "polarity_for_each_indicator": ["-", "-", "+", "+"],
+    #         "sensitivity": {
+    #             "sensitivity_on": "yes",
+    #             "normalization": "minmax",
+    #             "aggregation": "weighted_sum"},
+    #         "robustness": {
+    #             "robustness_on": "yes",
+    #             "on_single_weights": "no",
+    #             "on_all_weights": "no",
+    #             "given_weights": [0.5, 0.5, 0.5, 0.5],
+    #             "on_indicators": "yes"},
+    #         "monte_carlo_sampling": {
+    #             "monte_carlo_runs": 100,
+    #             "num_cores": 1,
+    #             "random_seed": 42,
+    #             "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal', 'poisson']},
+    #         "output_directory_path": "/path/to/output"
+    #     }
 
     @staticmethod
     def get_input_matrix() -> pd.DataFrame:
@@ -95,10 +123,16 @@ class TestMCDA_with_robustness(unittest.TestCase):
         data4 = pd.DataFrame(data4)
         out_list = [data1, data2, data3, data4]
 
+        setup = TestMCDA_with_robustness.setup()
+        marginal_distributions = setup['marginal_distributions']
+        num_runs = setup['num_runs']
+        random_seed = setup['random_seed']
+
         input_matrix = TestMCDA_with_robustness.get_input_matrix()
-        config = TestMCDA_with_robustness.get_test_config()
-        config = Config(config)
-        mcda_with_robustness = MCDAWithRobustness(config, input_matrix, is_exact_pdf_mask, is_poisson_pdf_mask)
+        mcda_with_robustness = MCDAWithRobustness(input_matrix, marginal_distributions,
+                                                  num_runs, is_exact_pdf_mask, is_poisson_pdf_mask,
+                                                  random_seed)
+
         output_list = mcda_with_robustness.convert_list(out_list)
 
         return output_list
@@ -107,15 +141,17 @@ class TestMCDA_with_robustness(unittest.TestCase):
         # Given
         input_matrix = self.get_input_matrix()
         input_series = input_matrix.iloc[:, 0]
-        config = TestMCDA_with_robustness.get_test_config()
-        config = Config(config)
         num_runs = 10
         exp_matrix = pd.DataFrame(
             data={'0': [0, 1, 2, 3], '1': [0, 1, 2, 3], '2': [0, 1, 2, 3], '3': [0, 1, 2, 3], '4': [0, 1, 2, 3],
                   '5': [0, 1, 2, 3], '6': [0, 1, 2, 3], '7': [0, 1, 2, 3], '8': [0, 1, 2, 3], '9': [0, 1, 2, 3]})
 
         # When
-        mcda_with_robustness = MCDAWithRobustness(config, input_matrix)
+        setup = TestMCDA_with_robustness.setup()
+        marginal_distributions = setup['marginal_distributions']
+
+        mcda_with_robustness = MCDAWithRobustness(input_matrix, marginal_distributions,
+                                                  num_runs)
         output_matrix = mcda_with_robustness.repeat_series_to_create_df(input_series, num_runs)
 
         # Then
@@ -126,15 +162,18 @@ class TestMCDA_with_robustness(unittest.TestCase):
     def test_convert_list(self):
         # Given
         input_matrix = self.get_input_matrix()
-        config = TestMCDA_with_robustness.get_test_config()
         input_list = TestMCDA_with_robustness.get_input_list()
         expected_output_list = TestMCDA_with_robustness.get_expected_out_list()
         is_exact_pdf_mask = (1, 0, 0, 0)
         is_poisson_pdf_mask = (0, 0, 0, 1)
 
         # When
-        config = Config(config)
-        mcda_with_robustness = MCDAWithRobustness(config, input_matrix, is_exact_pdf_mask, is_poisson_pdf_mask)
+        setup = TestMCDA_with_robustness.setup()
+        marginal_distributions = setup['marginal_distributions']
+        num_runs = setup['num_runs']
+
+        mcda_with_robustness = MCDAWithRobustness(input_matrix, marginal_distributions, num_runs,
+                                                  is_exact_pdf_mask, is_poisson_pdf_mask)
         output_list = mcda_with_robustness.convert_list(input_list)
 
         # Then
@@ -148,16 +187,19 @@ class TestMCDA_with_robustness(unittest.TestCase):
         # Given
         input_matrix = self.get_input_matrix()
         input_matrix_rescale = self.get_input_matrix_rescale()
-        config = TestMCDA_with_robustness.get_test_config()
         is_exact_pdf_mask = (1, 0, 0, 0)
         is_poisson_pdf_mask = (0, 0, 0, 1)
 
+
         # When
-        config = Config(config)
-        mcda_with_robustness = MCDAWithRobustness(config, input_matrix,
+        setup = TestMCDA_with_robustness.setup()
+        marginal_distributions = setup['marginal_distributions']
+        num_runs = setup['num_runs']
+
+        mcda_with_robustness = MCDAWithRobustness(input_matrix, marginal_distributions, num_runs,
                                                   is_exact_pdf_mask, is_poisson_pdf_mask)
         n_random_matrices = mcda_with_robustness.create_n_randomly_sampled_matrices()
-        mcda_with_robustness_rescale = MCDAWithRobustness(config, input_matrix_rescale,
+        mcda_with_robustness_rescale = MCDAWithRobustness(input_matrix_rescale, marginal_distributions, num_runs,
                                                           is_exact_pdf_mask, is_poisson_pdf_mask)
         n_random_matrices_rescale = mcda_with_robustness_rescale.create_n_randomly_sampled_matrices()
 
@@ -165,7 +207,7 @@ class TestMCDA_with_robustness(unittest.TestCase):
 
         # Then
         assert isinstance(n_random_matrices, list)
-        assert len(n_random_matrices) == config.monte_carlo_sampling["monte_carlo_runs"]
+        assert len(n_random_matrices) == setup["num_runs"]
         for df1, df2 in zip(n_random_matrices, exp_n_random_matrices):
             assert df1.shape == (4, 4)
             assert df1.values.all() == df2.values.all()
