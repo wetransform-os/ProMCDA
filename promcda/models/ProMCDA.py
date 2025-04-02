@@ -80,7 +80,7 @@ class ProMCDA:
 
         self.input_matrix = input_matrix
         self.polarity = polarity
-        self.weights = weights.copy()
+        self.weights = weights.copy() if weights is not None else None
         self.robustness_weights = robustness_weights
         self.robustness_single_weights = robustness_single_weights
         self.robustness_indicators = robustness_indicators
@@ -104,6 +104,10 @@ class ProMCDA:
         self.iterative_random_w_score_means_normalized = None
 
         self.input_matrix_no_alternatives = check_input_matrix(self.input_matrix)
+
+        if weights is None:
+            weights = [0.5] * input_matrix.shape[1]
+        self.weights = weights.copy()
 
         validate_configuration(
             input_matrix=self.input_matrix,

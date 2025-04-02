@@ -1,106 +1,69 @@
 import os
 import unittest
+from distutils.core import setup
+
 import pandas as pd
 from unittest import TestCase
 
+from promcda.enums import PDFType, NormalizationFunctions, AggregationFunctions, OutputColumnNames4Sensitivity
+from promcda.models import ProMCDA
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 resources_directory = os.path.join(current_directory, '..', 'resources')
 
-
 class TestMCDA_without_robustness(unittest.TestCase):
 
     @staticmethod
-    def get_test_config():
-        return {
-            "input_matrix_path": "/path/to/input_matrix.csv",
-            "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
-            "sensitivity": {
-                "sensitivity_on": "yes",
-                "normalization": "minmax",
-                "aggregation": "weighted_sum"},
-            "robustness": {
-                "robustness_on": "no",
-                "on_single_weights": "no",
-                "on_all_weights": "yes",
-                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-                "on_indicators": "no"},
-            "monte_carlo_sampling": {
-                "monte_carlo_runs": 10,
-                "num_cores": 4,
-                "random_seed": 42,
-                "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
-            "output_directory_path": "/path/to/output"
+    def setup():
+        polarity = ("-", "-", "+", "+", "+", "+")
+        weights = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+        robustness_weights = False
+        robustness_single_weights = False
+        robustness_indicators = False
+
+        # Return the setup parameters as a dictionary
+        setup = {
+            'input_matrix': None,  # will be given later
+            'polarity': polarity,
+            'weights': weights,
+            'robustness_weights': robustness_weights,
+            'robustness_single_weights': robustness_single_weights,
+            'robustness_indicators': robustness_indicators,
+            'num_cores': 1,
+            'random_seed': 42,
+            'num_runs': 10,
+            'marginal_distributions': tuple([PDFType.EXACT, PDFType.UNIFORM, PDFType.NORMAL, PDFType.POISSON])
         }
 
-    @staticmethod
-    def get_test_config_simple_mcda():
-        return {
-            "input_matrix_path": "/path/to/input_matrix.csv",
-            "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
-            "sensitivity": {
-                "sensitivity_on": "no",
-                "normalization": "minmax",
-                "aggregation": "weighted_sum"},
-            "robustness": {
-                "robustness_on": "no",
-                "on_single_weights": "no",
-                "on_all_weights": "yes",
-                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-                "on_indicators": "no"},
-            "monte_carlo_sampling": {
-                "monte_carlo_runs": 10,
-                "num_cores": 4,
-                "random_seed": 42,
-                "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
-            "output_directory_path": "/path/to/output"
-        }
+        return setup
+
 
     @staticmethod
-    def get_test_config_randomness():
-        return {
-            "input_matrix_path": "/path/to/input_matrix.csv",
-            "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
-            "sensitivity": {
-                "sensitivity_on": "yes",
-                "normalization": "minmax",
-                "aggregation": "weighted_sum"},
-            "robustness": {
-                "robustness_on": "yes",
-                "on_single_weights": "no",
-                "on_all_weights": "yes",
-                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-                "on_indicators": "no"},
-            "monte_carlo_sampling": {
-                "monte_carlo_runs": 10,
-                "num_cores": 4,
-                "random_seed": 42,
-                "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
-            "output_directory_path": "/path/to/output"
+    def setup_robustness_weights():
+
+        polarity = ("-", "-", "+", "+", "+", "+")
+        weights = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+        robustness_weights = True
+        robustness_single_weights = False
+        robustness_indicators = False
+
+        # Return the setup parameters as a dictionary
+        setup_robustness_weights = {
+            'input_matrix': None,  # will be given later
+            'polarity': polarity,
+            'weights': weights,
+            'robustness_weights': robustness_weights,
+            'robustness_single_weights': robustness_single_weights,
+            'robustness_indicators': robustness_indicators,
+            'num_cores': 1,
+            'random_seed': 42,
+            'num_runs': 10,
+            'marginal_distributions': tuple([PDFType.EXACT, PDFType.UNIFORM, PDFType.NORMAL, PDFType.POISSON])
         }
 
-    @staticmethod
-    def get_test_config_randomness_simple_mcda():
-        return {
-            "input_matrix_path": "/path/to/input_matrix.csv",
-            "polarity_for_each_indicator": ['-', '-', '+', '+', '+', '+'],
-            "sensitivity": {
-                "sensitivity_on": "no",
-                "normalization": "minmax",
-                "aggregation": "weighted_sum"},
-            "robustness": {
-                "robustness_on": "yes",
-                "on_single_weights": "no",
-                "on_all_weights": "yes",
-                "given_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-                "on_indicators": "no"},
-            "monte_carlo_sampling": {
-                "monte_carlo_runs": 10,
-                "num_cores": 4,
-                "random_seed": 42,
-                "marginal_distribution_for_each_indicator": ['exact', 'exact', 'exact', 'exact', 'exact', 'exact']},
-            "output_directory_path": "/path/to/output"
-        }
+        return setup_robustness_weights
 
     @staticmethod
     def get_input_matrix():
@@ -117,77 +80,107 @@ class TestMCDA_without_robustness(unittest.TestCase):
         return list_df
 
     def test_normalize_indicators(self):
-        from promcda.models.mcda_without_robustness import MCDAWithoutRobustness
-
         # Given
-        config_general = TestMCDA_without_robustness.get_test_config()
-        config_general = Config(config_general)
         input_matrix = TestMCDA_without_robustness.get_input_matrix()
-
-        config_simple_mcda = TestMCDA_without_robustness.get_test_config_simple_mcda()
-        config_simple_mcda = Config(config_simple_mcda)
+        setup = TestMCDA_without_robustness.setup()
+        polarity = setup['polarity']
 
         # When
-        mcda_no_uncert_general = MCDAWithoutRobustness(config_general, input_matrix)
-        res_general = mcda_no_uncert_general.normalize_indicators()
+        promcda_sensitivity = ProMCDA(input_matrix, polarity)
+        res_sensitivity = promcda_sensitivity.normalize()
 
-        mcda_no_uncert_simple_mcda = MCDAWithoutRobustness(config_simple_mcda, input_matrix)
-        res_simple_mcda = mcda_no_uncert_simple_mcda.normalize_indicators('minmax')
+        promcda_simple = ProMCDA(input_matrix, polarity)
+        res_simple = promcda_simple.normalize(NormalizationFunctions.MINMAX)
 
         # Then
-        assert isinstance(res_general, dict)
-        TestCase.assertIn(self, member='standardized_any', container=res_general.keys())
-        TestCase.assertIn(self, member='standardized_without_zero', container=res_general.keys())
-        TestCase.assertIn(self, member='minmax_01', container=res_general.keys())
-        TestCase.assertIn(self, member='minmax_without_zero', container=res_general.keys())
-        TestCase.assertIn(self, member='target_01', container=res_general.keys())
-        TestCase.assertIn(self, member='target_without_zero', container=res_general.keys())
-        TestCase.assertIn(self, member='rank', container=res_general.keys())
-        for key in res_general.keys():
-            assert (res_general[key].shape == input_matrix.shape)
+        assert isinstance(res_sensitivity, pd.DataFrame)
+        expected_columns = ['standardized_any', 'standardized_without_zero', 'minmax_01',
+                'minmax_without_zero', 'target_01', 'target_without_zero', 'rank']
+        for member in expected_columns:
+                self.assertTrue(any(member in col for col in res_sensitivity.columns),
+                                msg=f"Column containing '{member}' not found in DataFrame")
 
-        assert isinstance(res_simple_mcda, dict)
-        TestCase.assertIn(self, member='minmax_01', container=res_simple_mcda.keys())
-        TestCase.assertIn(self, member='minmax_without_zero', container=res_simple_mcda.keys())
-        TestCase.assertNotIn(self, member='standardized_any', container=res_simple_mcda.keys())
-        TestCase.assertNotIn(self, member='standardized_without_zero', container=res_simple_mcda.keys())
-        TestCase.assertNotIn(self, member='target_01', container=res_simple_mcda.keys())
-        TestCase.assertNotIn(self, member='target_without_zero', container=res_simple_mcda.keys())
-        TestCase.assertNotIn(self, member='rank', container=res_simple_mcda.keys())
-        for key in res_simple_mcda.keys():
-            assert (res_simple_mcda[key].shape == input_matrix.shape)
+        assert isinstance(res_simple, pd.DataFrame)
+        present_columns = ["minmax_01", "minmax_without_zero"]
+        absent_columns = ["standardized_any", "standardized_without_zero", "target_01", "target_without_zero", "rank"]
+        for col in present_columns:
+            self.assertTrue(any(col in column for column in res_simple.columns))
+        for col in absent_columns:
+            self.assertFalse(any(col in column for column in res_simple.columns))
+        for col in res_simple.columns:
+            self.assertEqual(res_simple.shape[0], input_matrix.shape[0])
+            self.assertEqual(res_simple.shape[1], input_matrix.shape[1]*2)
 
-    def test_aggregate_indicators(self):
-        from promcda.models.mcda_without_robustness import MCDAWithoutRobustness
-
+    def test_aggregate_indicators_simple(self):
         # Given
-        config = TestMCDA_without_robustness.get_test_config()
-        config = Config(config)
         input_matrix = TestMCDA_without_robustness.get_input_matrix()
-
-        config_simple_mcda = TestMCDA_without_robustness.get_test_config_simple_mcda()
-        config_simple_mcda = Config(config_simple_mcda)
+        setup = TestMCDA_without_robustness.setup()
+        polarity = setup['polarity']
+        weights = setup["weights"]
 
         # When
-        weights = config.robustness["given_weights"]
-
-        mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
-        normalized_indicators = mcda_no_uncert.normalize_indicators()
-        mcda_no_uncert_simple_mcdaa = MCDAWithoutRobustness(config_simple_mcda, input_matrix)
-        normalized_indicators_simple_mcda = mcda_no_uncert_simple_mcdaa.normalize_indicators(
-            config_simple_mcda.sensitivity['normalization'])
-
-        res = mcda_no_uncert.aggregate_indicators(normalized_indicators, weights)
-        res_simple_mcda = mcda_no_uncert_simple_mcdaa.aggregate_indicators(normalized_indicators_simple_mcda, weights,
-                                                                           config_simple_mcda.sensitivity[
-                                                                               'aggregation'])
-
-        col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                     'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero',
-                     'geom-rank', 'harm-minmax_without_zero', 'harm-target_without_zero',
-                     'harm-standardized_without_zero', 'harm-rank', 'min-standardized_any']
-
+        promcda = ProMCDA(input_matrix, polarity, weights)
+        promcda.normalize(NormalizationFunctions.MINMAX)
+        res_simple_promcda = promcda.aggregate(AggregationFunctions.WEIGHTED_SUM)
         simple_mcda_col_names = ['ws-minmax_01']
+
+        # Then
+        assert isinstance(res_simple_promcda, pd.DataFrame)
+        TestCase.assertListEqual(self, list1=res_simple_promcda.columns.tolist(), list2=simple_mcda_col_names)
+        assert res_simple_promcda.shape[0] == input_matrix.shape[0]
+        assert res_simple_promcda.shape[1] == len(simple_mcda_col_names)
+
+    def test_aggregate_indicators_weights_none(self):
+        # Given
+        input_matrix = TestMCDA_without_robustness.get_input_matrix()
+        setup = TestMCDA_without_robustness.setup()
+        polarity = setup['polarity']
+
+        # When
+        promcda = ProMCDA(input_matrix, polarity)
+        promcda.normalize(NormalizationFunctions.MINMAX)
+        res_simple_promcda = promcda.aggregate(AggregationFunctions.WEIGHTED_SUM)
+        simple_mcda_col_names = ['ws-minmax_01']
+
+        # Then
+        assert isinstance(res_simple_promcda, pd.DataFrame)
+        TestCase.assertListEqual(self, list1=res_simple_promcda.columns.tolist(), list2=simple_mcda_col_names)
+        assert res_simple_promcda.shape[0] == input_matrix.shape[0]
+        assert res_simple_promcda.shape[1] == len(simple_mcda_col_names)
+
+    def test_aggregate_indicators_sensitivity(self):
+        # Given
+        input_matrix = TestMCDA_without_robustness.get_input_matrix()
+        setup = TestMCDA_without_robustness.setup()
+        polarity = setup['polarity']
+        weights = setup["weights"]
+
+        # When
+        promcda = ProMCDA(input_matrix, polarity, weights)
+        promcda.normalize()
+        res_sensitivity_promcda = promcda.aggregate()
+
+        col_names = [e.value for e in OutputColumnNames4Sensitivity]
+
+        # Then
+        assert isinstance(res_sensitivity_promcda, pd.DataFrame)
+        TestCase.assertListEqual(self, list1=res_sensitivity_promcda.columns.tolist(), list2=col_names)
+        assert res_sensitivity_promcda.shape[0] == input_matrix.shape[0]
+        assert res_sensitivity_promcda.shape[1] == len(col_names)
+
+
+    def test_aggregate_indicators_in_parallel_simple(self):
+        # Given
+        input_matrix = TestMCDA_without_robustness.get_input_matrix()
+        setup = TestMCDA_without_robustness.setup_robustness_weights()
+        polarity = setup['polarity']
+        weights = setup['weights']
+
+        # When
+        promcda = ProMCDA(input_matrix, polarity, weights)
+        promcda.normalize(NormalizationFunctions.MINMAX)
+        res = promcda.aggregate(AggregationFunctions.WEIGHTED_SUM)
+        col_names = ['ws-minmax_01']
 
         # Then
         assert isinstance(res, pd.DataFrame)
@@ -195,54 +188,24 @@ class TestMCDA_without_robustness(unittest.TestCase):
         assert res.shape[0] == input_matrix.shape[0]
         assert res.shape[1] == len(col_names)
 
-        assert isinstance(res_simple_mcda, pd.DataFrame)
-        TestCase.assertListEqual(self, list1=res_simple_mcda.columns.tolist(), list2=simple_mcda_col_names)
-        assert res_simple_mcda.shape[0] == input_matrix.shape[0]
-        assert res_simple_mcda.shape[1] == len(simple_mcda_col_names)
-
-    def test_aggregate_indicators_in_parallel(self):
-        from promcda.models.mcda_without_robustness import MCDAWithoutRobustness
-        from promcda.mcda_functions.aggregation import Aggregation
-        import promcda.utils.utils_for_parallelization as utils_for_parallelization
-
+    def test_aggregate_indicators_in_parallel_sensitivity(self):
         # Given
-        config = TestMCDA_without_robustness.get_test_config_randomness()
-        config = Config(config)
         input_matrix = TestMCDA_without_robustness.get_input_matrix()
-        weights = config.robustness["given_weights"]
-        agg = Aggregation(weights)
-
-        config_randomness_simple_mcda = TestMCDA_without_robustness.get_test_config_randomness_simple_mcda()
-        config_randomness_simple_mcda = Config(config_randomness_simple_mcda)
+        setup = TestMCDA_without_robustness.setup_robustness_weights()
+        polarity = setup['polarity']
+        weights = setup['weights']
 
         # When
-        mcda_no_uncert = MCDAWithoutRobustness(config, input_matrix)
-        normalized_indicators = mcda_no_uncert.normalize_indicators()
-        res = utils_for_parallelization.aggregate_indicators_in_parallel(agg, normalized_indicators)
-
-        mcda_no_uncert_simple_mcda = MCDAWithoutRobustness(config_randomness_simple_mcda, input_matrix)
-        normalized_indicators = mcda_no_uncert_simple_mcda.normalize_indicators(
-            config_randomness_simple_mcda.sensitivity['normalization'])
-        res_simple_mcda = utils_for_parallelization.aggregate_indicators_in_parallel(agg, normalized_indicators,
-            config_randomness_simple_mcda.sensitivity['aggregation'])
-
-        col_names = ['ws-minmax_01', 'ws-target_01', 'ws-standardized_any', 'ws-rank',
-                     'geom-minmax_without_zero', 'geom-target_without_zero', 'geom-standardized_without_zero',
-                     'geom-rank', 'harm-minmax_without_zero', 'harm-target_without_zero',
-                     'harm-standardized_without_zero', 'harm-rank', 'min-standardized_any']
-
-        simple_mcda_col_names = ['ws-minmax_01']
+        promcda = ProMCDA(input_matrix, polarity, weights)
+        promcda.normalize()
+        res = promcda.aggregate()
+        col_names = [e.value for e in OutputColumnNames4Sensitivity]
 
         # Then
         assert isinstance(res, pd.DataFrame)
         TestCase.assertListEqual(self, list1=res.columns.tolist(), list2=col_names)
         assert res.shape[0] == input_matrix.shape[0]
         assert res.shape[1] == len(col_names)
-
-        assert isinstance(res_simple_mcda, pd.DataFrame)
-        TestCase.assertListEqual(self, list1=res_simple_mcda.columns.tolist(), list2=simple_mcda_col_names)
-        assert res_simple_mcda.shape[0] == input_matrix.shape[0]
-        assert res_simple_mcda.shape[1] == len(simple_mcda_col_names)
 
     def test_estimate_runs_mean_std(self):
         import promcda.utils.utils_for_parallelization as utils_for_parallelization
@@ -262,7 +225,6 @@ class TestMCDA_without_robustness(unittest.TestCase):
         assert isinstance(res[0], pd.DataFrame)
         assert res[0].to_numpy().all() == TestMCDA_without_robustness.get_input_matrix().to_numpy().all()
         assert res[1].to_numpy().all() == df_std.to_numpy().all()
-
 
 if __name__ == '__main__':
     unittest.main()

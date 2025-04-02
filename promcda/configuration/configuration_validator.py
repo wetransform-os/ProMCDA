@@ -73,6 +73,7 @@ def validate_configuration(
         raise ValueError(
             "If 'robustness_indicators' is True, 'robustness_weights' and 'robustness_single_weights' must be False.")
 
+
     if weights is not None and len(weights) != num_indicators:
         raise ValueError("'weights' must have the same number of elements as 'num_indicators'.")
     if weights is not None and not all(isinstance(w, (float, int)) for w in weights):
@@ -212,7 +213,7 @@ def _handle_polarities_and_weights(robustness_indicators: bool,
         if any(value == 1 for value in num_unique):
            weights = pop_indexed_elements(col_to_drop_indexes, weights)
         # Managing weights for no robustness weights
-        if robustness_weights is False and robustness_single_weights is False:
+        if weights is not None and robustness_weights is False and robustness_single_weights is False:
             fixed_weights = weights
             norm_fixed_weights = check_norm_sum_weights(fixed_weights)
             logger.info("Weights: {}".format(fixed_weights))
