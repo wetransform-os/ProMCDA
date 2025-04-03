@@ -111,10 +111,10 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
                                    robustness_single_weights: bool,
                                    polarity: Tuple[str, ...],
                                    mc_runs: int,
-                                   weights: List[str]) \
+                                   weights: List[str], marginal_distributions: Tuple[str, ...]) \
         -> Tuple[pd.DataFrame, int, Tuple[str, ...], Union[list, List[list], dict]]:
     """
-    Process indicators and weights based on input parameters in the configuration.
+    Process indicators and weights based on input parameters in the setup configuration.
 
     Parameters:
     - input_matrix: the input matrix without alternatives.
@@ -165,15 +165,20 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
     cols_to_drop = num_unique[num_unique == 1].index
     col_to_drop_indexes = input_matrix.columns.get_indexer(cols_to_drop)
 
+    num_indicators = input_matrix.shape[1]
+
     if robustness_indicators is False:
         input_matrix = _handle_no_robustness_indicators(input_matrix)
         logger.info("Number of indicators: {}".format(input_matrix.shape[1]))
     else:  # matrix with uncertainty on indicators
+        num_non_exact_and_non_poisson = (len(marginal_distributions) - marginal_distributions.count('exact') -
+                                         marginal_distributions.count('poisson'))
+        num_indicators = (input_matrix.shape[1] - num_non_exact_and_non_poisson)
+        if weights is None: weights = [0.5] * num_indicators
+
         logger.info("Number of alternatives: {}".format(input_matrix.shape[0]))
         logger.info("Number of indicators: {}".format(input_matrix.shape[1]))
         # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional - see TODO below
-
-    num_indicators = input_matrix.shape[1]
 
     polarities_and_weights = _handle_polarities_and_weights(robustness_indicators, robustness_weights,
                                                             robustness_single_weights, num_unique,
@@ -209,7 +214,6 @@ def _handle_polarities_and_weights(robustness_indicators: bool,
 
     # Managing weights for no robustness indicators
     if robustness_indicators is False:
-    # TODO: what happens when robustness_indicators is True? Apparently no dropping
         if any(value == 1 for value in num_unique):
            weights = pop_indexed_elements(col_to_drop_indexes, weights)
         # Managing weights for no robustness weights
@@ -221,8 +225,8 @@ def _handle_polarities_and_weights(robustness_indicators: bool,
             return polarity, norm_fixed_weights, None, None
             #  Return None for norm_random_weights and rand_weight_per_indicator
         else:
-            output_weights = _handle_robustness_weights(mc_runs, num_indicators, robustness_weights,
-                                                    robustness_single_weights)
+            output_weights = handle_robustness_weights(mc_runs, num_indicators, robustness_weights,
+                                                       robustness_single_weights)
         if output_weights is not None:
             norm_random_weights, rand_weight_per_indicator = output_weights
         if norm_random_weights:
@@ -230,10 +234,14 @@ def _handle_polarities_and_weights(robustness_indicators: bool,
         else:
             return polarity, None, None, rand_weight_per_indicator
         #  Return None for norm_fixed_weights and one of the other two cases of randomness
+    else: # robustness_indicators is True - in this case no columns are dropped!
+        fixed_weights = weights
+        norm_fixed_weights = check_norm_sum_weights(fixed_weights)
+        return polarity, norm_fixed_weights, None, None
 
 
-def _handle_robustness_weights(mc_runs: int, num_indicators: int, robustness_weights: bool,
-                               robustness_single_weight: bool) -> Tuple[Union[List[list], None], Union[dict, None]]:
+def handle_robustness_weights(mc_runs: int, num_indicators: int, robustness_weights: bool,
+                              robustness_single_weight: bool) -> Tuple[Union[List[list], None], Union[dict, None]]:
     """
     Handle the generation and normalization of random weights based on the specified settings
     when a robustness analysis is requested on all the weights.

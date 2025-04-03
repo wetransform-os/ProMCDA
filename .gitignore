@@ -1,7 +1,11 @@
 .DS_Store
 .idea
 .ipynb_checkpoints/
-.png
-.CSV
+*.png
+*.CSV
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 demo_in_notebook/output_files/mock_output/
 

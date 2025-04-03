@@ -3,6 +3,8 @@ import sys
 import pandas as pd
 from typing import Tuple, List, Union, Optional
 
+from promcda.configuration import process_indicators_and_weights
+from promcda.configuration.configuration_validator import handle_robustness_weights
 from promcda.enums import PDFType, NormalizationFunctions, AggregationFunctions
 from promcda.utils import check_parameters_pdf, check_if_pdf_is_exact, check_if_pdf_is_poisson, rescale_minmax, \
     compute_scores_for_single_random_weight, compute_scores_for_all_random_weights
@@ -105,9 +107,17 @@ class ProMCDA:
 
         self.input_matrix_no_alternatives = check_input_matrix(self.input_matrix)
 
-        if weights is None:
-            weights = [0.5] * input_matrix.shape[1]
-        self.weights = weights.copy()
+        if self.weights is None and robustness_indicators is False:
+            self.weights = [0.5] * self.input_matrix_no_alternatives.shape[1]
+        elif self.weights is None and robustness_indicators is True:
+            self.input_matrix, num_indicators, polarity, weights = process_indicators_and_weights( # an input matrix without alternatives & unuseful columns
+                self.input_matrix_no_alternatives,
+                self.robustness_indicators,
+                self.robustness_weights,
+                self.robustness_single_weights,
+                self.polarity, self.num_runs,
+                weights, self.marginal_distributions)
+            self.weights = weights.copy()
 
         validate_configuration(
             input_matrix=self.input_matrix,
@@ -158,7 +168,7 @@ class ProMCDA:
                                                                         self.robustness_weights,
                                                                         self.robustness_single_weights,
                                                                         self.polarity, self.num_runs,
-                                                                        self.weights)
+                                                                        self.weights, self.marginal_distributions)
 
         if not self.robustness_indicators:
             mcda_without_robustness = MCDAWithoutRobustness(polarity, input_matrix_no_alternatives)
@@ -242,7 +252,7 @@ class ProMCDA:
         input_matrix_no_alternatives, num_indicators, polarity, norm_weights = process_indicators_and_weights(self.input_matrix_no_alternatives,
                                                         self.robustness_indicators,
                                                         self.robustness_weights, self.robustness_single_weights,
-                                                        self.polarity, self.num_runs, self.weights)
+                                                        self.polarity, self.num_runs, self.weights, self.marginal_distributions)
 
         # Check the number of indicators, weights, and polarities, assign random weights if uncertainty is enabled
         try:
