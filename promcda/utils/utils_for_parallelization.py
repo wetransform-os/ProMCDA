@@ -135,52 +135,41 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
     indicators_scaled_target_without_zero = None
     indicators_scaled_rank = None
 
-    def _rename_columns(df, method_name):
-        """ Helper function to rename columns based on the normalization method """
-        if df is not None:
-            df.columns = [f"{col}_{method_name}" for col in df.columns.tolist()]
-        return df
+    # Complex objects like Enums are no (especially on macOS and Windows),
+    # which can cause issues when using multiprocessing.
 
-    if method is None or method == NormalizationFunctions.MINMAX:
+    if method is None or method == 'minmax':
         indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
-        indicators_scaled_minmax_01 = _rename_columns(indicators_scaled_minmax_01, "minmax_01")
         # for aggregation "geometric" and "harmonic" that accept no 0
         indicators_scaled_minmax_without_zero = norm.minmax(feature_range=(0.1, 1))
-        indicators_scaled_minmax_without_zero = _rename_columns(indicators_scaled_minmax_without_zero,
-                                                               "minmax_without_zero")
-    if method is None or method == NormalizationFunctions.TARGET:
+
+    if method is None or method == 'target':
         indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
-        indicators_scaled_target_01 = _rename_columns(indicators_scaled_target_01, "target_01")
         # for aggregation "geometric" and "harmonic" that accept no 0
         indicators_scaled_target_without_zero = norm.target(feature_range=(0.1, 1))
-        indicators_scaled_target_without_zero = _rename_columns(indicators_scaled_target_without_zero,
-                                                               "target_without_zero")
-    if method is None or method == NormalizationFunctions.STANDARDIZED:
+
+    if method is None or method == 'standardized':
         indicators_scaled_standardized_any = norm.standardized(
             feature_range=('-inf', '+inf'))
-        indicators_scaled_standardized_any = _rename_columns(indicators_scaled_standardized_any, "standardized_any")
         indicators_scaled_standardized_without_zero = norm.standardized(
             feature_range=(0.1, '+inf'))
-        indicators_scaled_standardized_without_zero = _rename_columns(indicators_scaled_standardized_without_zero,
-                                                                     "standardized_without_zero")
-    if method is None or method == NormalizationFunctions.RANK:
+
+    if method is None or method == 'rank':
         indicators_scaled_rank = norm.rank()
-        indicators_scaled_rank = _rename_columns(indicators_scaled_rank, "rank")
-    if method is not None and method not in [e for e in NormalizationFunctions]:
+
+    elif method is not None and (method != 'minmax' and method != 'target' and method != 'standardized' and method != 'rank'):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The selected normalization method is not supported')
 
-    normalized_indicators = {"standardized_any": indicators_scaled_standardized_any,
-                             "standardized_without_zero": indicators_scaled_standardized_without_zero,
-                             "minmax_01": indicators_scaled_minmax_01,
-                             "minmax_without_zero": indicators_scaled_minmax_without_zero,
-                             "target_01": indicators_scaled_target_01,
-                             "target_without_zero": indicators_scaled_target_without_zero,
-                             "rank": indicators_scaled_rank
-                             }
 
     normalized_indicators = {
-        k: v for k, v in normalized_indicators.items() if v is not None}
+        NormalizationNames4Sensitivity.STANDARDIZED_ANY.value: indicators_scaled_standardized_any,
+        NormalizationNames4Sensitivity.STANDARDIZED_WITHOUT_ZERO.value: indicators_scaled_standardized_without_zero,
+        NormalizationNames4Sensitivity.MINMAX_01.value: indicators_scaled_minmax_01,
+        NormalizationNames4Sensitivity.MINMAX_WITHOUT_ZERO.value: indicators_scaled_minmax_without_zero,
+        NormalizationNames4Sensitivity.TARGET_01.value: indicators_scaled_target_01,
+        NormalizationNames4Sensitivity.TARGET_WITHOUT_ZERO.value: indicators_scaled_target_without_zero,
+        NormalizationNames4Sensitivity.RANK.value: indicators_scaled_rank}
 
     return normalized_indicators
 
