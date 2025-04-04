@@ -2,34 +2,11 @@ import unittest
 from unittest import TestCase
 from unittest.mock import patch
 
-from mcda.utils.utils_for_main import *
-from mcda.utils.utils_for_main import _check_and_rescale_negative_indicators
+from promcda.utils.utils_for_main import *
+from promcda.utils.utils_for_main import _check_and_rescale_negative_indicators
 
 
 class TestUtils(unittest.TestCase):
-
-    @staticmethod
-    def get_test_config():
-        return {
-            "input_matrix_path": "/path/to/input_matrix.csv",
-            "polarity_for_each_indicator": ["-", "-", "+", "+"],
-            "sensitivity": {
-                "sensitivity_on": "yes",
-                "normalization": "minmax",
-                "aggregation": "weighted_sum"},
-            "robustness": {
-                "robustness_on": "yes",
-                "on_single_weights": "no",
-                "on_all_weights": "no",
-                "given_weights": [0.5, 0.5, 0.5, 0.5],
-                "on_indicators": "yes"},
-            "monte_carlo_sampling": {
-                "monte_carlo_runs": 10000,
-                "num_cores": 1,
-                "random_seed": 42,
-                "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal', 'poisson']},
-            "output_directory_path": "/path/to/output"
-        }
 
     @staticmethod
     def get_input_matrix_1() -> pd.DataFrame:
@@ -142,12 +119,12 @@ class TestUtils(unittest.TestCase):
         input_matrix_1 = TestUtils.get_input_matrix_1()
         input_matrix_2 = TestUtils.get_input_matrix_2()
         input_matrix_3 = TestUtils.get_input_matrix_3()
-        config = TestUtils.get_test_config()
+        marginal_distributions = ['exact', 'uniform', 'normal', 'poisson']
 
         # When
-        are_parameters_correct_1 = check_parameters_pdf(input_matrix_1, config, True)
-        are_parameters_correct_2 = check_parameters_pdf(input_matrix_2, config, True)
-        are_parameters_correct_3 = check_parameters_pdf(input_matrix_3, config, True)
+        are_parameters_correct_1 = check_parameters_pdf(input_matrix_1, marginal_distributions, True)
+        are_parameters_correct_2 = check_parameters_pdf(input_matrix_2, marginal_distributions, True)
+        are_parameters_correct_3 = check_parameters_pdf(input_matrix_3, marginal_distributions, True)
 
         # Then
         isinstance(are_parameters_correct_1, list)
