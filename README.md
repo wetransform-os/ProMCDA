@@ -13,6 +13,8 @@
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/ProMCDA)
 [![Downloads](https://static.pepy.tech/badge/ProMCDA)](https://pepy.tech/project/ProMCDA)
 
+TODO: 
+- add instructions to install the library (statically or dynamically)
 
 A tool to estimate scores of alternatives and their uncertainties based on a Multi Criteria Decision Analysis (MCDA) approach.
 
@@ -213,12 +215,12 @@ From the root dir, via command line
 - on Windows:
 ```bash
 activate.bat <your-env>
-python3 -m mcda.mcda_run -c configuration.json
+python3 -m promcda.mcda_run -c configuration.json
 ```
 - on Mac and Linux:
 ```bash
 source activate <your-env>
-python3 -m mcda.mcda_run -c configuration.json
+python3 -m promcda.mcda_run -c configuration.json
 ```
 where an example of configuration file can be found in `./configuration.json`.
 
