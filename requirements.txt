@@ -12,3 +12,4 @@ kaleido
 networkx~=2.7.1
 matplotlib~=3.9.3
 setuptools~=70.0.0
+altair~=4.0.0
