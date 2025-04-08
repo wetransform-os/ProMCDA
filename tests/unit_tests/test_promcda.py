@@ -336,13 +336,5 @@ class TestProMCDA(unittest.TestCase):
         # TODO: clarify why "aggregated_scores" do not range within 0 and 1 but show values < 1 for 'ws-minmax_01'
 
 
-#    def tearDown(self):
-#        """
-#        Clean up temporary directories and files after each test.
-#        """
-#        if os.path.exists(self.output_path):
-#            shutil.rmtree(self.output_path)
-
-
 if __name__ == '__main__':
     unittest.main()

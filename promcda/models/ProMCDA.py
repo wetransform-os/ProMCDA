@@ -7,7 +7,7 @@ from promcda.configuration import process_indicators_and_weights
 from promcda.configuration.configuration_validator import handle_robustness_weights
 from promcda.enums import PDFType, NormalizationFunctions, AggregationFunctions
 from promcda.utils import check_parameters_pdf, check_if_pdf_is_exact, check_if_pdf_is_poisson, rescale_minmax, \
-    compute_scores_for_single_random_weight, compute_scores_for_all_random_weights
+    compute_scores_for_single_random_weight, compute_scores_for_all_random_weights, check_norm_sum_weights
 
 log = logging.getLogger(__name__)
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
@@ -191,6 +191,7 @@ class ProMCDA:
                 n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(
                     n_random_input_matrices, polarity)
             else:
+                normalization_method = normalization_method.value
                 n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(
                     n_random_input_matrices, polarity, normalization_method)
 
@@ -261,17 +262,6 @@ class ProMCDA:
         except ValueError as e:
             logging.error(str(e), stack_info=True)
             raise
-
-        # Assign values to weights when they are None
-        if norm_weights is None and self.robustness_weights is False:
-            if self.robustness_indicators:
-                num_non_indicators = (
-                        len(self.marginal_distributions) - self.marginal_distributions.count('exact')
-                        - self.marginal_distributions.count('poisson'))
-                num_indicators = (input_matrix_no_alternatives.shape[1] - num_non_indicators)
-                weights = [0.5] * num_indicators
-            else:
-                weights = [0.5] * num_indicators
 
         # Apply aggregation in the different configuration settings
         # NO UNCERTAINTY ON INDICATORS AND WEIGHTS

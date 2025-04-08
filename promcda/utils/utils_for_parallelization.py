@@ -171,6 +171,9 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
         NormalizationNames4Sensitivity.TARGET_WITHOUT_ZERO.value: indicators_scaled_target_without_zero,
         NormalizationNames4Sensitivity.RANK.value: indicators_scaled_rank}
 
+    # Filter out None values - when some norm functions are not used
+    normalized_indicators = {key: value for key, value in normalized_indicators.items() if value is not None}
+
     return normalized_indicators
 
 
