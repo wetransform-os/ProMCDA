@@ -13,22 +13,24 @@
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/ProMCDA)
 [![Downloads](https://static.pepy.tech/badge/ProMCDA)](https://pepy.tech/project/ProMCDA)
 
-TODO: 
-- add instructions to install the library (statically or dynamically)
-
 A tool to estimate scores of alternatives and their uncertainties based on a Multi Criteria Decision Analysis (MCDA) approach.
 
 ### Table of Contents
 - [Contributing](#contributing)
 - [MCDA quick overview and applications](#mcda-quick-overview-and-applications)
+- [Requirements to use ProMCDA](#requirements-to-use-promcda)
+- [How to use ProMCDA](#how-to-use-promcda)
+- 
 - [Input information needed in the configuration file](#input-information-needed-in-the-configuration-file)
 - [Output](#output)
 - [Requirements](#requirements)
 - [Running ProMCDA](#running-promcda)
-- [Running the tests](#running-the-tests)
+- [Input matrix](#input-matrix)
+- [Running the unit tests](#running-the-unit-tests)
 - [Toy example](#toy-example)
 - [A high level summary](#a-high-level-summary)
 - [General information and references](#general-information-and-references)
+- [Get in touch](#get-in-touch)
 
 ### Contributing
 We welcome contributions from the community! Before contributing, please read our 
@@ -37,8 +39,9 @@ pull requests.
 
 
 ### MCDA quick overview and applications
-A MCDA approach is a systematic framework for making decisions in situations where multiple criteria or objectives need to be 
-considered. It can be applied in various domains and contexts. Here are some possible usages of an MCDA approach:
+A MCDA approach is a systematic framework for making decisions in situations where multiple criteria need to be 
+considered. It ranks a set of alternatives considering the multiple criteria and the user preferences.
+It can be applied in various domains and contexts. Here are some possible usages of an MCDA approach:
 
 - **Environmental impact assessment**: assess the environmental consequences of various projects or policies by considering 
   multiple environmental criteria.
@@ -69,16 +72,17 @@ considered. It can be applied in various domains and contexts. Here are some pos
 
 These are just a few examples of how MCDA can be applied across a wide range of fields to support decision-making processes 
 that involve multiple, often conflicting, criteria. The specific application of MCDA will depend on the context 
-and the goals of the decision-maker.
+and the goals of the decision-maker. The final goal is to facilitate a process of informative decision-making that is transparent,
+reliable and explainable.
 
 Before using ```ProMCDA```, we suggest you first to get familiar with the main steps and concepts of an MCDA method: 
-the normalization of the criteria values; their polarities and weights; and the aggregation of information into a composite indicator. 
+the normalization of the criteria values; setting the polarities and weights of the indicators; and the aggregation of information into a composite indicator (CI). 
 In MCDA context an *alternative* is one possible course of action available; an *indicator*, or *criterion*, is a parameter 
 that describes the alternatives. The variability of the MCDA scores are caused by:
 
 - the sensitivity of the algorithm to the different pairs of normalization/aggregation functions (--> sensitivity analysis);
-- the randomness that can be associated to the weights (--> robustness analysis);
-- the uncertainty associated with the indicators (--> robustness analysis).
+- the randomness that can be associated to the weights (--> robustness analysis weights);
+- the uncertainty associated with the indicators (--> robustness analysis indicators).
 
 Here we define:
 - the **sensitivity analysis** as the one aimed at capturing the output score stability to the different initial modes;
@@ -86,33 +90,114 @@ Here we define:
 
 The tool can be also used as a simple (i.e. deterministic) MCDA ranking tool with no robustness/sensitivity analysis (see below for instructions).
 
-### Input and output file paths
-All input and output files are saved by default in the `input_files` and `output_files` folders located in the project root directory. 
-The two variables, which define the default input and output paths, `DEFAULT_INPUT_DIRECTORY_PATH` and `DEFAULT_OUTPUT_DIRECTORY_PATH`
-are defined in `utils_for_main.py` and `utils_for_plotting.py`. Users can set custom environmental variables in their environment to override the default directory paths. 
-In the terminal, users can override one or both default variables by typing:
+### Requirements to use ProMCDA
+
+It’s advisable to install any packages within a virtual environment to manage dependencies effectively and avoid conflicts. 
+To set up and activate a virtual environment:
+
+On Windows:
+```bash
+conda create --name <choose-a-name-like-Promcda> python=3.9
+activate.bat <choose-a-name-like-Promcda>
+pip install -r requirements.txt
+```
+On Mac and Linux:
+```bash
+conda create --name <choose-a-name-like-Promcda> python=3.9
+source activate <choose-a-name-like-Promcda>
+pip install -r requirements.txt
+```
+The Python version should de 3.9 or higher.
+
+### How to use ProMCDA
+This section provides a comprehensive guide on utilizing ProMCDA for Probabilistic Multi-Criteria Decision Analysis. 
+ProMCDA is designed to help decision-makers explore the sensitivity and robustness of Composite Indicators (CIs) in a user-friendly manner. 
+You can use ```ProMCDA``` as a Python library. With Python and pip set up, you can install ProMCDA using the following command:
 
 ```bash
-export PROMCDA_INPUT_DIRECTORY_PATH=/path/to/custom/input/directory
-export PROMCDA_OUTPUT_DIRECTORY_PATH=/path/to/custom/output/directory
+pip install ProMCDA
 ```
-Please ensure that you execute the above command(s) from within the project environment. The variable names `PROMCDA_INPUT_DIRECTORY_PATH` 
-and `PROMCDA_OUTPUT_DIRECTORY_PATH` are fixed as defined in `utils_for_main.py` and `utils_for_plotting.py`.
 
-This allows the user to customize the directory paths without modifying the source code of the Python package, 
-and using relative paths in the configuration file.
+This command fetches and installs the ProMCDA package along with its dependencies from the Python Package Index (PyPI).
 
-### Input information needed in the configuration file
-A configuration file is needed to run```ProMCDA```.
-The configuration file collects all the input information to run ```ProMCDA``` in your specific study case.
-You find a configuration.json file as an example in this directory: please modify it for your needs. In the following, 
-the entries of the configuration file are described.
+After installation, confirm that ProMCDA is correctly installed by opening a Python interpreter or a Jupyter notebook
+and attempting to import the package:
+```python
+import promcda
+print(promcda.__version__)
+```
 
-***Path to the input matrix***, a table where rows represent the alternatives and columns represent the indicators.
-Be sure that the first column of the input matrix contains the names of the alternatives.
+Once ```ProMCDA``` is installed, you can start using it in your Python projects or Jupyter Notebooks. 
+In `demo_in_notebook` you can find a Jupyter notebook that shows how to use the library in Python with a few examples.
 
-Be sure that there are no duplicates among the rows. If the values of one or more indicators are all the same, 
-the indicators are dropped from the input matrix because they contain no information.
+In particular, the notebook contains:
+- Two examples of setups for instatiating the ProMCDA object: one with a dataset without uncertainties and one with a dataset with uncertainties.
+- A mock dataset is created in each setup representing three alternatives evaluated against two criteria.
+- A ProMCDA object is created with the data.
+- The data is normalized using the ```normalize``` method.
+- The data is aggregated using the ```aggregate``` method.
+	
+```ProMCDA``` has the following functionalities:
+- Case of non robustness on the indicators
+  - normalization with a specific method or any methods (i.e., sensitivity analysis on the normalization);
+  - aggregation with a specific method or any methods (i.e., sensitivity analysis on the aggregation);
+  - any combinations of the two above (partial or full sensitivity analysis);
+  - case of robustness on the weights, i.e., all weights are randomly sampled from a uniform distribution [0,1];
+  - case of robustness on the weights, i.e., one weight at time is randomly sampled from a uniform distribution [0,1];
+  - the two cases above can be combined with the sensitivity analysis on the normalization and/or aggregation.
+- Case of robustness on the indicators (indicators are associated with uncertainties)
+  - normalization with a specific method or any methods (i.e., sensitivity analysis on the normalization);
+  - aggregation with a specific method or any methods (i.e., sensitivity analysis on the aggregation);
+  - any combinations of the two above (partial or full sensitivity analysis);
+  - if the robustness analysis is performed, the weights cannot be randomly sampled.
+
+```ProMCDA``` has two required **input parameters**: 
+- the *input matrix* (with or without uncertainties): a Pandas DataFrame containing the alternatives and their indicators;
+- the *polarities* assigned to the indicators: a tuple of "+" - which means the higher the value of the indicator the better for the CI
+  evaluation; or of "-" - which means the lower the value of the indicator the better for the CI evaluation. 
+
+The optional parameters are the:
+- *weights*: a list specifying the weights assigned to each indicator for aggregation. If not provided, equal weighting is assumed for all indicators.
+- *robustness_weights*: a boolean (default False); if enabled (True), the analysis will incorporate robustness checks concerning the weights, assessing how variations in weights impact the results.
+- *robustness_single_weights*: a boolean (default False); when True, the analysis will perform robustness checks on individual weights, evaluating the sensitivity of the outcome to changes in each weight separately.
+- the *robustness_indicators*: a boolean (default False); if enabled (True), the analysis will include robustness assessments related to the indicators, examining how their uncertainties affect the overall evaluation.
+- the *marginal_distributions*: a tuple of strings specifying the probability distribution functions (PDFs) to be used for modeling the uncertainty of each indicator. The available PDFs are defined in the PDFType Enum class. 
+- *num_runs*: an integer (default=10000) that determines the number of simulation runs to be executed during the probabilistic analysis. A higher number of runs can increase the accuracy of the results.
+- *num_cores*: an integer (default=1) that specifies the number of CPU cores to utilize for parallel processing. 
+- *random_seed*: an integer (default=43) that sets the seed for random number generation to ensure reproducibility of results. 
+
+The PDFType Enum includes the following options:
+- PDFType.EXACT: represents an exact value with no uncertainty.
+- PDFType.UNIFORM: represents a uniform distribution.
+- PDFType.NORMAL: represents a normal (Gaussian) distribution. ￼
+- PDFType.LOGNORMAL: represents a log-normal distribution.
+- PDFType.POISSON: represents a Poisson distribution.
+
+The method ```normalize``` has one optional input parameters that is the normalization function; if not provided, the function will apply all the available normalization functions.
+The available normalization functions are defined in the NormalizationFunctions Enum class:
+- minmax normalization.
+- target normalization.
+- standardized normalization.
+- rank normalization.
+
+The method ```aggregate``` has one optional input parameters that is the aggregation function; if not provided, the function will apply all the available aggregation functions.
+The available aggregation functions are defined in the AggregationFunctions Enum class:
+- weighted-sum aggregation.
+- geometric aggregation.
+- harmonic aggregation.
+- minimum aggregation.
+
+Note that the results of ```normalize``` and ```aggregate``` are exposed only for a simple run (i.e., without robustness analysis).
+In case a robustness analysis is performed, the results can be accessed via the ```get_normalized_values_with_robustness_weights``` and
+```get_aggregated_values_with_robustness_indicators``` methods, which returns a dictionary containing the results of the analysis.
+    
+For more details about the normalization and aggregation functions, please refer to the paper cited in the badge section.
+By configuring these parameters appropriately, you can tailor the ProMCDA analysis to your specific needs, enabling comprehensive and customized multi-criteria decision analyses.
+
+
+### Input matrix
+If the values of one or more indicators are all the same, the indicators are dropped from the input matrix because they contain no information.
+Consequently, the relative weights and polarities are dropped.
 Examples of input matrix:
 
 - *input matrix without uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`);
@@ -134,125 +219,21 @@ The input matrix with uncertainties has the following characteristics:
 - if an indicator is described by a *Poisson* PDF, one needs only one colum with the rate.
 
 If any mean value of any indicator is equal or smaller of its standard deviation - in case of a normal or lognormal PDF - 
-```ProMCDA``` breaks to ask you if you need to investigate your data further before applying MCDA. In fact, your data shows
+```ProMCDA``` breaks to ask you if you need to investigate your data further before applying MCDA. This means that your data shows
 a high variability regarding some indicators. If you want to continue anyway, negative sampled data will be rescaled 
 into [0,1], as in the case without uncertainty.
 
-
-***List of polarities*** for each indicator, "+" (the higher the value of the indicator the better for the evaluation) 
-or "-" (the lower the value of the indicator the better).
-
-The configuration file can trigger a run with or without ***sensitivity analysis***; this is set in the `sensitivity_on` parameter (*yes* or *no*); 
-if *no* is selected, then the pair normalization/aggregation should be given in `normalization` and `aggregation`. If *yes*
-is selected, then the normalization/aggregation pair is disregarded.
-
-Similarly, a run with or without uncertainty on the indicators or on the weights (i.e. with ***robustness analysis***) 
-can be triggered by setting the `robustness_on` parameter to *yes* or *no*. If `robustness_on` is set to *yes*, then 
-the uncertainties might be on the indicators (`on_indicators`) or on the weights (`on_single_weights` or `on_all_weights`). 
-In the first case (`on_single_weights=yes`) one weight at time is randomly sampled from a uniform distribution; 
-in the second case (`on_all_weights=yes`) all weights are simultaneously sampled from a uniform distribution. 
-If there is no uncertainty associated to the weights, then the user should provide a ***list of weights*** in the `given_weights` parameter for the indicators. 
-The sum of the weights should always be equal to 1 or the values will be normalised internally. 
-Depending on the different options, information not needed are disregard. Sensitivity and robustness analysis can be run
-together. If robustness analysis is selected, it can run either on the weights or on the indicators, but not on both simultaneously.
-
-If robustness analysis is selected, a last block of information is needed:
-the ***Number of Monte Carlo runs***, "N" (default is 0, then no robustness is considered; N should be a sufficient big number, 
-e.g., larger or equal than 1000). The ***number of cores*** used for the parallelization; and a 
-***List of marginal distributions*** for each indicator; the available distributions are: 
-  - exact, **"exact"**,
-  - uniform distribution, **"uniform"**
-  - normal distribution, **"normal"**
-  - lognormal distribution, **"lnorm"**
-  - Poisson distribution, **"poisson"**
-
-### Output
-The user gives the ***path to output file*** (e.g. `path/output_file.csv`). In the output file the scores (normalised or rough) 
-and the ranks relative to the alternatives can be found in the form of CSV tables. If the weights are iteratively sampled, 
-multiple tables are saved in a PICKLE file as an object ```dictionary```. Plots of the scores are saved in PNG images. The configuration.json file
-is saved in the output directory too; the information stored in the configuration settings are useful in case one runs
-multiple tests and needs to review them.
-
-All file names of the output objects are followed by a time stamp that group them with the specific test setting.
-
-To retrieve a PICKLE file in Python one can:
-
-```pythongroup them 
-import pickle
-
-# Replace 'your_file.pickle' with the path to your PICKLE file
-file_path = 'your_file.pickle'
-
-# Load the PICKLE file
-with open(file_path, 'rb') as file:
-    data = pickle.load(file)
-
-# Now, 'data' contains the object or data stored in the PICKLE file
-```
-Note that in case of a robustness analysis, the error bars in the plots are only shown for non-normalized scores. This is
-because when one calculates the standard deviation after rescaling, the denominator used in the standard deviation formula 
-becomes smaller. This results in a higher relative standard deviation compared to the mean that is solely an artificial 
-effect.
-  
-
-### Requirements
-On Windows:
-```bash
-conda create --name <choose-a-name-like-Promcda> python=3.9
-activate.bat <choose-a-name-like-Promcda>
-pip install -r requirements.txt
-```
-On Mac and Linux:
-```bash
-conda create --name <choose-a-name-like-Promcda> python=3.9
-source activate <choose-a-name-like-Promcda>
-pip install -r requirements.txt
-```
-The Python version should de 3.9 or higher.
-
-### Running ProMCDA
-From the root dir, via command line
-- on Windows:
-```bash
-activate.bat <your-env>
-python3 -m promcda.mcda_run -c configuration.json
-```
-- on Mac and Linux:
-```bash
-source activate <your-env>
-python3 -m promcda.mcda_run -c configuration.json
-```
-where an example of configuration file can be found in `./configuration.json`.
-
-We tested ProMCDA on Windows, Linux and Mac. We identified a possible issue with some Windows machines caused by the
-library ```kaleido``` (used to generate static images) and reported [here](https://github.com/plotly/Kaleido/issues/126). 
-If you are experiencing any unexpected behavior of the package, we provide to you also the possibility to run it via Docker.
-
-First, build the docker image:
-```bash
-docker build -t <your-docker-image> .
-```
-
-Then, run the Docker container:
-```bash
-docker run -p 4000:80 <your-docker-image>
-```
-
-Change the configuration file for your needs.
-
-### Running the tests
+### Running the unit tests
 ```bash
 python3 -m pytest -s tests/unit_tests -vv
 ```
 ### Toy example
 ```ProMCDA``` contains a toy example, a simple case to test run the package. 
 The toy example helps you identify the best car models (i.e., the alternatives) you can buy based on a few indicators 
-(e.g., Model, Fuel Efficiency, Safety Rating, Price, Cargo Space, Acceleration, Warranty). 
-In the `output_files/toy_example/` directory you can find a few different tests that have been run already, with their 
-relative configuration and output files. 
+(e.g., Model, Fuel Efficiency, Safety Rating, Price, Cargo Space, Acceleration, Warranty).
 The input matrix for the toy example is in `input_files/toy_example/car_data.csv`. 
-If you want to test the package yourself, you have to modify your configuration file according to the desired experiment. 
-The directory `toy_example_utilities` contains also a Jupyter notebook to allow you to modify the input matrix easily. 
+You can import the input matrix in a Python environment as a Pandas dataframe and perform normalization and aggregation with the ProMCDA library. 
+The directory `toy_example/toy_example_utilities` contains also a Jupyter notebook to allow you to modify the input matrix easily. 
 The chosen example is very simple and not suitable for a robustness analysis test. Running the robustness analysis requires an input matrix 
 containing information on the uncertainties of the criteria as described above, and it is not under the scope of the toy example. 
 
@@ -260,25 +241,21 @@ containing information on the uncertainties of the criteria as described above, 
 If no robustness analysis is selected, then:
 - the indicator values are normalized by mean of all the possible normalization methods (or by the selected one);
 - the normalized indicators are aggregated by mean of all the possible aggregation methods (or by the selected one), 
-  by considering their assigned weights (in the `given_weights` parameter);
-- the resulting scores of all the combinations normalization/aggregation (or the selected ones only) are provided in form 
-  of a csv table and plots in png format in the output directory.
+  by considering their assigned weights.
 
 If the weights are randomly sampled (robustness analysis of the weights), then:
 - all weights or one weight at time are randomly sampled from a uniform distribution [0,1];
 - the weights are normalized so that their sum is always equal to 1;
-- if all weights are sampled together, MCDA calculations receive N-inputs (N being the number of `monte_carlo_runs`; 
+- if all weights are sampled together, MCDA calculations receive N-inputs (N being the number of `num_runs`; 
   if the weights are sampled one at time, MCDA will receive (*n-inputs x num_weights*) inputs;
 - iterations 1,2,3 of the first condition follow;
-- the results of all the combinations normalization/aggregation (or the one selected) are provided in the form of mean and standard deviation over all the runs 
-  (if the weights are iteratively sampled, this applies for *num_indicators-times*).
 
-If the robustness analysis regards the indicators, then:
+If the robustness analysis is selected on the indicators, then:
 - for each indicator, the parameters (e.g., mean and standard deviation) describing the marginal distribution under interest are extracted from the input matrix;
 - for each N, and for each indicator, a value is sampled from the relative assigned marginal distribution: therefore, one of N input matrix is created;
 - normalizations and aggregations are performed as in points 1,2 of the first case: a list of all the results is created in the output directory;
 - mean and standard deviation of all the results are estimated across (monte_carlo_runs x pairs of combinations);  
-- in this case, no randomness on the weights is allowed, therefore, they need to be assigned to all indicators in the `given_weights` parameter.
+- in this case, no randomness on the weights is allowed.
 
 
 ### General information and references
@@ -296,5 +273,8 @@ In fact, when one calculates the standard deviation after rescaling between (0,1
 This results in a higher relative standard deviation compared to the mean.
 However, the higher relative standard deviation is not indicating a greater spread in the data but rather a consequence of the rescaling operation and 
 the chosen denominator in the standard deviation calculation.
+
+### Get in touch
+We hope you enjoy exploring and utilizing ProMCDA. If you have any questions or need assistance, please don't hesitate to contact us.
 
 

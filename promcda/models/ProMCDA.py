@@ -4,10 +4,9 @@ import pandas as pd
 from typing import Tuple, List, Union, Optional
 
 from promcda.configuration import process_indicators_and_weights
-from promcda.configuration.configuration_validator import handle_robustness_weights
 from promcda.enums import PDFType, NormalizationFunctions, AggregationFunctions
 from promcda.utils import check_parameters_pdf, check_if_pdf_is_exact, check_if_pdf_is_poisson, rescale_minmax, \
-    compute_scores_for_single_random_weight, compute_scores_for_all_random_weights, check_norm_sum_weights
+    compute_scores_for_single_random_weight, compute_scores_for_all_random_weights
 
 log = logging.getLogger(__name__)
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
@@ -203,7 +202,7 @@ class ProMCDA:
             raise ValueError(
                 "Inconsistent configuration: 'robustness_weights' and 'robustness_indicators' are both enabled.")
 
-    def get_normalized_values_with_robustness(self) -> Optional[pd.DataFrame]:
+    def get_normalized_values_with_robustness_weights(self) -> Optional[pd.DataFrame]:
         """
         Getter method to access normalized values when robustness on indicators is performed.
 
