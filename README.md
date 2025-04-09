@@ -30,6 +30,7 @@ A tool to estimate scores of alternatives and their uncertainties based on a Mul
 - [Toy example](#toy-example)
 - [A high level summary](#a-high-level-summary)
 - [General information and references](#general-information-and-references)
+- [Releases](#releases)
 - [Get in touch](#get-in-touch)
 
 ### Contributing
@@ -257,7 +258,6 @@ If the robustness analysis is selected on the indicators, then:
 - mean and standard deviation of all the results are estimated across (monte_carlo_runs x pairs of combinations);  
 - in this case, no randomness on the weights is allowed.
 
-
 ### General information and references
 The aggregation functions are implemented by following [*Langhans et al.*, 2014](https://www.sciencedirect.com/science/article/abs/pii/S1470160X14002167)
 
@@ -273,6 +273,10 @@ In fact, when one calculates the standard deviation after rescaling between (0,1
 This results in a higher relative standard deviation compared to the mean.
 However, the higher relative standard deviation is not indicating a greater spread in the data but rather a consequence of the rescaling operation and 
 the chosen denominator in the standard deviation calculation.
+
+### Releases
+The ProMCDA library is continuously being improved and updated.
+Refer to the [CHANGELOG](CHANGELOG.md) for a detailed list of changes and updates in each version.
 
 ### Get in touch
 We hope you enjoy exploring and utilizing ProMCDA. If you have any questions or need assistance, please don't hesitate to contact us.
