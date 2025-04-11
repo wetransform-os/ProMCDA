@@ -169,7 +169,7 @@ class TestProMCDA(unittest.TestCase):
         promcda.normalize(normalization_method=NormalizationFunctions.MINMAX)
 
         # Then
-        normalized_values = promcda.get_normalized_values_with_robustness_weights()
+        normalized_values = promcda.get_normalized_values_with_robustness()
         self.assertIsNotNone(normalized_values)
         self.assertEqual(len(normalized_values), self.num_runs)
 
