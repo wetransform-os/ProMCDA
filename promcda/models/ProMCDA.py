@@ -202,7 +202,7 @@ class ProMCDA:
             raise ValueError(
                 "Inconsistent configuration: 'robustness_weights' and 'robustness_indicators' are both enabled.")
 
-    def get_normalized_values_with_robustness_weights(self) -> Optional[pd.DataFrame]:
+    def get_normalized_values_with_robustness(self) -> Optional[pd.DataFrame]:
         """
         Getter method to access normalized values when robustness on indicators is performed.
 
@@ -413,10 +413,44 @@ class ProMCDA:
             return means, normalized_means, stds
         return None
 
+    @staticmethod
+    def evaluate_ranks(scores) -> Union[pd.Series, pd.DataFrame]:
+        """
+        Compute percentile ranks from scores.
+
+        Parameters
+        scores : array-like, pandas Series, or DataFrame
+            A 1D array or Series, or a 2D DataFrame with multiple columns of scores.
+
+        Returns
+        ranks : pandas.Series or pandas.DataFrame
+            Percentile ranks. If input is a Series or 1D array, returns a Series.
+            If input is a DataFrame, returns a DataFrame with ranks computed per column.
+
+        Examples
+        evaluate_ranks([0.8, 0.6, 0.8])
+        0    0.833333
+        1    0.333333
+        2    0.833333
+
+        evaluate_ranks(pd.DataFrame({"A": [0.8, 0.6], "B": [0.4, 0.9]}))
+                  A         B
+        0  1.000000  0.000000
+        1  0.000000  1.000000
+        """
+        import pandas as pd
+
+        if isinstance(scores, pd.DataFrame):
+            return scores.rank(pct=True)
+
+        if not isinstance(scores, pd.Series):
+            scores = pd.Series(scores)
+
+        return scores.rank(pct=True)
 
 
-    def run_mcda(self, is_robustness_indicators: int, is_robustness_weights: int,
-                 weights: Union[list, List[list], dict]):
+    def run(self, normalization_method: Optional[NormalizationFunctions] = None,
+                      aggregation_method: Optional[AggregationFunctions] = None):
         """
         Execute the full ProMCDA process, either with or without uncertainties on the indicators.
         """

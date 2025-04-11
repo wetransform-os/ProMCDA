@@ -3,6 +3,7 @@ import warnings
 
 import pandas as pd
 
+from promcda.models.ProMCDA import ProMCDA
 from promcda.enums import NormalizationFunctions, AggregationFunctions, OutputColumnNames4Sensitivity, \
     NormalizationNames4Sensitivity, PDFType
 
@@ -334,6 +335,24 @@ class TestProMCDA(unittest.TestCase):
             "Values should be in the range [0, 1] for minmax normalization with weighted sum.")
 
         # TODO: clarify why "aggregated_scores" do not range within 0 and 1 but show values < 1 for 'ws-minmax_01'
+
+    def test_evaluate_ranks_series(self):
+        scores = [0.8, 0.6, 0.8]
+        expected = pd.Series([0.833333, 0.333333, 0.833333])
+        result = ProMCDA.evaluate_ranks(scores)
+        pd.testing.assert_series_equal(result.round(6), expected, check_dtype=False)
+
+    def test_evaluate_ranks_dataframe(self):
+        scores_df = pd.DataFrame({
+            "A": [0.2, 0.4, 0.1],
+            "B": [0.9, 0.3, 0.5]
+        })
+        expected = pd.DataFrame({
+            "A": [0.666667, 1.000000, 0.333333],
+            "B": [1.000000, 0.333333, 0.666667]
+        })
+        result = ProMCDA.evaluate_ranks(scores_df)
+        pd.testing.assert_frame_equal(result.round(6), expected, check_dtype=False)
 
 
 if __name__ == '__main__':

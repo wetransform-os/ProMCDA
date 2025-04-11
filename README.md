@@ -20,11 +20,7 @@ A tool to estimate scores of alternatives and their uncertainties based on a Mul
 - [MCDA quick overview and applications](#mcda-quick-overview-and-applications)
 - [Requirements to use ProMCDA](#requirements-to-use-promcda)
 - [How to use ProMCDA](#how-to-use-promcda)
-- 
-- [Input information needed in the configuration file](#input-information-needed-in-the-configuration-file)
-- [Output](#output)
-- [Requirements](#requirements)
-- [Running ProMCDA](#running-promcda)
+- [The output of ProMCDA](#the-output-of-promcda)
 - [Input matrix](#input-matrix)
 - [Running the unit tests](#running-the-unit-tests)
 - [Toy example](#toy-example)
@@ -137,6 +133,7 @@ In particular, the notebook contains:
 - A ProMCDA object is created with the data.
 - The data is normalized using the ```normalize``` method.
 - The data is aggregated using the ```aggregate``` method.
+- The ranks are evaluated using the ```evaluate_ranks``` method.
 	
 ```ProMCDA``` has the following functionalities:
 - Case of non robustness on the indicators
@@ -188,9 +185,15 @@ The available aggregation functions are defined in the AggregationFunctions Enum
 - harmonic aggregation.
 - minimum aggregation.
 
-Note that the results of ```normalize``` and ```aggregate``` are exposed only for a simple run (i.e., without robustness analysis).
-In case a robustness analysis is performed, the results can be accessed via the ```get_normalized_values_with_robustness_weights``` and
-```get_aggregated_values_with_robustness_indicators``` methods, which returns a dictionary containing the results of the analysis.
+### The output of ProMCDA
+The results of ```normalize``` and ```aggregate``` are exposed as Pandas DataFrames only for a simple run (i.e., without robustness analysis).
+In case a robustness analysis is performed, the results can be accessed via the ```get_normalized_values_with_robustness``` method, 
+which returns a tuple (means, normalized_means, stds) in case of a robustness analysis is performed on all weights or indicators.
+In the case the robustness analysis is performed on a weight at time, then the results can be accessed via the ```get_aggregated_values_with_robustness_one_weight()```
+method, which returns a dictionary. In this case, the keys of the dictionary refer to the indicators whose weight has been perturbed.
+The method ```evaluate_ranks``` returns a Pandas DataFrame containing the ranks of the alternatives based on the aggregated values.
+Refer to the last note in [General information and references](#general-information-and-references)for more details about the use of means 
+and normalized means in association with standard deviations.
     
 For more details about the normalization and aggregation functions, please refer to the paper cited in the badge section.
 By configuring these parameters appropriately, you can tailor the ProMCDA analysis to your specific needs, enabling comprehensive and customized multi-criteria decision analyses.
@@ -249,7 +252,7 @@ If the weights are randomly sampled (robustness analysis of the weights), then:
 - the weights are normalized so that their sum is always equal to 1;
 - if all weights are sampled together, MCDA calculations receive N-inputs (N being the number of `num_runs`; 
   if the weights are sampled one at time, MCDA will receive (*n-inputs x num_weights*) inputs;
-- iterations 1,2,3 of the first condition follow;
+- iterations 1,2,3 of the first condition follow.
 
 If the robustness analysis is selected on the indicators, then:
 - for each indicator, the parameters (e.g., mean and standard deviation) describing the marginal distribution under interest are extracted from the input matrix;
@@ -268,7 +271,7 @@ The code implements 4 normalization and 4 aggregation functions. However, not al
 meaningful or mathematically acceptable. For more details refer to Table 6 in 
 [*Gasser et al.*, 2020](https://www.sciencedirect.com/science/article/pii/S1470160X19307241)
 
-The standard deviation of rescaled scores with any form of randomness are not saved nor plotted because they cannot bring a statistically meaningful information.
+The standard deviation of rescaled (i.e. normalized) scores with any form of randomness are not saved nor plotted because they cannot bring a statistically meaningful information.
 In fact, when one calculates the standard deviation after rescaling between (0,1), the denominator used in the standard deviation formula becomes smaller. 
 This results in a higher relative standard deviation compared to the mean.
 However, the higher relative standard deviation is not indicating a greater spread in the data but rather a consequence of the rescaling operation and 
