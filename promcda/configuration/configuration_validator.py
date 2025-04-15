@@ -177,7 +177,7 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
         if weights is None: weights = [0.5] * num_indicators
 
         logger.info("Number of alternatives: {}".format(input_matrix.shape[0]))
-        logger.info("Number of indicators: {}".format(input_matrix.shape[1]))
+        logger.info("Number of indicators: {}".format(num_indicators))
         # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional - see TODO below
 
     polarities_and_weights = _handle_polarities_and_weights(robustness_indicators, robustness_weights,
