@@ -130,7 +130,7 @@ class ProMCDA:
             robustness_single_weights=self.robustness_single_weights,
             robustness_indicators=self.robustness_indicators)
 
-    # noinspection PyArgumentList
+        # noinspection PyArgumentList
     def normalize(self, normalization_method: Optional[NormalizationFunctions] = None) -> Union[pd.DataFrame, str]:
         """
         Normalize the input data using the specified method.
@@ -359,10 +359,10 @@ class ProMCDA:
         Getter method to access aggregated scores when robustness on indicators is performed.
 
         Returns:
-        A tuple containing two DataFrames:
-        - The mean scores of the aggregated indicators.
-        - The standard deviations of the aggregated indicators.
-        If robustness is not enabled, returns None.
+        - A tuple containing two DataFrames:
+          - The mean scores of the aggregated indicators.
+          - The standard deviations of the aggregated indicators.
+          If robustness is not enabled, returns None.
         """
 
         means = getattr(self, 'all_indicators_scores_means', None)
@@ -379,10 +379,10 @@ class ProMCDA:
         Getter method to access aggregated scores when robustness on weights is performed.
 
         Returns:
-        A tuple containing two DataFrames:
-        - The mean scores of the aggregated indicators.
-        - The standard deviations of the aggregated indicators.
-        If robustness is not enabled, returns None.
+        - A tuple containing two DataFrames:
+          - The mean scores of the aggregated indicators.
+          - The standard deviations of the aggregated indicators.
+          If robustness is not enabled, returns None.
         """
 
         means = getattr(self, 'all_weights_score_means', None)
@@ -399,10 +399,10 @@ class ProMCDA:
         Getter method to access aggregated scores when robustness on one weight at time is performed.
 
         Returns:
-        A tuple containing two DataFrames:
-        - The mean scores of the aggregated indicators.
-        - The standard deviations of the aggregated indicators.
-        If robustness is not enabled, returns None.
+        - A tuple containing two DataFrames:
+          - The mean scores of the aggregated indicators.
+          - The standard deviations of the aggregated indicators.
+          If robustness is not enabled, returns None.
         """
 
         means = getattr(self, 'iterative_random_w_score_means', None)
@@ -419,11 +419,11 @@ class ProMCDA:
         Compute percentile ranks from scores.
 
         Parameters
-        scores : array-like, pandas Series, or DataFrame
+        - scores : array-like, pandas Series, or DataFrame
             A 1D array or Series, or a 2D DataFrame with multiple columns of scores.
 
         Returns
-        ranks : pandas.Series or pandas.DataFrame
+        - ranks : pandas.Series or pandas.DataFrame
             Percentile ranks. If input is a Series or 1D array, returns a Series.
             If input is a DataFrame, returns a DataFrame with ranks computed per column.
 
@@ -438,7 +438,6 @@ class ProMCDA:
         0  1.000000  0.000000
         1  0.000000  1.000000
         """
-        import pandas as pd
 
         if isinstance(scores, pd.DataFrame):
             return scores.rank(pct=True)
@@ -450,72 +449,71 @@ class ProMCDA:
 
 
     def run(self, normalization_method: Optional[NormalizationFunctions] = None,
-                      aggregation_method: Optional[AggregationFunctions] = None):
+                  aggregation_method: Optional[AggregationFunctions] = None):
         """
         Execute the full ProMCDA process, either with or without uncertainties on the indicators.
+
+        Parameters
+        - normalization method (optional): The normalization method to use. If None, all available methods will be
+            applied for a Sensitivity Analysis.
+        - aggregation method (optional): The aggregation method to use. If None, all available methods will be
+            applied for a Sensitivity Analysis.
+
+        Returns
+        - A dictionary containing the:
+          - scores: a pd.DataFrame containing the aggregated scores per normalization and aggregation methods,
+                if robustness on indicators is not performed.
+          - means scores and standard deviations: two pd.DataFrames containing:
+                - the mean scores of the aggregated indicators;
+                - the standard deviations of the aggregated indicators,
+                if robustness on indicators or weights is performed.
+          - ranks : pandas.Series or pandas.DataFrame
+                Percentile ranks. If input is a Series or 1D array, returns a Series.
+                If input is a DataFrame, returns a DataFrame with ranks computed per column.
+
+          Notes
+          - In case of randomness on a single weight, the ranks are not computed.
         """
+        results = {}
+        print("ProMCDA starts...")
 
-        # Normalize
-        # self.normalize()
+        self.normalize(normalization_method)
+        print(f"Indicators are normalized with: {normalization_method}")
 
-        # Aggregate
-        # self.aggregate()
+        scores = self.aggregate(aggregation_method)
+        print(f"MCDA scores are estimated through: {aggregation_method}")
 
-        # Run
-        # no uncertainty
-        # TODO
-        # uncertainty
-        # TODO
+        ranks = self.evaluate_ranks(scores)
+        print(f"MCDA ranks are retrieved")
 
+        if not any([self.robustness_weights, self.robustness_indicators, self.robustness_single_weights]):
+            results = {
+                 "scores": scores,
+                 "ranks": ranks
+            }
+        elif self.robustness_weights:
+            avg, normalized_avg, std = self.get_aggregated_values_with_robustness_weights()
+            results = {
+                 "normalized_scores": normalized_avg,
+                 "average_scores": avg,
+                 "standard deviations": std,
+                 "ranks": self.evaluate_ranks(avg)
+            }
+        elif self.robustness_single_weights:
+            avg, normalized_avg, std = self.get_aggregated_values_with_robustness_one_weight()
+            results = {
+                 "normalized_scores": normalized_avg,
+                 "average_scores": avg,
+                 "standard deviations": std
+            }
+        elif self.robustness_indicators:
+            avg, normalized_avg, std = self.get_aggregated_values_with_robustness_indicators()
+            results = {
+                 "normalized_scores": normalized_avg,
+                 "average_scores": avg,
+                 "standard deviations": std,
+                 "ranks": self.evaluate_ranks(avg)
+            }
 
-    def plot_results(self, data: Union[pd.DataFrame, dict], plot_type: str, **kwargs):
-        """
-        Plot the results based on the specified type of plot.
-
-        Parameters:
-        - data (pd.DataFrame or dictionary): The data to be plotted.
-        - plot_type (str): The type of plot to generate. Must be one of:
-            - "normalized_scores"
-            - "non_normalized_scores"
-            - "average_scores"
-            - "iterative_average_scores"
-        - **kwargs: Additional keyword arguments for customization, such as labels, titles, or styles.
-
-        Returns:
-        None
-        """
-        from promcda.utils.utils_for_plotting import plot_norm_scores_without_uncert, plot_non_norm_scores_with_altair
-
-        #TODO: what if plot_results is used within a Python environment from the Terminal?
-
-        if plot_type == "normalized_scores":
-           plot_norm_scores_without_uncert(self.aggregated_scores)
-        elif plot_type == "non_normalized_scores":
-           #return(plot_non_norm_scores_without_uncert(self.aggregated_scores))
-           return plot_non_norm_scores_with_altair(self.aggregated_scores)
-        #     # Implement the logic for non-normalized scores without uncertainty
-        #     plt.plot(data, linestyle='--', **kwargs)
-        #     plt.title("Non-Normalized Scores Without Uncertainty")
-        # elif plot_type == "mean_scores":
-        #     # Implement the logic for mean scores
-        #     data.mean().plot(kind='bar', **kwargs)
-        #     plt.title("Mean Scores")
-        # elif plot_type == "mean_scores_iterative":
-        #     # Implement the logic for iterative mean scores
-        #     data.cumsum().mean().plot(kind='line', **kwargs)
-        #     plt.title("Mean Scores (Iterative)")
-        # else:
-        #     raise ValueError(f"Invalid plot_type: {plot_type}. Must be one of: "
-        #                      f"'norm_scores_without_uncert', 'non_norm_scores_without_uncert', 'mean_scores', 'mean_scores_iterative'")
-        #
-        # plt.xlabel(kwargs.get("xlabel", "X-axis"))
-        # plt.ylabel(kwargs.get("ylabel", "Y-axis"))
-        # plt.grid(kwargs.get("grid", True))
-        # plt.show()
-
-    # def get_results(self):
-    #     """
-    #     Return the final results as a DataFrame or other relevant structure.
-    #     """
-    #     # Return the aggregated results (or any other relevant results)
-    #     return self.aggregated_matrix
+        print("ProMCDA completed evaluation.")
+        return results

@@ -34,7 +34,6 @@ We welcome contributions from the community! Before contributing, please read ou
 [Contribution Guidelines](./CONTRIBUTING.md) to learn about our development process, coding standards, and how to submit 
 pull requests.
 
-
 ### MCDA quick overview and applications
 A MCDA approach is a systematic framework for making decisions in situations where multiple criteria need to be 
 considered. It ranks a set of alternatives considering the multiple criteria and the user preferences.
@@ -136,25 +135,25 @@ In particular, the notebook contains:
 - The ranks are evaluated using the ```evaluate_ranks``` method.
 	
 ```ProMCDA``` has the following functionalities:
-- Case of non robustness on the indicators
+- **Case of non robustness on the indicators**
   - normalization with a specific method or any methods (i.e., sensitivity analysis on the normalization);
   - aggregation with a specific method or any methods (i.e., sensitivity analysis on the aggregation);
   - any combinations of the two above (partial or full sensitivity analysis);
   - case of robustness on the weights, i.e., all weights are randomly sampled from a uniform distribution [0,1];
   - case of robustness on the weights, i.e., one weight at time is randomly sampled from a uniform distribution [0,1];
   - the two cases above can be combined with the sensitivity analysis on the normalization and/or aggregation.
-- Case of robustness on the indicators (indicators are associated with uncertainties)
+- **Case of robustness on the indicators** (indicators are associated with uncertainties)
   - normalization with a specific method or any methods (i.e., sensitivity analysis on the normalization);
   - aggregation with a specific method or any methods (i.e., sensitivity analysis on the aggregation);
   - any combinations of the two above (partial or full sensitivity analysis);
   - if the robustness analysis is performed, the weights cannot be randomly sampled.
 
-```ProMCDA``` has two required **input parameters**: 
+```ProMCDA``` has two *required* **input parameters**: 
 - the *input matrix* (with or without uncertainties): a Pandas DataFrame containing the alternatives and their indicators;
 - the *polarities* assigned to the indicators: a tuple of "+" - which means the higher the value of the indicator the better for the CI
   evaluation; or of "-" - which means the lower the value of the indicator the better for the CI evaluation. 
 
-The optional parameters are the:
+The *optional* parameters are the:
 - *weights*: a list specifying the weights assigned to each indicator for aggregation. If not provided, equal weighting is assumed for all indicators.
 - *robustness_weights*: a boolean (default False); if enabled (True), the analysis will incorporate robustness checks concerning the weights, assessing how variations in weights impact the results.
 - *robustness_single_weights*: a boolean (default False); when True, the analysis will perform robustness checks on individual weights, evaluating the sensitivity of the outcome to changes in each weight separately.
@@ -185,23 +184,49 @@ The available aggregation functions are defined in the AggregationFunctions Enum
 - harmonic aggregation.
 - minimum aggregation.
 
+The method ```evaluate_ranks``` is a static method, which compute percentile ranks from scores.
+
+The method ```run```executes the full ProMCDA process, either with or without uncertainties on the weights or indicators.
+It combines the normalization, aggregation, and evaluation of ranks steps into a single function call. The two optional input parameters are
+the normalization and aggregation functions; if not provided, the function will apply all the available normalization and aggregation functions.
+
 ### The output of ProMCDA
-The results of ```normalize``` and ```aggregate``` are exposed as Pandas DataFrames only for a simple run (i.e., without robustness analysis).
-In case a robustness analysis is performed, the results can be accessed via the ```get_normalized_values_with_robustness``` method, 
-which returns a tuple (means, normalized_means, stds) in case of a robustness analysis is performed on all weights or indicators.
-In the case the robustness analysis is performed on a weight at time, then the results can be accessed via the ```get_aggregated_values_with_robustness_one_weight()```
-method, which returns a dictionary. In this case, the keys of the dictionary refer to the indicators whose weight has been perturbed.
-The method ```evaluate_ranks``` returns a Pandas DataFrame containing the ranks of the alternatives based on the aggregated values.
+The results of ```normalize```, ```aggregate```, and ```evaluate_ranks``` are exposed as Pandas DataFrames only for a simple run (i.e., without robustness analysis):
+
+- simple normalization: Pandas DataFrame with normalized indicators, each column representing an indicator combined with a normalization method;
+- simple aggregation: Pandas DataFrame with aggregated values, each column representing a normalization combined with an aggregation method;
+- simple evaluation of ranks: Pandas DataFrame with ranks of the alternatives based on the aggregated values, each column representing the rank associated to a normalization combined with an aggregation method.
+
+In case a robustness analysis is performed, the results can be accessed via one of ```get_normalized_values_with_robustness```, 
+```get_aggregated_values_with_robustness_weights```, ```get_aggregated_values_with_robustness_one_weight```, 
+and ```get_normalized_values_with_robustness_indicators``` methods, which return respectively:
+
+- normalization with robustness on indicators: Pandas DataFrame with normalized indicators x num_runs;
+- aggregation with robustness on weights: Tuple (means, normalized_means, stds); each objet is a Pandas DataFrame;
+- aggregation with robustness one weight at time: dictionary with keys referring to means, normalized_means, and stds of the aggregated scores; each dictionary contains another dictionary with keys referring to the indicator whose weight has been perturbed;
+- aggregation with robustness on indicators: Tuple (means, normalized_means, stds); each objet is a Pandas DataFrame.
+
+The output of ```run``` adapts to the type of analysis performed.
+
 Refer to the last note in [General information and references](#general-information-and-references)for more details about the use of means 
 and normalized means in association with standard deviations.
     
 For more details about the normalization and aggregation functions, please refer to the paper cited in the badge section.
 By configuring these parameters appropriately, you can tailor the ProMCDA analysis to your specific needs, enabling comprehensive and customized multi-criteria decision analyses.
 
-
 ### Input matrix
+The input matrix is a Pandas DataFrame containing the alternatives and their indicators. 
+Each row of the DataFrame represents an alternative, while each column represents an indicator. 
+The first column should contain the names of the alternatives, and the subsequent columns should contain the values of the indicators.
+
+The input matrix can be provided in two formats: with uncertainties or without uncertainties.
+- The **input matrix without uncertainties** is used when the indicators are deterministic values.
+- The **input matrix with uncertainties** is used when the indicators are associated with uncertainties, represented by probability distributions.
+- The input matrix can also contain negative values, which will be rescaled to the range [0,1] if necessary.
+
 If the values of one or more indicators are all the same, the indicators are dropped from the input matrix because they contain no information.
 Consequently, the relative weights and polarities are dropped.
+
 Examples of input matrix:
 
 - *input matrix without uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`);

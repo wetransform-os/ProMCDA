@@ -354,6 +354,125 @@ class TestProMCDA(unittest.TestCase):
         result = ProMCDA.evaluate_ranks(scores_df)
         pd.testing.assert_frame_equal(result.round(6), expected, check_dtype=False)
 
+    def test_run_without_robustness(self):
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix,
+            weights=[0.5, 0.5],
+            polarity=self.polarity,
+            robustness_weights=self.robustness_weights,
+            robustness_indicators=self.robustness_indicators,
+            random_seed=self.random_seed
+        )
+
+        results = promcda.run(normalization_method=NormalizationFunctions.MINMAX, aggregation_method=AggregationFunctions.WEIGHTED_SUM)
+
+        self.assertIn("scores", results)
+        self.assertIn("ranks", results)
+        self.assertNotIn("average_scores", results)
+        self.assertNotIn("standard deviations", results)
+
+        self.assertEqual(len(results["scores"]), len(self.input_matrix))
+        self.assertEqual(len(results["ranks"]), len(self.input_matrix))
+
+    def test_run_without_robustness_with_sensitivity(self):
+        expected_combinations = 13 # Num of possible combinations of aggregation and normalization methods - can be updated
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix,
+            weights=[0.5, 0.5],
+            polarity=self.polarity,
+            robustness_weights=self.robustness_weights,
+            robustness_indicators=self.robustness_indicators,
+            random_seed=self.random_seed
+        )
+
+        results = promcda.run()
+
+        self.assertIn("scores", results)
+        self.assertIn("ranks", results)
+        self.assertNotIn("average_scores", results)
+        self.assertNotIn("standard deviations", results)
+
+        self.assertEqual(len(results["scores"]), len(self.input_matrix))
+        self.assertEqual(len(results["ranks"]), len(self.input_matrix))
+
+        self.assertEqual((results["scores"].shape), (len(self.input_matrix),expected_combinations))
+        self.assertEqual((results["ranks"].shape), (len(self.input_matrix), expected_combinations))
+
+    def test_run_with_robustness_weights(self):
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix,
+            weights=[0.5, 0.5],
+            polarity=self.polarity,
+            robustness_weights=True,
+            marginal_distributions=self.marginal_distributions,
+            num_runs=self.num_runs,
+            num_cores=self.num_cores,
+            random_seed=self.random_seed
+        )
+
+        results = promcda.run()
+
+        self.assertIn("normalized_scores", results)
+        self.assertIn("average_scores", results)
+        self.assertIn("standard deviations", results)
+        self.assertIn("ranks", results)
+
+        self.assertEqual(len(results["normalized_scores"]), len(self.input_matrix))
+        self.assertEqual(len(results["average_scores"]), len(self.input_matrix))
+        self.assertEqual(len(results["standard deviations"]), len(self.input_matrix))
+        self.assertEqual(len(results["ranks"]), len(self.input_matrix))
+
+    def test_run_with_robustness_one_weight(self):
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix,
+            weights=[0.5, 0.5],
+            polarity=self.polarity,
+            robustness_single_weights=True,
+            marginal_distributions=self.marginal_distributions,
+            num_runs=self.num_runs,
+            num_cores=self.num_cores,
+            random_seed=self.random_seed
+        )
+
+        results = promcda.run()
+
+        self.assertIn("normalized_scores", results)
+        self.assertIn("average_scores", results)
+        self.assertIn("standard deviations", results)
+
+        self.assertIsInstance(results, dict)
+        self.assertEqual(len(results.keys()), 3)
+        for key, value in results.items():
+            self.assertIsInstance(value, dict, msg=f"Value for key '{key}' is not a dictionary")
+            for key_intern, value_intern in value.items():
+                self.assertIsInstance(key_intern, str, msg=f"Key '{key_intern}' is not a string")
+                self.assertIsInstance(value_intern, pd.DataFrame, msg=f"Value for key '{key_intern}' is not a DataFrame")
+
+
+    def test_run_with_robustness_indicators(self):
+        promcda = ProMCDA(
+            input_matrix=self.input_matrix_with_uncertainty,
+            weights=[0.5, 0.5],
+            polarity=self.polarity,
+            robustness_indicators=True,
+            marginal_distributions=self.marginal_distributions,
+            num_runs=self.num_runs,
+            num_cores=self.num_cores,
+            random_seed=self.random_seed
+        )
+
+        results = promcda.run()
+
+        self.assertIn("normalized_scores", results)
+        self.assertIn("average_scores", results)
+        self.assertIn("standard deviations", results)
+        self.assertIn("ranks", results)
+
+        self.assertEqual(len(results["normalized_scores"]), len(self.input_matrix))
+        self.assertEqual(len(results["average_scores"]), len(self.input_matrix))
+        self.assertEqual(len(results["standard deviations"]), len(self.input_matrix))
+        self.assertEqual(len(results["ranks"]), len(self.input_matrix))
+
 
 if __name__ == '__main__':
     unittest.main()
