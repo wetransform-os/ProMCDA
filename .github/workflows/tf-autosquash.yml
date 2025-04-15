@@ -23,16 +23,17 @@ jobs:
         env:
           WE_HELPER_GITHUB_PRIVATE_KEY: ${{ secrets.WE_HELPER_GITHUB_PRIVATE_KEY }}
         if: env.WE_HELPER_GITHUB_PRIVATE_KEY # only if we have the required secret
-        uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69 # v1.11.0
+        uses: actions/create-github-app-token@3ff1caaa28b64c9cc276ce0a02e2ff584f3900c5 # v2.0.2
         id: app-token
         with:
           app-id: ${{ secrets.WE_HELPER_GITHUB_APP_ID }}
           private-key: ${{ secrets.WE_HELPER_GITHUB_PRIVATE_KEY }}
 
       - name: Checkout the repository and persist credentials
-        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           token: ${{ steps.app-token.outputs.token || github.token }}
+          fetch-depth: 0 # otherwise rebase will fail if PR is not based on the latest commit
 
       - name: Determine PR head repo owner
         run: |
@@ -75,6 +76,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Remember author and email of last commit
+        run: |
+          LAST_COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
+          LAST_COMMIT_EMAIL=$(git log -1 --pretty=format:"%ae")
+          echo "LAST_COMMIT_AUTHOR=$LAST_COMMIT_AUTHOR" >> $GITHUB_ENV
+          echo "LAST_COMMIT_EMAIL=$LAST_COMMIT_EMAIL" >> $GITHUB_ENV
+
       - name: Perform interactive rebase with autosquash
         env:
           EDITOR: 'true' # to automatically complete the interactive rebase
@@ -82,6 +90,15 @@ jobs:
           BASE_REF=$(gh pr view ${{ github.event.issue.number }} --json baseRefName -q .baseRefName)
           git fetch origin
           git rebase -i --autosquash origin/$BASE_REF
+
+      - name: Replace renovate author to prevent renovate overriding changes
+        env:
+          EDITOR: 'true' # to automatically complete the amend
+        run: |
+          COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
+            if [ "$COMMIT_AUTHOR" = "renovate[bot]" ] || [ "$COMMIT_AUTHOR" = "we-renovate[bot]" ]; then
+            git commit --amend --author="$LAST_COMMIT_AUTHOR <$LAST_COMMIT_EMAIL>"
+          fi
 
       - name: Push changes
         run: |
