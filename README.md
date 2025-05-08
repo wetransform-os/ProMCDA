@@ -195,6 +195,10 @@ effect.
   
 
 ### Requirements
+
+As this project is now a submodule in ranking-service, it must be run from the root directory i.e. outside of `ProMCDA` folder.
+You would need to create a virtual environment outside ProMCDA.
+
 On Windows:
 ```bash
 conda create --name <choose-a-name-like-Promcda> python=3.9
@@ -214,14 +218,27 @@ From the root dir, via command line
 - on Windows:
 ```bash
 activate.bat <your-env>
-python3 -m mcda.mcda_run -c configuration.json
+python3 -m ProMCDA.mcda.mcda_run -c ProMCDA/configuration.json 
 ```
 - on Mac and Linux:
 ```bash
 source activate <your-env>
-python3 -m mcda.mcda_run -c configuration.json
+python3 -m ProMCDA.mcda.mcda_run -c ProMCDA/configuration.json 
 ```
-where an example of configuration file can be found in `./configuration.json`.
+where an example of configuration file can be found in `ProMCDA/configuration.json`.
+
+
+### Run ProMCDA for ranking service
+
+Once you have set up virtual environment and installed all the requirements from requirements.txt, you can run the following command to run ProMCDA with sample data
+
+```bash
+python3 -m ProMCDA.mcda.mcda_ranking_run -c ProMCDA/input_files/toy_example/car-data-input-sample-from-ranking-service.json
+```
+where 
+- ProMCDA/input_files/toy_example/car-data-input-sample-from-ranking-service.json is the config file required to run mcda for ranking service where input matrix is part of the configuration
+- ProMCDA.mcda.mcda_ranking_run is the main program that is run
+
 
 We tested ProMCDA on Windows, Linux and Mac. We identified a possible issue with some Windows machines caused by the
 library ```kaleido``` (used to generate static images) and reported [here](https://github.com/plotly/Kaleido/issues/126). 
@@ -241,7 +258,7 @@ Change the configuration file for your needs.
 
 ### Running the tests
 ```bash
-python3 -m pytest -s tests/unit_tests -vv
+python3 -m pytest -s ProMCDA/tests/unit_tests -vv 
 ```
 ### Toy example
 ```ProMCDA``` contains a toy example, a simple case to test run the package. 
