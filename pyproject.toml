@@ -1,0 +1,33 @@
+# For editable installs, use pyproject.toml instead of setup.py (deprecated).
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "promcda"
+version = "1.0.8"
+description = "A probabilistic Multi Criteria Decision Analysis"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "EPL v 2.0" }
+authors = [
+    { name = "Flaminia Catalli", email = "flaminia.catalli@wetransform.to" },
+    { name = "Matteo Spada", email = "spaa@zhaw.ch" },
+]
+keywords = ["MCDA", "robustness analysis", "Monte Carlo sampling", "probabilistic approach"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Eclipse Public License 2.0 (EPL-2.0)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+dependencies = [
+    # Dependencies will be listed here after processing requirements.txt
+]
+
+[tool.setuptools]
+packages = ["promcda"]
