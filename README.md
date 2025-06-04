@@ -215,9 +215,10 @@ For more details about the normalization and aggregation functions, please refer
 By configuring these parameters appropriately, you can tailor the ProMCDA analysis to your specific needs, enabling comprehensive and customized multi-criteria decision analyses.
 
 ### Input matrix
-The input matrix is a Pandas DataFrame containing the alternatives and their indicators. 
+The input matrix is a Pandas DataFrame that contains the alternatives and their corresponding indicators. 
 Each row of the DataFrame represents an alternative, while each column represents an indicator. 
-The first column should contain the names of the alternatives, and the subsequent columns should contain the values of the indicators.
+The first column should contain the names of the alternatives and be set as the index column of the dataframe. 
+The subsequent columns should contain the values of the indicators.
 
 The input matrix can be provided in two formats: with uncertainties or without uncertainties.
 - The **input matrix without uncertainties** is used when the indicators are deterministic values.
