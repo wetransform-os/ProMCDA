@@ -50,10 +50,10 @@ def validate_configuration(
         num_indicators = input_matrix.shape[1]
     else:
         num_non_exact_and_non_poisson = (len(marginal_distributions) -
-                                         marginal_distributions.count(PDFType.EXACT.value) -
-                                         marginal_distributions.count(PDFType.POISSON.value))
+                                         marginal_distributions.count(PDFType.EXACT) -
+                                         marginal_distributions.count(PDFType.POISSON))
         num_indicators = (input_matrix.shape[1] - num_non_exact_and_non_poisson)
-
+    
     for param_name, param_value in {
         'robustness_weights': robustness_weights,
         'robustness_single_weights': robustness_single_weights,
@@ -72,7 +72,6 @@ def validate_configuration(
     if robustness_indicators and (robustness_weights or robustness_single_weights):
         raise ValueError(
             "If 'robustness_indicators' is True, 'robustness_weights' and 'robustness_single_weights' must be False.")
-
 
     if weights is not None and len(weights) != num_indicators:
         raise ValueError("'weights' must have the same number of elements as 'num_indicators'.")
