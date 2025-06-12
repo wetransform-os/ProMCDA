@@ -146,7 +146,7 @@ class MCDAWithRobustness:
             elif distribution_type == 'uniform':
                 samples = np.random.uniform(
                     low=parameter1, high=parameter2, size=(num_runs, len(parameter1)))
-            elif distribution_type == 'lnorm':
+            elif distribution_type == 'lognormal':
                 samples = np.random.lognormal(
                     mean=parameter1, sigma=parameter2, size=(num_runs, len(parameter1)))
             elif distribution_type == 'poisson':
