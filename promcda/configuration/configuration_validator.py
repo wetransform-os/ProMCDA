@@ -53,7 +53,7 @@ def validate_configuration(
                                          marginal_distributions.count(PDFType.EXACT) -
                                          marginal_distributions.count(PDFType.POISSON))
         num_indicators = (input_matrix.shape[1] - num_non_exact_and_non_poisson)
-    
+
     for param_name, param_value in {
         'robustness_weights': robustness_weights,
         'robustness_single_weights': robustness_single_weights,

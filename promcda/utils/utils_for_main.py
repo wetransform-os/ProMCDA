@@ -526,6 +526,11 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, marginal_distributions: Tup
         param1_position = j
         if pdf_exact == 0 and pdf_poisson == 0:  # non-exact PDF, except Poisson
             param2_position = param1_position + 1  # param2 column follows param1
+            if param2_position >= len(input_matrix.columns):
+                raise IndexError(
+                    f"You are trying to access column number {param2_position}, but the maximum number of columns is "
+                    f"{len(input_matrix.columns) - 1}. "
+                    f"Check marginal_distribution.")
             param1_col = input_matrix.columns[param1_position]
             param2_col = input_matrix.columns[param2_position]
             param1 = input_matrix[param1_col]
@@ -560,7 +565,7 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, marginal_distributions: Tup
 
 def check_if_pdf_is_exact(marginal_pdf: tuple[PDFType, ...]) -> list:
     """
-    Check if each indicator's probability distribution function (PDF) is of type 'exact'.
+    Check if the indicator's probability distribution function (PDF) is of type 'exact'.
 
     Parameters:
     - marginal_pdf: a list containing the type of PDF for each indicator.
@@ -577,7 +582,7 @@ def check_if_pdf_is_exact(marginal_pdf: tuple[PDFType, ...]) -> list:
     :param marginal_pdf: list
     :return exact_pdf_mask: List[int]
     """
-    exact_pdf_mask = [1 if pdf == 'exact' else 0 for pdf in marginal_pdf]
+    exact_pdf_mask = [1 if pdf == PDFType.EXACT else 0 for pdf in marginal_pdf]
 
     return exact_pdf_mask
 
@@ -601,7 +606,7 @@ def check_if_pdf_is_poisson(marginal_pdf: tuple[PDFType, ...]) -> list:
     :param marginal_pdf: list
     :return poisson_pdf_mask: List[int]
     """
-    poisson_pdf_mask = [1 if pdf == 'poisson' else 0 for pdf in marginal_pdf]
+    poisson_pdf_mask = [1 if pdf == PDFType.POISSON else 0 for pdf in marginal_pdf]
 
     return poisson_pdf_mask
 
@@ -625,7 +630,7 @@ def check_if_pdf_is_uniform(marginal_pdf: list) -> list:
     :param marginal_pdf: list
     :return uniform_pdf_mask: List[int]
     """
-    uniform_pdf_mask = [1 if pdf == 'uniform' else 0 for pdf in marginal_pdf]
+    uniform_pdf_mask = [1 if pdf == PDFType.UNIFORM else 0 for pdf in marginal_pdf]
 
     return uniform_pdf_mask
 
