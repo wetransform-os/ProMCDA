@@ -170,8 +170,8 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
         input_matrix = _handle_no_robustness_indicators(input_matrix)
         logger.info("Number of indicators: {}".format(input_matrix.shape[1]))
     else:  # matrix with uncertainty on indicators
-        num_non_exact_and_non_poisson = (len(marginal_distributions) - marginal_distributions.count('exact') -
-                                         marginal_distributions.count('poisson'))
+        num_non_exact_and_non_poisson = (len(marginal_distributions) - marginal_distributions.count(PDFType.EXACT) -
+                                         marginal_distributions.count(PDFType.POISSON))
         num_indicators = (input_matrix.shape[1] - num_non_exact_and_non_poisson)
         if weights is None: weights = [0.5] * num_indicators
 
