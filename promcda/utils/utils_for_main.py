@@ -830,31 +830,36 @@ dict, None]) -> None:
 
 def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
     """
-    Check the input matrix for duplicated rows in the alternatives column, rescale negative indicator values
-    and drop the index column of alternatives.
+    Check the input matrix for:
+    - duplicate alternative names (assumed in the first column),
+    - duplicate rows (i.e., identical alternatives with same indicator values),
+    - then drop the column with alternative names and rescale indicators if needed.
 
     Parameters:
     - input_matrix: The input matrix containing the alternatives and indicators.
 
     Raises:
-    - ValueError: If duplicated rows are found in the alternative column.
-    - UserStoppedInfo: If the user chooses to stop when duplicates are found.
+    - ValueError: If duplicate alternative names or duplicate full rows are found.
+
+    Returns:
+    - pd.DataFrame: Cleaned input matrix with alternative names removed and indicators rescaled if needed.
 
      :param input_matrix: pd.DataFrame
      :rtype: pd.DataFrame
      :return: input_matrix
     """
+    alternative_names = input_matrix.iloc[:, 0]
+    if alternative_names.duplicated().any():
+        raise ValueError("Error: Duplicate alternative names found in the first column.")
+
+    logger.info(f"Alternatives are: {alternative_names.tolist()}")
+
     if input_matrix.duplicated().any():
-        raise ValueError('Error: Duplicated rows in the alternatives column.')
-    elif input_matrix.iloc[:, 0].duplicated().any():
-        logger.info('Duplicated rows in the alternatives column.')
+        raise ValueError("Error: Duplicate full rows found in the input matrix.")
 
-    index_column_values = input_matrix.index.tolist()
-    logger.info("Alternatives are {}".format(index_column_values))
-    input_matrix_no_alternatives = input_matrix.reset_index(drop=True)  # drop the alternative
+    input_matrix_no_alternatives = input_matrix.iloc[:, 1:].reset_index(drop=True)
 
-    input_matrix_no_alternatives = _check_and_rescale_negative_indicators(
-        input_matrix_no_alternatives)
+    input_matrix_no_alternatives = _check_and_rescale_negative_indicators(input_matrix_no_alternatives)
 
     return input_matrix_no_alternatives
 
