@@ -19,11 +19,12 @@ A tool to estimate scores of alternatives and their uncertainties based on a Mul
 - [Contributing](#contributing)
 - [MCDA quick overview and applications](#mcda-quick-overview-and-applications)
 - [Requirements to use ProMCDA](#requirements-to-use-promcda)
-- [How to use ProMCDA](#how-to-use-promcda)
-- [The output of ProMCDA](#the-output-of-promcda)
+- [How to install ProMCDA](#how-to-use-promcda)
 - [Input matrix](#input-matrix)
+- [ProMCDA functionalities](#promcda-functionalities)
+- [The output of ProMCDA](#the-output-of-promcda)
+- [Using ProMCDA: Examples](#using-promcda-examples)
 - [Running the unit tests](#running-the-unit-tests)
-- [Toy example](#toy-example)
 - [A high level summary](#a-high-level-summary)
 - [General information and references](#general-information-and-references)
 - [Releases](#releases)
@@ -87,6 +88,7 @@ Here we define:
 The tool can be also used as a simple (i.e. deterministic) MCDA ranking tool with no robustness/sensitivity analysis (see below for instructions).
 
 ### Requirements to use ProMCDA
+To use ProMCDA, you need to have Python 3.9 or higher installed on your system.
 
 It’s advisable to install any packages within a virtual environment to manage dependencies effectively and avoid conflicts. 
 To set up and activate a virtual environment:
@@ -103,9 +105,8 @@ conda create --name <choose-a-name-like-Promcda> python=3.9
 source activate <choose-a-name-like-Promcda>
 pip install -r requirements.txt
 ```
-The Python version should de 3.9 or higher.
 
-### How to use ProMCDA
+### How to install ProMCDA
 This section provides a comprehensive guide on utilizing ProMCDA for Probabilistic Multi-Criteria Decision Analysis. 
 ProMCDA is designed to help decision-makers explore the sensitivity and robustness of Composite Indicators (CIs) in a user-friendly manner. 
 You can use ```ProMCDA``` as a Python library. With Python and pip set up, you can install ProMCDA using the following command:
@@ -123,17 +124,46 @@ import promcda
 print(promcda.__version__)
 ```
 
-Once ```ProMCDA``` is installed, you can start using it in your Python projects or Jupyter Notebooks. 
-In `demo_in_notebook` you can find a Jupyter notebook that shows how to use the library in Python with a few examples.
+### Input matrix
+The input matrix is a Pandas DataFrame that contains the alternatives and their corresponding indicators. 
+Each row of the DataFrame represents an alternative, while each column represents an indicator. 
+The first column should contain the names of the alternatives and be set as the index column of the dataframe. 
+The subsequent columns should contain the values of the indicators.
 
-In particular, the notebook contains:
-- Two examples of setups for instatiating the ProMCDA object: one with a dataset without uncertainties and one with a dataset with uncertainties.
-- A mock dataset is created in each setup representing three alternatives evaluated against two criteria.
-- A ProMCDA object is created with the data.
-- The data is normalized using the ```normalize``` method.
-- The data is aggregated using the ```aggregate``` method.
-- The ranks are evaluated using the ```evaluate_ranks``` method.
-	
+The input matrix can be provided in two formats: with uncertainties or without uncertainties.
+- The **input matrix without uncertainties** is used when the indicators are deterministic values.
+- The **input matrix with uncertainties** is used when the indicators are associated with uncertainties, represented by probability distributions.
+- The input matrix can also contain negative values, which will be rescaled to the range [0,1] if necessary.
+
+If the values of one or more indicators are all the same, the indicators are dropped from the input matrix because they contain no information.
+Consequently, the relative weights and polarities are dropped.
+
+Examples of input matrix:
+
+- *input matrix without uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`);
+- *input matrix with uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`).
+
+The example input matrix with uncertainties is designed for an example where the PDFs describing the indicators are respectively: 
+uniform; exact; normal (or lognormal); exact; and normal (or lognormal). Please modify it for your specific needs.
+
+If the input matrix without uncertainties has any values of any indicators that are negative, those values are rescaled
+between [0,1]. This is needed because some normalization functions (as for example *target*) cannot handle negative values 
+properly.
+
+The input matrix with uncertainties has the following characteristics:
+
+- if an indicator is described by an *exact* probability density function (PDF), one needs only a column with its values;
+- if an indicator is described by a *uniform* PDF, one needs two columns with the lowest and highest values (in this order);
+- if an indicator is described by a *normal* PDF, one needs two columns with the mean and standard deviation values (in this order);
+- if an indicator is described by a *lognormal* PDF, one needs two columns with the log(mean) and log(standard deviation) values (in this order);
+- if an indicator is described by a *Poisson* PDF, one needs only one colum with the rate.
+
+If any mean value of any indicator is equal or smaller of its standard deviation - in case of a normal or lognormal PDF - 
+```ProMCDA``` breaks to ask you if you need to investigate your data further before applying MCDA. This means that your data shows
+a high variability regarding some indicators. If you want to continue anyway, negative sampled data will be rescaled 
+into [0,1], as in the case without uncertainty.
+
+### ProMCDA functionalities
 ```ProMCDA``` has the following functionalities:
 - **Case of non robustness on the indicators**
   - normalization with a specific method or any methods (i.e., sensitivity analysis on the normalization);
@@ -202,9 +232,9 @@ In case a robustness analysis is performed, the results can be accessed via one 
 and ```get_normalized_values_with_robustness_indicators``` methods, which return respectively:
 
 - normalization with robustness on indicators: Pandas DataFrame with normalized indicators x num_runs;
-- aggregation with robustness on weights: Tuple (means, normalized_means, stds); each objet is a Pandas DataFrame;
+- aggregation with robustness on weights: Tuple (means, normalized_means, stds); each object is a Pandas DataFrame;
 - aggregation with robustness one weight at time: dictionary with keys referring to means, normalized_means, and stds of the aggregated scores; each dictionary contains another dictionary with keys referring to the indicator whose weight has been perturbed;
-- aggregation with robustness on indicators: Tuple (means, normalized_means, stds); each objet is a Pandas DataFrame.
+- aggregation with robustness on indicators: Tuple (means, normalized_means, stds); each object is a Pandas DataFrame.
 
 The output of ```run``` adapts to the type of analysis performed.
 
@@ -214,58 +244,35 @@ and normalized means in association with standard deviations.
 For more details about the normalization and aggregation functions, please refer to the paper cited in the badge section.
 By configuring these parameters appropriately, you can tailor the ProMCDA analysis to your specific needs, enabling comprehensive and customized multi-criteria decision analyses.
 
-### Input matrix
-The input matrix is a Pandas DataFrame that contains the alternatives and their corresponding indicators. 
-Each row of the DataFrame represents an alternative, while each column represents an indicator. 
-The first column should contain the names of the alternatives and be set as the index column of the dataframe. 
-The subsequent columns should contain the values of the indicators.
+### Using ProMCDA: Examples
+Once ```ProMCDA``` is installed, you can start using it in your Python projects or Jupyter Notebooks. 
+To help you get started, the library comes with two example setups:
+The first is a minimal functional demo that focuses purely on how to instantiate and run ProMCDA. It uses mock data for 
+simplicity, with no real-world meaning. It is useful to quickly understand the syntax and workflow.
+The second is a playful, real-world inspired example showing how ProMCDA can support group decision-making. 
+In this case, how a group of friends might choose a weekend destination. Though informal, this example demonstrates 
+how uncertainties and preferences come into play in practical scenarios. 
+Together, these examples show both the mechanics of using the library and the applicability of its concepts.
 
-The input matrix can be provided in two formats: with uncertainties or without uncertainties.
-- The **input matrix without uncertainties** is used when the indicators are deterministic values.
-- The **input matrix with uncertainties** is used when the indicators are associated with uncertainties, represented by probability distributions.
-- The input matrix can also contain negative values, which will be rescaled to the range [0,1] if necessary.
+In particular, `demo_in_notebook` contains:
+- Two examples of setups for instatiating the ProMCDA object: one with a dataset without uncertainties and one with a dataset with uncertainties.
+- A mock dataset is created in each setup representing three alternatives evaluated against two criteria.
+- A ProMCDA object is created with the data.
+- The data is normalized using the ```normalize``` method.
+- The data is aggregated using the ```aggregate``` method.
+- The ranks are evaluated using the ```evaluate_ranks``` method.
 
-If the values of one or more indicators are all the same, the indicators are dropped from the input matrix because they contain no information.
-Consequently, the relative weights and polarities are dropped.
-
-Examples of input matrix:
-
-- *input matrix without uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_without_uncert.csv`);
-- *input matrix with uncertainties* for the indicators (see an example here: `tests/resources/input_matrix_with_uncert.csv`).
-
-The example input matrix with uncertainties is designed for an example where the PDFs describing the indicators are respectively: 
-uniform; exact; normal (or lognormal); exact; and normal (or lognormal). Please modify it for your specific needs.
-
-If the input matrix without uncertainties has any values of any indicators that are negative, those values are rescaled
-between [0,1]. This is needed because some normalization functions (as for example *target*) cannot handle negative values 
-properly.
-
-The input matrix with uncertainties has the following characteristics:
-
-- if an indicator is described by an *exact* probability density function (PDF), one needs only a column with its values;
-- if an indicator is described by a *uniform* PDF, one needs two columns with the lowest and highest values (in this order);
-- if an indicator is described by a *normal* PDF, one needs two columns with the mean and standard deviation values (in this order);
-- if an indicator is described by a *lognormal* PDF, one needs two columns with the log(mean) and log(standard deviation) values (in this order);
-- if an indicator is described by a *Poisson* PDF, one needs only one colum with the rate.
-
-If any mean value of any indicator is equal or smaller of its standard deviation - in case of a normal or lognormal PDF - 
-```ProMCDA``` breaks to ask you if you need to investigate your data further before applying MCDA. This means that your data shows
-a high variability regarding some indicators. If you want to continue anyway, negative sampled data will be rescaled 
-into [0,1], as in the case without uncertainty.
+In the `training_notebook`, you can find a playful example that shows how ProMCDA can support group decision-making in everyday life.
+Scenario: A group of friends is trying to decide where to go for a weekend trip. They have a few options, and they evaluate 
+these alternatives based on a few criteria like cost (lower is better); travel time (lower is better); and weather (higher is better).
+Each friend has slightly different preferences, which are reflected in the weights assigned to the criteria. 
+To capture the uncertainty of these preferences, weights are either fixed or randomly sampled within a plausible range. 
+In some setups, we also introduce uncertainty on the criteria, using probability distributions.
 
 ### Running the unit tests
 ```bash
 python3 -m pytest -s tests/unit_tests -vv
 ```
-### Toy example
-```ProMCDA``` contains a toy example, a simple case to test run the package. 
-The toy example helps you identify the best car models (i.e., the alternatives) you can buy based on a few indicators 
-(e.g., Model, Fuel Efficiency, Safety Rating, Price, Cargo Space, Acceleration, Warranty).
-The input matrix for the toy example is in `input_files/toy_example/car_data.csv`. 
-You can import the input matrix in a Python environment as a Pandas dataframe and perform normalization and aggregation with the ProMCDA library. 
-The directory `toy_example/toy_example_utilities` contains also a Jupyter notebook to allow you to modify the input matrix easily. 
-The chosen example is very simple and not suitable for a robustness analysis test. Running the robustness analysis requires an input matrix 
-containing information on the uncertainties of the criteria as described above, and it is not under the scope of the toy example. 
 
 ### A high level summary
 If no robustness analysis is selected, then:
