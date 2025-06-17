@@ -857,11 +857,11 @@ def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
     if input_matrix.duplicated().any():
         raise ValueError("Error: Duplicate full rows found in the input matrix.")
 
-    input_matrix_no_alternatives = input_matrix.iloc[:, 1:].reset_index(drop=True)
+    input_matrix_indexed_by_alternatives = input_matrix.iloc[:, 1:].reset_index(drop=True)
 
-    input_matrix_no_alternatives = _check_and_rescale_negative_indicators(input_matrix_no_alternatives)
+    input_matrix_indexed_by_alternatives = _check_and_rescale_negative_indicators(input_matrix_indexed_by_alternatives)
 
-    return input_matrix_no_alternatives
+    return input_matrix_indexed_by_alternatives
 
 
 def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame:
