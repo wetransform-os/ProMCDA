@@ -135,8 +135,12 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
     indicators_scaled_target_without_zero = None
     indicators_scaled_rank = None
 
-    # Complex objects like Enums are no (especially on macOS and Windows),
-    # which can cause issues when using multiprocessing.
+    # Avoid passing complex objects like Enums to multiprocessing workers.
+    # On macOS and Windows, the default 'spawn' start method is used for multiprocessing,
+    # which requires all objects to be pickleable. Enums can cause pickling issues,
+    # especially if they are not defined in an importable module or are passed directly.
+    # To ensure compatibility, consider passing only simple types (e.g., strings or integers)
+    # derived from Enum values.
 
     if method is None or method == 'minmax':
         indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))

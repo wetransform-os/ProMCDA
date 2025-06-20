@@ -4,7 +4,7 @@ import pandas as pd
 from typing import Tuple, List, Union, Optional
 
 from promcda.configuration import process_indicators_and_weights
-from promcda.enums import PDFType, NormalizationFunctions, AggregationFunctions
+from promcda.enums import PDFType, NormalizationFunctions, AggregationFunctions, RobustnessAnalysisType
 from promcda.utils import check_parameters_pdf, check_if_pdf_is_exact, check_if_pdf_is_poisson, rescale_minmax, \
     compute_scores_for_single_random_weight, compute_scores_for_all_random_weights
 
@@ -17,8 +17,7 @@ logger = logging.getLogger("ProMCDA")
 class ProMCDA:
     def __init__(self, input_matrix: pd.DataFrame, polarity: Tuple[str, ...],
                  weights: Optional[list] = None,
-                 robustness_weights: Optional[bool] = False,
-                 robustness_single_weights: Optional[bool] = False, robustness_indicators: Optional[bool] = False,
+                 robustness: RobustnessAnalysisType = RobustnessAnalysisType.NONE,
                  marginal_distributions: Optional[Tuple[PDFType, ...]] = None,
                  num_runs: Optional[int] = 10000, num_cores: Optional[int] = 1, random_seed: Optional[int] = 43):
 
@@ -82,9 +81,7 @@ class ProMCDA:
         self.input_matrix = input_matrix
         self.polarity = polarity
         self.weights = weights.copy() if weights is not None else None
-        self.robustness_weights = robustness_weights
-        self.robustness_single_weights = robustness_single_weights
-        self.robustness_indicators = robustness_indicators
+        self.robustness = robustness
         self.num_runs = num_runs
         self.marginal_distributions = marginal_distributions
         self.num_cores = num_cores
@@ -106,16 +103,19 @@ class ProMCDA:
 
         self.input_matrix_no_alternatives = check_input_matrix(self.input_matrix)
 
-        if self.weights is None and robustness_indicators is False:
+        if not isinstance(robustness, RobustnessAnalysisType):
+            raise TypeError(f"'robustness' must be of type RobustnessAnalysisType, got {type(robustness).__name__}")
+
+        if self.weights is None and RobustnessAnalysisType.INDICATORS.value is not "indicators":
             self.weights = [0.5] * self.input_matrix_no_alternatives.shape[1]
-        elif self.weights is None and robustness_indicators is True:
+        elif self.weights is None and self.robustness == RobustnessAnalysisType.INDICATORS:
             self.input_matrix, num_indicators, polarity, weights = process_indicators_and_weights( # an input matrix without alternatives & unuseful columns
                 self.input_matrix_no_alternatives,
-                self.robustness_indicators,
-                self.robustness_weights,
-                self.robustness_single_weights,
-                self.polarity, self.num_runs,
-                weights, self.marginal_distributions)
+                self.robustness,
+                self.polarity,
+                self.num_runs,
+                weights,
+                self.marginal_distributions)
             self.weights = weights.copy()
 
         validate_configuration(
@@ -126,9 +126,7 @@ class ProMCDA:
             num_runs=self.num_runs,
             num_cores=self.num_cores,
             random_seed=self.random_seed,
-            robustness_weights=self.robustness_weights,
-            robustness_single_weights=self.robustness_single_weights,
-            robustness_indicators=self.robustness_indicators)
+            robustness=self.robustness)
 
         # noinspection PyArgumentList
     def normalize(self, normalization_method: Optional[NormalizationFunctions] = None) -> Union[pd.DataFrame, str]:
@@ -155,28 +153,26 @@ class ProMCDA:
         from promcda.configuration import process_indicators_and_weights
 
         # Configuration parameters' validation
-        if normalization_method is not None:
-            if normalization_method not in vars(NormalizationFunctions).values():
-                raise ValueError(
-                    f"Invalid 'normalization_method'. Expected one of {list(vars(NormalizationFunctions).values())}, "
-                    f"got '{normalization_method}'.")
+        if normalization_method is not None and normalization_method not in [member for member in
+                                                                             NormalizationFunctions]:
+            raise ValueError(
+                f"Invalid 'normalization_method'. Expected one of {[member.value for member in NormalizationFunctions]}, "
+                f"got '{normalization_method}'.")
 
         # Process indicators and weights based on input parameters in the configuration
         input_matrix_no_alternatives, num_indicators, polarity, norm_weights = process_indicators_and_weights(self.input_matrix_no_alternatives,
-                                                                        self.robustness_indicators,
-                                                                        self.robustness_weights,
-                                                                        self.robustness_single_weights,
+                                                                        self.robustness,
                                                                         self.polarity, self.num_runs,
                                                                         self.weights, self.marginal_distributions)
 
-        if not self.robustness_indicators:
+        if not self.robustness == RobustnessAnalysisType.INDICATORS:
             mcda_without_robustness = MCDAWithoutRobustness(polarity, input_matrix_no_alternatives)
             self.normalized_values_without_robustness = mcda_without_robustness.normalize_indicators(
                 normalization_method)
 
             return self.normalized_values_without_robustness
 
-        elif self.robustness_indicators and not self.robustness_weights:
+        elif self.robustness == RobustnessAnalysisType.INDICATORS and not self.robustness == RobustnessAnalysisType.ALL_WEIGHTS:
             check_parameters_pdf(input_matrix_no_alternatives, self.marginal_distributions, for_testing=False)
             is_exact_pdf_mask = check_if_pdf_is_exact(self.marginal_distributions)
             is_poisson_pdf_mask = check_if_pdf_is_poisson(self.marginal_distributions)
@@ -198,7 +194,7 @@ class ProMCDA:
 
             return f"{self.num_runs} randomly sampled matrices have been normalized."
 
-        if self.robustness_weights and self.robustness_indicators:
+        if self.robustness == RobustnessAnalysisType.ALL_WEIGHTS and self.robustness == RobustnessAnalysisType.INDICATORS:
             raise ValueError(
                 "Inconsistent configuration: 'robustness_weights' and 'robustness_indicators' are both enabled.")
 
@@ -250,21 +246,19 @@ class ProMCDA:
 
         # Process indicators and weights based on input parameters in the configuration
         input_matrix_no_alternatives, num_indicators, polarity, norm_weights = process_indicators_and_weights(self.input_matrix_no_alternatives,
-                                                        self.robustness_indicators,
-                                                        self.robustness_weights, self.robustness_single_weights,
-                                                        self.polarity, self.num_runs, self.weights, self.marginal_distributions)
+                                                        self.robustness,
+                                                        self.polarity, self.num_runs, self.weights,
+                                                        self.marginal_distributions)
 
         # Check the number of indicators, weights, and polarities, assign random weights if uncertainty is enabled
-        try:
-            check_indicator_weights_polarities(num_indicators, polarity, robustness_weights=self.robustness_weights,
+        check_indicator_weights_polarities(num_indicators, polarity, self.robustness,
                                                weights=norm_weights)
-        except ValueError as e:
-            logging.error(str(e), stack_info=True)
-            raise
 
         # Apply aggregation in the different configuration settings
         # NO UNCERTAINTY ON INDICATORS AND WEIGHTS
-        if not self.robustness_indicators and not self.robustness_weights and not self.robustness_single_weights:
+        if (not self.robustness == RobustnessAnalysisType.INDICATORS
+                and not self.robustness == RobustnessAnalysisType.ALL_WEIGHTS
+                and not self.robustness == RobustnessAnalysisType.SINGLE_WEIGHTS):
             mcda_without_robustness = MCDAWithoutRobustness(self.polarity, input_matrix_no_alternatives)
             normalized_indicators = self.normalized_values_without_robustness
             if normalized_indicators is None:
@@ -288,7 +282,9 @@ class ProMCDA:
             return self.aggregated_scores
 
         # NO UNCERTAINTY ON INDICATORS, ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)
-        elif self.robustness_weights and not self.robustness_single_weights and not self.robustness_indicators:
+        elif (self.robustness == RobustnessAnalysisType.ALL_WEIGHTS
+              and self.robustness != RobustnessAnalysisType.SINGLE_WEIGHTS
+              and self.robustness != RobustnessAnalysisType.INDICATORS):
             logger.info("Start ProMCDA with uncertainty on the weights")
             all_weights_score_means, all_weights_score_stds, \
                 all_weights_score_means_normalized, all_weights_score_stds_normalized = \
@@ -301,7 +297,9 @@ class ProMCDA:
             return "Aggregation considered uncertainty on all weights, results are not explicitly shown."
 
         # NO UNCERTAINTY ON INDICATORS, ONE SINGLE RANDOM WEIGHT AT TIME
-        elif self.robustness_single_weights and not self.robustness_weights and not self.robustness_indicators:
+        elif (self.robustness == RobustnessAnalysisType.SINGLE_WEIGHTS
+              and self.robustness != RobustnessAnalysisType.ALL_WEIGHTS
+              and self.robustness != RobustnessAnalysisType.INDICATORS):
             logger.info("Start ProMCDA with uncertainty on one weight at time")
             iterative_random_weights_statistics: dict = compute_scores_for_single_random_weight(
                 self.normalized_values_without_robustness, norm_weights, index_column_name, index_column_values,
@@ -316,7 +314,9 @@ class ProMCDA:
             return "Aggregation considered uncertainty on one weight at time, results are not explicitly shown."
 
         # UNCERTAINTY ON INDICATORS, NO UNCERTAINTY ON WEIGHTS
-        elif self.robustness_indicators and not self.robustness_weights and not self.robustness_single_weights:
+        elif (self.robustness == RobustnessAnalysisType.INDICATORS
+              and self.robustness != RobustnessAnalysisType.ALL_WEIGHTS
+              and self.robustness != RobustnessAnalysisType.SINGLE_WEIGHTS):
             all_indicators_scores_normalized = []
             logger.info("Start ProMCDA with uncertainty on the indicators")
             n_normalized_input_matrices = self.normalized_values_with_robustness
@@ -486,12 +486,14 @@ class ProMCDA:
         ranks = self.evaluate_ranks(scores)
         print(f"MCDA ranks are retrieved")
 
-        if not any([self.robustness_weights, self.robustness_indicators, self.robustness_single_weights]):
+        if not any([self.robustness == RobustnessAnalysisType.ALL_WEIGHTS,
+                    self.robustness == RobustnessAnalysisType.INDICATORS,
+                    self.robustness == RobustnessAnalysisType.SINGLE_WEIGHTS]):
             results = {
                  "scores": scores,
                  "ranks": ranks
             }
-        elif self.robustness_weights:
+        elif self.robustness == RobustnessAnalysisType.ALL_WEIGHTS:
             avg, normalized_avg, std = self.get_aggregated_values_with_robustness_weights()
             results = {
                  "normalized_scores": normalized_avg,
@@ -499,14 +501,14 @@ class ProMCDA:
                  "standard deviations": std,
                  "ranks": self.evaluate_ranks(avg)
             }
-        elif self.robustness_single_weights:
+        elif self.robustness == RobustnessAnalysisType.SINGLE_WEIGHTS:
             avg, normalized_avg, std = self.get_aggregated_values_with_robustness_one_weight()
             results = {
                  "normalized_scores": normalized_avg,
                  "average_scores": avg,
                  "standard deviations": std
             }
-        elif self.robustness_indicators:
+        elif self.robustness == RobustnessAnalysisType.INDICATORS:
             avg, normalized_avg, std = self.get_aggregated_values_with_robustness_indicators()
             results = {
                  "normalized_scores": normalized_avg,

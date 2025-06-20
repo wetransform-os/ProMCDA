@@ -153,6 +153,35 @@ class TestUtils(unittest.TestCase):
         isinstance(non_rescaled_matrix, pd.DataFrame)
         assert non_rescaled_matrix.equals(input_matrix_positive)
 
+
+    def test_check_if_pdf_is_uniform(self):
+        # Given
+        list_pdf = TestUtils.get_list_pdf()
+
+        # When
+        output_mask = check_if_pdf_is_uniform(list_pdf)
+        expected_mask = [0, 0, 0, 0, 0]
+
+        # Then
+        isinstance(output_mask, list)
+        assert (len(output_mask) == len(expected_mask))
+        self.assertListEqual(output_mask, expected_mask)
+
+
+    def test_check_if_pdf_is_poisson(self):
+        # Given
+        list_pdf = TestUtils.get_list_pdf()
+
+        # When
+        output_mask = check_if_pdf_is_poisson(list_pdf)
+        expected_mask = [0, 0, 0, 1, 0]
+
+        # Then
+        isinstance(output_mask, list)
+        assert (len(output_mask) == len(expected_mask))
+        self.assertListEqual(output_mask, expected_mask)
+
+
     def test_check_if_pdf_is_exact(self):
         # Given
         list_pdf = TestUtils.get_list_pdf()

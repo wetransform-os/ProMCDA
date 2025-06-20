@@ -5,7 +5,7 @@ import pandas as pd
 
 from promcda.models.ProMCDA import ProMCDA
 from promcda.enums import NormalizationFunctions, AggregationFunctions, OutputColumnNames4Sensitivity, \
-    NormalizationNames4Sensitivity, PDFType
+    NormalizationNames4Sensitivity, PDFType, RobustnessAnalysisType
 
 
 def _remove_empty_levels_from_multiindex(multi_index: pd.MultiIndex) -> pd.MultiIndex:
@@ -42,8 +42,7 @@ class TestProMCDA(unittest.TestCase):
         self.polarity = ('+', '-',)
 
         # Define optional parameters
-        self.robustness_weights = False
-        self.robustness_indicators = False
+        self.robustness = RobustnessAnalysisType.NONE
         self.marginal_distributions = (PDFType.NORMAL, PDFType.NORMAL)
         self.num_runs = 5
         self.num_cores = 2
@@ -59,8 +58,7 @@ class TestProMCDA(unittest.TestCase):
         promcda = ProMCDA(
             input_matrix=self.input_matrix,
             polarity=self.polarity,
-            robustness_weights=self.robustness_weights,
-            robustness_indicators=self.robustness_indicators,
+            robustness=self.robustness,
             marginal_distributions=self.marginal_distributions,
             num_runs=self.num_runs,
             num_cores=self.num_cores,
@@ -70,8 +68,8 @@ class TestProMCDA(unittest.TestCase):
         # Then
         self.assertEqual(promcda.input_matrix.shape, (3, 2))
         self.assertEqual(promcda.polarity, self.polarity)
-        self.assertFalse(promcda.robustness_weights)
-        self.assertFalse(promcda.robustness_indicators)
+        self.assertFalse(promcda.robustness == RobustnessAnalysisType.ALL_WEIGHTS)
+        self.assertFalse(promcda.robustness == RobustnessAnalysisType.INDICATORS)
         self.assertEqual(promcda.marginal_distributions, self.marginal_distributions)
         self.assertEqual(promcda.num_runs, self.num_runs)
         self.assertEqual(promcda.num_cores, self.num_cores)
@@ -103,8 +101,7 @@ class TestProMCDA(unittest.TestCase):
         promcda = ProMCDA(
             input_matrix=self.input_matrix,
             polarity=self.polarity,
-            robustness_weights=self.robustness_weights,
-            robustness_indicators=self.robustness_indicators,
+            robustness=self.robustness,
             marginal_distributions=self.marginal_distributions,
             num_runs=self.num_runs,
             num_cores=self.num_cores,
@@ -129,8 +126,7 @@ class TestProMCDA(unittest.TestCase):
         promcda = ProMCDA(
             input_matrix=self.input_matrix,
             polarity=self.polarity,
-            robustness_weights=self.robustness_weights,
-            robustness_indicators=self.robustness_indicators,
+            robustness=self.robustness,
             marginal_distributions=self.marginal_distributions,
             num_runs=self.num_runs,
             num_cores=self.num_cores,
@@ -153,12 +149,11 @@ class TestProMCDA(unittest.TestCase):
         """
         from promcda.models.ProMCDA import ProMCDA
         # Given
-        robustness_indicators = True
+        robustness = RobustnessAnalysisType.INDICATORS
         promcda = ProMCDA(
             input_matrix=self.input_matrix_with_uncertainty,
             polarity=self.polarity,
-            robustness_weights=self.robustness_weights,
-            robustness_indicators=robustness_indicators,
+            robustness=robustness,
             marginal_distributions=self.marginal_distributions,
             num_runs=self.num_runs,
             num_cores=self.num_cores,
@@ -182,8 +177,7 @@ class TestProMCDA(unittest.TestCase):
         promcda = ProMCDA(
             input_matrix=self.input_matrix,
             polarity=self.polarity,
-            robustness_weights=self.robustness_weights,
-            robustness_indicators=self.robustness_indicators,
+            robustness=self.robustness,
             marginal_distributions=self.marginal_distributions,
             num_runs=self.num_runs,
             num_cores=self.num_cores,
@@ -214,8 +208,7 @@ class TestProMCDA(unittest.TestCase):
         promcda = ProMCDA(
             input_matrix=self.input_matrix,
             polarity=self.polarity,
-            robustness_weights=self.robustness_weights,
-            robustness_indicators=self.robustness_indicators,
+            robustness=self.robustness,
             marginal_distributions=self.marginal_distributions,
             num_runs=self.num_runs,
             num_cores=self.num_cores,
@@ -247,8 +240,7 @@ class TestProMCDA(unittest.TestCase):
         promcda = ProMCDA(
             input_matrix=self.input_matrix_with_uncertainty,
             polarity=self.polarity,
-            robustness_weights=self.robustness_weights,
-            robustness_indicators=True,
+            robustness = RobustnessAnalysisType.INDICATORS,
             marginal_distributions=self.marginal_distributions,
             num_runs=self.num_runs,
             num_cores=self.num_cores,
@@ -284,8 +276,7 @@ class TestProMCDA(unittest.TestCase):
         promcda = ProMCDA(
             input_matrix=self.input_matrix,
             polarity=self.polarity,
-            robustness_weights=True,
-            robustness_indicators=self.robustness_indicators,
+            robustness = RobustnessAnalysisType.ALL_WEIGHTS,
             marginal_distributions=self.marginal_distributions,
             num_runs=self.num_runs,
             num_cores=self.num_cores,
@@ -314,8 +305,7 @@ class TestProMCDA(unittest.TestCase):
         promcda = ProMCDA(
             input_matrix=self.input_matrix,
             polarity=self.polarity,
-            robustness_weights=True,
-            robustness_indicators=self.robustness_indicators,
+            robustness = RobustnessAnalysisType.ALL_WEIGHTS,
             marginal_distributions=self.marginal_distributions,
             num_runs=self.num_runs,
             num_cores=self.num_cores,
@@ -359,8 +349,7 @@ class TestProMCDA(unittest.TestCase):
             input_matrix=self.input_matrix,
             weights=[0.5, 0.5],
             polarity=self.polarity,
-            robustness_weights=self.robustness_weights,
-            robustness_indicators=self.robustness_indicators,
+            robustness = RobustnessAnalysisType.NONE,
             random_seed=self.random_seed
         )
 
@@ -380,8 +369,7 @@ class TestProMCDA(unittest.TestCase):
             input_matrix=self.input_matrix,
             weights=[0.5, 0.5],
             polarity=self.polarity,
-            robustness_weights=self.robustness_weights,
-            robustness_indicators=self.robustness_indicators,
+            robustness = RobustnessAnalysisType.NONE,
             random_seed=self.random_seed
         )
 
@@ -403,7 +391,7 @@ class TestProMCDA(unittest.TestCase):
             input_matrix=self.input_matrix,
             weights=[0.5, 0.5],
             polarity=self.polarity,
-            robustness_weights=True,
+            robustness = RobustnessAnalysisType.ALL_WEIGHTS,
             marginal_distributions=self.marginal_distributions,
             num_runs=self.num_runs,
             num_cores=self.num_cores,
@@ -427,7 +415,7 @@ class TestProMCDA(unittest.TestCase):
             input_matrix=self.input_matrix,
             weights=[0.5, 0.5],
             polarity=self.polarity,
-            robustness_single_weights=True,
+            robustness = RobustnessAnalysisType.SINGLE_WEIGHTS,
             marginal_distributions=self.marginal_distributions,
             num_runs=self.num_runs,
             num_cores=self.num_cores,
@@ -454,7 +442,7 @@ class TestProMCDA(unittest.TestCase):
             input_matrix=self.input_matrix_with_uncertainty,
             weights=[0.5, 0.5],
             polarity=self.polarity,
-            robustness_indicators=True,
+            robustness = RobustnessAnalysisType.INDICATORS,
             marginal_distributions=self.marginal_distributions,
             num_runs=self.num_runs,
             num_cores=self.num_cores,

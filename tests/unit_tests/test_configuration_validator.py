@@ -1,6 +1,6 @@
 import unittest
 import pandas as pd
-from promcda.configuration.configuration_validator import validate_configuration, PDFType
+from promcda.configuration.configuration_validator import validate_configuration, PDFType, RobustnessAnalysisType
 
 class TestConfigurationValidator(unittest.TestCase):
 
@@ -12,9 +12,7 @@ class TestConfigurationValidator(unittest.TestCase):
         self.num_runs = 10
         self.num_cores = 2
         self.random_seed = 42
-        self.robustness_weights = False
-        self.robustness_single_weights = False
-        self.robustness_indicators = False
+        self.robustness = RobustnessAnalysisType.NONE
 
     def test_valid_configuration(self):
         try:
@@ -26,9 +24,7 @@ class TestConfigurationValidator(unittest.TestCase):
                 self.num_runs,
                 self.num_cores,
                 self.random_seed,
-                self.robustness_weights,
-                self.robustness_single_weights,
-                self.robustness_indicators
+                self.robustness
             )
         except Exception as e:
             self.fail(f"validate_configuration raised an exception {type(e)} unexpectedly!")
@@ -43,9 +39,7 @@ class TestConfigurationValidator(unittest.TestCase):
                 self.num_runs,
                 self.num_cores,
                 self.random_seed,
-                self.robustness_weights,
-                self.robustness_single_weights,
-                self.robustness_indicators
+                self.robustness
             )
 
     def test_invalid_polarity_type(self):
@@ -58,9 +52,7 @@ class TestConfigurationValidator(unittest.TestCase):
                 self.num_runs,
                 self.num_cores,
                 self.random_seed,
-                self.robustness_weights,
-                self.robustness_single_weights,
-                self.robustness_indicators
+                self.robustness
             )
 
     def test_invalid_weights(self):
@@ -73,24 +65,7 @@ class TestConfigurationValidator(unittest.TestCase):
                 self.num_runs,
                 self.num_cores,
                 self.random_seed,
-                self.robustness_weights,
-                self.robustness_single_weights,
-                self.robustness_indicators
-            )
-
-    def test_conflicting_robustness_flags(self):
-        with self.assertRaises(ValueError):
-            validate_configuration(
-                self.input_matrix,
-                self.polarity,
-                self.weights,
-                self.marginal_distributions,
-                self.num_runs,
-                self.num_cores,
-                self.random_seed,
-                True,
-                False,
-                True
+                self.robustness
             )
 
     def test_weights_length_mismatch(self):
@@ -103,9 +78,7 @@ class TestConfigurationValidator(unittest.TestCase):
                 self.num_runs,
                 self.num_cores,
                 self.random_seed,
-                self.robustness_weights,
-                self.robustness_single_weights,
-                self.robustness_indicators
+                self.robustness
             )
 
 

@@ -7,7 +7,7 @@ from typing import Tuple, Union
 
 from pandas.core import series
 
-from promcda.enums import PDFType
+from promcda.enums import PDFType, RobustnessAnalysisType
 from promcda.utils.utils_for_main import pop_indexed_elements, check_norm_sum_weights, randomly_sample_all_weights, \
      randomly_sample_ix_weight
 
@@ -28,9 +28,7 @@ def validate_configuration(
     num_runs: int,
     num_cores: int,
     random_seed: int,
-    robustness_weights: bool,
-    robustness_single_weights: bool,
-    robustness_indicators: bool
+    robustness: RobustnessAnalysisType
 ):
     # Required parameters
     if input_matrix is None:
@@ -46,38 +44,22 @@ def validate_configuration(
 
     # Optional parameters
     # Check the input matrix
-    if robustness_indicators is False:
+    if robustness != RobustnessAnalysisType.INDICATORS:
         num_indicators = input_matrix.shape[1]
-    else:
+    elif robustness == RobustnessAnalysisType.INDICATORS:
         num_non_exact_and_non_poisson = (len(marginal_distributions) -
                                          marginal_distributions.count(PDFType.EXACT) -
                                          marginal_distributions.count(PDFType.POISSON))
         num_indicators = (input_matrix.shape[1] - num_non_exact_and_non_poisson)
 
-    for param_name, param_value in {
-        'robustness_weights': robustness_weights,
-        'robustness_single_weights': robustness_single_weights,
-        'robustness_indicators': robustness_indicators
-    }.items():
-        if not isinstance(param_value, bool):
-            raise TypeError(f"Expected '{param_name}' to be a bool, got {type(param_value).__name__}")
-
-    if robustness_weights and robustness_single_weights:
-        raise ValueError("'robustness_weights' and 'robustness_single_weights' cannot both be True.")
-
-    if (robustness_weights or robustness_single_weights) and robustness_indicators:
-        raise ValueError(
-            "If 'robustness_weights' or 'robustness_single_weights' is True, 'robustness_indicators' must be False.")
-
-    if robustness_indicators and (robustness_weights or robustness_single_weights):
-        raise ValueError(
-            "If 'robustness_indicators' is True, 'robustness_weights' and 'robustness_single_weights' must be False.")
+    if not isinstance(robustness, RobustnessAnalysisType):
+        raise TypeError(f"'robustness' must be of type RobustnessAnalysisType, got {type(robustness).__name__}")
 
     if weights is not None and len(weights) != num_indicators:
         raise ValueError("'weights' must have the same number of elements as 'num_indicators'.")
     if weights is not None and not all(isinstance(w, (float, int)) for w in weights):
         raise TypeError(f"Expected 'weights' to be a float, int, or None, got {type(weights).__name__}")
-    if weights is not None and any(w < 0 for w in weights): # TODO: check if this is correct
+    if weights is not None and any(w < 0 for w in weights):
         raise ValueError("'weights' must be a non-negative value.")
 
     if not isinstance(num_runs, int):
@@ -105,23 +87,18 @@ def validate_configuration(
 
 
 def process_indicators_and_weights(input_matrix: pd.DataFrame,
-                                   robustness_indicators: bool,
-                                   robustness_weights: bool,
-                                   robustness_single_weights: bool,
+                                   robustness: RobustnessAnalysisType,
                                    polarity: Tuple[str, ...],
                                    mc_runs: int,
-                                   weights: List[str], marginal_distributions: Tuple[str, ...]) \
+                                   weights: List[str],
+                                   marginal_distributions: Tuple[str, ...]) \
         -> Tuple[pd.DataFrame, int, Tuple[str, ...], Union[list, List[list], dict]]:
     """
     Process indicators and weights based on input parameters in the setup configuration.
 
     Parameters:
     - input_matrix: the input matrix without alternatives.
-    - robustness_indicators: a flag indicating whether the matrix should include indicator uncertainties
-      (True or False).
-    - robustness_weights: a flag indicating whether robustness analysis is considered for the weights (True or False).
-    - robustness_single_weights: a flag indicating whether robustness analysis is considered for a single weight
-      at time (True or False).
+    - robustness: the type of robustness analysis to be performed.
     - polarity: a tuple containing the original polarity associated to each indicator.
     - mc_runs: number of Monte Carlo runs for robustness analysis.
     - weights: a list containing the assigned weights.
@@ -135,26 +112,26 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
     - the normalised weights (either fixed or random sampled weights, depending on the settings)
 
     Notes:
-    - For robustness_indicators == False:
+    - For robustness == RobustnessAnalysisType.NONE:
         - Identifies and removes columns with constant values.
         - Logs the number of alternatives and indicators.
 
-    - For robustness_indicators == True:
+    - For robustness == RobustnessAnalysisType.INDICATORS:
         - Handles uncertainty in indicators.
         - Logs the number of alternatives and indicators.
 
-    - For robustness_weights == False:
+    - For robustness != RobustnessAnalysisType.WEIGHTS:
         - Processes fixed weights if given.
         - Logs weights and normalised weights.
 
-    - For robustness_weights == True:
+    - For robustness == RobustnessAnalysisType.WEIGHTS:
         - Performs robustness analysis on weights.
         - Logs randomly sampled weights.
 
+    :param marginal_distributions:
+    :param robustness:
     :param input_matrix: pd.DataFrame
-    :param robustness_weights: bool
-    :param robustness_single_weights:
-    :param robustness_indicators: bool
+    :param robustness: RobustnessAnalysisType
     :param polarity: List[str]
     :param mc_runs: int
     :param weights: List[str]
@@ -166,10 +143,13 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
 
     num_indicators = input_matrix.shape[1]
 
-    if robustness_indicators is False:
-        input_matrix = _handle_no_robustness_indicators(input_matrix)
+    if robustness != RobustnessAnalysisType.INDICATORS:
+        if any(value == 1 for value in num_unique):
+            logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
+            input_matrix = input_matrix.drop(cols_to_drop, axis=1)
         logger.info("Number of indicators: {}".format(input_matrix.shape[1]))
-    else:  # matrix with uncertainty on indicators
+        if weights is None: weights = [0.5] * num_indicators
+    elif robustness == RobustnessAnalysisType.INDICATORS:  # matrix with uncertainty on indicators
         num_non_exact_and_non_poisson = (len(marginal_distributions) - marginal_distributions.count(PDFType.EXACT) -
                                          marginal_distributions.count(PDFType.POISSON))
         num_indicators = (input_matrix.shape[1] - num_non_exact_and_non_poisson)
@@ -177,10 +157,9 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
 
         logger.info("Number of alternatives: {}".format(input_matrix.shape[0]))
         logger.info("Number of indicators: {}".format(num_indicators))
-        # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional - see TODO below
+        # TODO: eliminate indicators with constant values (i.e. same mean and 0 std) - optional
 
-    polarities_and_weights = _handle_polarities_and_weights(robustness_indicators, robustness_weights,
-                                                            robustness_single_weights, num_unique,
+    polarities_and_weights = _handle_polarities_and_weights(robustness, num_unique,
                                                             col_to_drop_indexes, polarity, mc_runs, num_indicators,
                                                             weights)
 
@@ -189,9 +168,7 @@ def process_indicators_and_weights(input_matrix: pd.DataFrame,
     return input_matrix, num_indicators, polar, norm_weights
 
 
-def _handle_polarities_and_weights(robustness_indicators: bool,
-                                   robustness_weights: bool,
-                                   robustness_single_weights: bool,
+def _handle_polarities_and_weights(robustness: RobustnessAnalysisType,
                                    num_unique: series,
                                    col_to_drop_indexes: np.ndarray,
                                    polarity: Tuple[str, ...],
@@ -212,11 +189,13 @@ def _handle_polarities_and_weights(robustness_indicators: bool,
     logger.info("Polarities are checked: {}".format(polarity))
 
     # Managing weights for no robustness indicators
-    if robustness_indicators is False:
+    if robustness != RobustnessAnalysisType.INDICATORS:
         if any(value == 1 for value in num_unique):
            weights = pop_indexed_elements(col_to_drop_indexes, weights)
         # Managing weights for no robustness weights
-        if weights is not None and robustness_weights is False and robustness_single_weights is False:
+        if (weights is not None
+                and robustness != RobustnessAnalysisType.ALL_WEIGHTS
+                and robustness != RobustnessAnalysisType.SINGLE_WEIGHTS):
             fixed_weights = weights
             norm_fixed_weights = check_norm_sum_weights(fixed_weights)
             logger.info("Weights: {}".format(fixed_weights))
@@ -224,8 +203,7 @@ def _handle_polarities_and_weights(robustness_indicators: bool,
             return polarity, norm_fixed_weights, None, None
             #  Return None for norm_random_weights and rand_weight_per_indicator
         else:
-            output_weights = handle_robustness_weights(mc_runs, num_indicators, robustness_weights,
-                                                       robustness_single_weights)
+            output_weights = handle_robustness_weights(mc_runs, num_indicators, robustness)
         if output_weights is not None:
             norm_random_weights, rand_weight_per_indicator = output_weights
         if norm_random_weights:
@@ -239,11 +217,37 @@ def _handle_polarities_and_weights(robustness_indicators: bool,
         return polarity, norm_fixed_weights, None, None
 
 
-def handle_robustness_weights(mc_runs: int, num_indicators: int, robustness_weights: bool,
-                              robustness_single_weight: bool) -> Tuple[Union[List[list], None], Union[dict, None]]:
+def handle_robustness_weights(mc_runs: int, num_indicators: int, robustness: RobustnessAnalysisType) \
+        -> Union[None, tuple[None, dict[str, list[list]]], tuple[list[list], None]]:
     """
     Handle the generation and normalization of random weights based on the specified settings
-    when a robustness analysis is requested on all the weights.
+    when a robustness analysis is requested.
+
+    Depending on the robustness types, this function performs one of the following:
+    1. If robustness on all weights is enabled and single-weight analysis is not,
+       it generates `mc_runs` random weight vectors of length `num_indicators`, and normalizes them to sum to 1.
+    2. If robustness on single weights is enabled and robustness on all weights is not,
+       it generates `mc_runs` vectors per indicator, each time varying only one indicator's weight while keeping others constant,
+       and normalizes each generated vector.
+
+    Parameters:
+    - mc_runs: Number of Monte Carlo simulation runs to perform for the robustness analysis.
+    - num_indicators: The number of indicators (criteria) used in the decision-making process.
+    - robustness: Indicates what kind of robustness should be performed.
+
+    Returns:
+    - norm_random_weights: A list of normalized weight vectors if robustness on all weights is selected, otherwise None.
+    - rand_weight_per_indicator: A dictionary where each key corresponds to an indicator and the value is a list of normalized vectors,
+        each varying that specific indicator's weight, if single-weight robustness is selected. Otherwise, None.
+
+    Raises:
+    - ValueError: if `mc_runs` is set to 0 or negative, as no robustness analysis can be performed in that case.
+
+    :param mc_runs: int
+    :param num_indicators: int
+    :param robustness: RobustnessAnalysisType
+    :return: norm_random_weights: List[list] or None
+    :return: rand_weight_per_indicator: dict or None
     """
     norm_random_weights = []
     rand_weight_per_indicator = {}
@@ -252,13 +256,13 @@ def handle_robustness_weights(mc_runs: int, num_indicators: int, robustness_weig
         logger.error('Error Message', stack_info=True)
         raise ValueError('The number of MC runs should be larger than 0 for robustness analysis')
 
-    if robustness_single_weight is False and robustness_weights is True:
+    if robustness == RobustnessAnalysisType.ALL_WEIGHTS:
         random_weights = randomly_sample_all_weights(num_indicators, mc_runs)
         for weights in random_weights:
             weights = check_norm_sum_weights(weights)
             norm_random_weights.append(weights)
         return norm_random_weights, None  # Return norm_random_weights, and None for rand_weight_per_indicator
-    elif robustness_single_weight is True and robustness_weights is False:
+    elif robustness == RobustnessAnalysisType.SINGLE_WEIGHTS :
         i = 0
         while i < num_indicators:
             random_weights = randomly_sample_ix_weight(num_indicators, i, mc_runs)
@@ -271,31 +275,16 @@ def handle_robustness_weights(mc_runs: int, num_indicators: int, robustness_weig
         return None, rand_weight_per_indicator  # Return None for norm_random_weights, and rand_weight_per_indicator
 
 
-def _handle_no_robustness_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame:
-    """
-    Handle the indicators in case of no robustness analysis required.
-    (The input matrix is without the alternative column)
-    Return modified matrix if some columns are dropped, or the original one.
-    """
-    num_unique = input_matrix.nunique()
-    cols_to_drop = num_unique[num_unique == 1].index
-
-    if any(value == 1 for value in num_unique):
-        logger.info("Indicators {} have been dropped because they carry no information".format(cols_to_drop))
-        input_matrix = input_matrix.drop(cols_to_drop, axis=1)
-
-    return input_matrix
-
-
-def check_indicator_weights_polarities(num_indicators: int, polar: Tuple[str, ...], robustness_weights: bool,
+def check_indicator_weights_polarities(num_indicators: int, polar: Tuple[str, ...], robustness: RobustnessAnalysisType,
                                        weights: List[int]):
     """
     Check the consistency of indicators, polarities, and fixed weights in a configuration.
 
     Parameters:
-    - num_indicators: the number of indicators in the input matrix.
-    - polar: a list containing the polarity associated to each indicator.
-    - config: the configuration dictionary.
+    - num_indicators: The number of indicators in the input matrix.
+    - polar: A list containing the polarity associated to each indicator.
+    - robustness: It specifies the type of robustness performed.
+    - weights: A list containing the fixed weights assigned to each indicator.
 
     This function raises a ValueError if the following conditions are not met:
     1. The number of indicators does not match the number of polarities.
@@ -305,15 +294,15 @@ def check_indicator_weights_polarities(num_indicators: int, polar: Tuple[str, ..
     Raises:
     - ValueError: if the conditions for indicator-polarity and fixed weights consistency are not met.
 
-    :param weights: List[int]
-    :param robustness_weights: bool
     :param num_indicators: int
     :param polar: List[str]
+    :param robustness: RobustnessAnalysisType
+    :param weights: List[int]
     :return: None
     """
     if num_indicators != len(polar):
         raise ValueError('The number of polarities does not correspond to the no. of indicators')
 
-    # Check the number of fixed weights if "robustness_on_all_weights" is set to "no"
-    if (robustness_weights is False) and (num_indicators != len(weights)):
+    # Check the number of fixed weights if no robustness on all weights is performed
+    if (robustness != RobustnessAnalysisType.ALL_WEIGHTS) and (num_indicators != len(weights)):
         raise ValueError('The no. of fixed weights does not correspond to the no. of indicators')

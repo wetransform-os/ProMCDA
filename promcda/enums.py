@@ -71,4 +71,12 @@ class PDFType(Enum):
     POISSON = "poisson"
 
 
+class RobustnessAnalysisType(Enum):
+    NONE = "none"
+    ALL_WEIGHTS = "all_weights"
+    SINGLE_WEIGHTS = "single_weights"
+    INDICATORS = "indicators"
+
+
+
 
