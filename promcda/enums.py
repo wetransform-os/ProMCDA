@@ -78,5 +78,13 @@ class RobustnessAnalysisType(Enum):
     INDICATORS = "indicators"
 
 
+class OutputType(Enum):
+    """
+    Types of output for the analysis
+    """
+    NORMALIZED_SCORES = "normalized_scores"
+    AVERAGE_SCORES = "average_scores"
+    STANDARD_DEVIATIONS = "standard deviations"
+    RANKS = "ranks"
 
 

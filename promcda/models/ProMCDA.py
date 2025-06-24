@@ -4,7 +4,7 @@ import pandas as pd
 from typing import Tuple, List, Union, Optional
 
 from promcda.configuration import process_indicators_and_weights
-from promcda.enums import PDFType, NormalizationFunctions, AggregationFunctions, RobustnessAnalysisType
+from promcda.enums import PDFType, NormalizationFunctions, AggregationFunctions, RobustnessAnalysisType, OutputType
 from promcda.utils import check_parameters_pdf, check_if_pdf_is_exact, check_if_pdf_is_poisson, rescale_minmax, \
     compute_scores_for_single_random_weight, compute_scores_for_all_random_weights, check_if_pdf_is_uniform
 
@@ -333,30 +333,21 @@ class ProMCDA:
                 logger.info("A meaningful number of Monte-Carlo runs is equal or larger than 1000")
             args_for_parallel_agg = [(norm_weights, normalized_indicators)
                                      for normalized_indicators in n_normalized_input_matrices]
-            if aggregation_method is None:
-                all_indicators_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg)
-            else:
-                all_indicators_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg,
+
+            all_indicators_scores = utils_for_parallelization.parallelize_aggregation(args_for_parallel_agg,
                                                                                           aggregation_method)
             for matrix in all_indicators_scores:
                 normalized_matrix = rescale_minmax(matrix)
                 all_indicators_scores_normalized.append(normalized_matrix)
 
-            all_indicators_scores_means, all_indicators_scores_stds = \
+            self.all_indicators_scores_means, self.all_indicators_scores_stds = \
                 utils_for_parallelization.estimate_runs_mean_std(all_indicators_scores)
-            all_indicators_means_scores_normalized, all_indicators_scores_stds_normalized = \
+            self.all_indicators_means_scores_normalized, self.all_indicators_scores_stds_normalized = \
                 utils_for_parallelization.estimate_runs_mean_std(all_indicators_scores_normalized)
 
             self.aggregated_scores = all_indicators_scores_normalized
-            self.all_indicators_scores_means = all_indicators_scores_means
-            self.all_indicators_scores_stds = all_indicators_scores_stds
-            self.all_indicators_means_scores_normalized = all_indicators_means_scores_normalized
-            self.all_indicators_scores_stds_normalized = all_indicators_scores_stds_normalized
             return "Aggregation considered uncertainty on indicators, results are not explicitly shown."
-        else:
-            logger.error('Error Message', stack_info=True)
-            raise ValueError(
-                'Inconsistent configuration: robustness_weights and robustness_indicators are both enabled.')
+
 
     def get_aggregated_values_with_robustness_indicators(self) \
             -> Optional[Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]]:
@@ -480,16 +471,16 @@ class ProMCDA:
           - In case of randomness on a single weight, the ranks are not computed.
         """
         results = {}
-        print("ProMCDA starts...")
+        logging.info("ProMCDA starts...")
 
         self.normalize(normalization_method)
-        print(f"Indicators are normalized with: {normalization_method}")
+        logging.info(f"Indicators are normalized with: {normalization_method}")
 
         scores = self.aggregate(aggregation_method)
-        print(f"MCDA scores are estimated through: {aggregation_method}")
+        logging.info(f"MCDA scores are estimated through: {aggregation_method}")
 
         ranks = self.evaluate_ranks(scores)
-        print(f"MCDA ranks are retrieved")
+        logging.info(f"MCDA ranks are retrieved")
 
         if not any([self.robustness == RobustnessAnalysisType.ALL_WEIGHTS,
                     self.robustness == RobustnessAnalysisType.INDICATORS,
@@ -501,26 +492,26 @@ class ProMCDA:
         elif self.robustness == RobustnessAnalysisType.ALL_WEIGHTS:
             avg, normalized_avg, std = self.get_aggregated_values_with_robustness_weights()
             results = {
-                 "normalized_scores": normalized_avg,
-                 "average_scores": avg,
-                 "standard deviations": std,
-                 "ranks": self.evaluate_ranks(avg)
+                 OutputType.NORMALIZED_SCORES: normalized_avg,
+                 OutputType.AVERAGE_SCORES: avg,
+                 OutputType.STANDARD_DEVIATIONS: std,
+                 OutputType.RANKS: self.evaluate_ranks(avg)
             }
         elif self.robustness == RobustnessAnalysisType.SINGLE_WEIGHTS:
             avg, normalized_avg, std = self.get_aggregated_values_with_robustness_one_weight()
             results = {
-                 "normalized_scores": normalized_avg,
-                 "average_scores": avg,
-                 "standard deviations": std
+                 OutputType.NORMALIZED_SCORES: normalized_avg,
+                 OutputType.AVERAGE_SCORES: avg,
+                 OutputType.STANDARD_DEVIATIONS: std
             }
         elif self.robustness == RobustnessAnalysisType.INDICATORS:
             avg, normalized_avg, std = self.get_aggregated_values_with_robustness_indicators()
             results = {
-                 "normalized_scores": normalized_avg,
-                 "average_scores": avg,
-                 "standard deviations": std,
-                 "ranks": self.evaluate_ranks(avg)
+                 OutputType.NORMALIZED_SCORES: normalized_avg,
+                 OutputType.AVERAGE_SCORES: avg,
+                 OutputType.STANDARD_DEVIATIONS: std,
+                 OutputType.RANKS: self.evaluate_ranks(avg)
             }
 
-        print("ProMCDA completed evaluation.")
+        logging.info("ProMCDA completed evaluation.")
         return results

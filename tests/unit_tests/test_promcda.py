@@ -5,7 +5,7 @@ import pandas as pd
 
 from promcda.models.ProMCDA import ProMCDA
 from promcda.enums import NormalizationFunctions, AggregationFunctions, OutputColumnNames4Sensitivity, \
-    NormalizationNames4Sensitivity, PDFType, RobustnessAnalysisType
+    NormalizationNames4Sensitivity, PDFType, RobustnessAnalysisType, OutputType
 
 
 def _remove_empty_levels_from_multiindex(multi_index: pd.MultiIndex) -> pd.MultiIndex:
@@ -400,15 +400,15 @@ class TestProMCDA(unittest.TestCase):
 
         results = promcda.run()
 
-        self.assertIn("normalized_scores", results)
-        self.assertIn("average_scores", results)
-        self.assertIn("standard deviations", results)
-        self.assertIn("ranks", results)
+        self.assertIn(OutputType.NORMALIZED_SCORES, results)
+        self.assertIn(OutputType.AVERAGE_SCORES, results)
+        self.assertIn(OutputType.STANDARD_DEVIATIONS, results)
+        self.assertIn(OutputType.RANKS, results)
 
-        self.assertEqual(len(results["normalized_scores"]), len(self.input_matrix))
-        self.assertEqual(len(results["average_scores"]), len(self.input_matrix))
-        self.assertEqual(len(results["standard deviations"]), len(self.input_matrix))
-        self.assertEqual(len(results["ranks"]), len(self.input_matrix))
+        self.assertEqual(len(results[OutputType.NORMALIZED_SCORES]), len(self.input_matrix))
+        self.assertEqual(len(results[OutputType.AVERAGE_SCORES]), len(self.input_matrix))
+        self.assertEqual(len(results[OutputType.STANDARD_DEVIATIONS]), len(self.input_matrix))
+        self.assertEqual(len(results[OutputType.RANKS]), len(self.input_matrix))
 
     def test_run_with_robustness_one_weight(self):
         promcda = ProMCDA(
@@ -424,9 +424,9 @@ class TestProMCDA(unittest.TestCase):
 
         results = promcda.run()
 
-        self.assertIn("normalized_scores", results)
-        self.assertIn("average_scores", results)
-        self.assertIn("standard deviations", results)
+        self.assertIn(OutputType.NORMALIZED_SCORES, results)
+        self.assertIn(OutputType.AVERAGE_SCORES, results)
+        self.assertIn(OutputType.STANDARD_DEVIATIONS, results)
 
         self.assertIsInstance(results, dict)
         self.assertEqual(len(results.keys()), 3)
@@ -451,15 +451,15 @@ class TestProMCDA(unittest.TestCase):
 
         results = promcda.run()
 
-        self.assertIn("normalized_scores", results)
-        self.assertIn("average_scores", results)
-        self.assertIn("standard deviations", results)
-        self.assertIn("ranks", results)
+        self.assertIn(OutputType.NORMALIZED_SCORES, results)
+        self.assertIn(OutputType.AVERAGE_SCORES, results)
+        self.assertIn(OutputType.STANDARD_DEVIATIONS, results)
+        self.assertIn(OutputType.RANKS, results)
 
-        self.assertEqual(len(results["normalized_scores"]), len(self.input_matrix))
-        self.assertEqual(len(results["average_scores"]), len(self.input_matrix))
-        self.assertEqual(len(results["standard deviations"]), len(self.input_matrix))
-        self.assertEqual(len(results["ranks"]), len(self.input_matrix))
+        self.assertEqual(len(results[OutputType.NORMALIZED_SCORES]), len(self.input_matrix))
+        self.assertEqual(len(results[OutputType.AVERAGE_SCORES]), len(self.input_matrix))
+        self.assertEqual(len(results[OutputType.STANDARD_DEVIATIONS]), len(self.input_matrix))
+        self.assertEqual(len(results[OutputType.RANKS]), len(self.input_matrix))
 
 
 if __name__ == '__main__':

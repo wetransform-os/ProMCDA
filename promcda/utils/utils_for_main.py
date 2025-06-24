@@ -34,31 +34,6 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=FORMATTER)
 logger = logging.getLogger("ProMCDA")
 
 
-def ensure_directory_exists(path):
-    """
-    Ensure that the directory specified by the given path exists.
-    If the directory does not exist, create it and any intermediate directories as needed.
-
-    Parameters:
-        path (str): The path of the file in the directory to ensure exists.
-
-    Example:
-    ```python
-    ensure_directory_exists(/path/to/directory/file.csv)
-    ```
-
-    :param path: str
-    :return: None
-    """
-    try:
-        directory = os.path.dirname(path)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-    except Exception as e:
-        logging.error(f"An error occurred while ensuring directory exists for path '{path}': {e}")
-        raise  # Re-raise the exception to propagate it to the caller
-
-
 # TODO: maybe give the option of giving either a pd.DataFrame or a path as input parameter in ProMCDA
 def read_matrix(input_matrix_path: str) -> Optional[pd.DataFrame]:
     """
@@ -108,93 +83,6 @@ def reset_index_if_needed(series):
         series = series.reset_index(drop=True)
 
     return series
-
-
-def save_df(df: pd.DataFrame, folder_path: str, filename: str):
-    """
-    Save a DataFrame to a CSV file with a timestamped filename.
-
-    Parameters:
-    - df (pd.DataFrame): The DataFrame to be saved.
-    - folder_path (str): The path to the folder where the file will be saved.
-    - filename (str): The original filename for the CSV file.
-
-    Notes:
-    - The saved file will have a timestamp added to its filename.
-    - A default output path is assigned, and it is used unless
-      a custom path is set in an environmental variable in the environment.
-
-    Example:
-    ```python
-    save_df(my_dataframe, '/path/to/folder', 'data.csv')
-    ```
-
-    :param df: pd.DataFrame
-    :param folder_path: str
-    :param filename: str
-    :return: None
-    """
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    new_filename = f"{timestamp}_{filename}"
-
-    if not os.path.isdir(folder_path):
-        logging.error(f"The provided folder path '{folder_path}' is not a valid directory.")
-        return
-
-    full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
-
-    try:
-        ensure_directory_exists(os.path.dirname(full_output_path))
-    except Exception as e:
-        logging.error(f"Error while saving data frame: {e}")
-        return
-
-    try:
-        df.to_csv(path_or_buf=full_output_path, index=False)
-    except IOError as e:
-        logging.error(f"Error while writing data frame into a CSV file: {e}")
-
-
-def save_dict(dictionary: dict, folder_path: str, filename: str):
-    """
-    Save a dictionary to a binary file using pickle with a timestamped filename.
-
-    Note: a default output path is assigned, and it is used unless
-    a custom path is set in an environmental variable in the environment.
-
-    Parameters:
-    - dictionary (dict): The dictionary to be saved.
-    - folder_path (str): The path to the folder where the file will be saved.
-    - filename (str): The original filename for the binary file.
-
-    Example:
-    ```python
-    save_dict(my_dict, '/path/to/folder', 'data.pkl')
-    ```
-
-    :param dictionary: dict
-    :param folder_path: str
-    :param filename: str
-    :return: None
-    """
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    new_filename = f"{timestamp}_{filename}"
-
-    if not os.path.isdir(folder_path):
-        logging.error(f"The provided folder path '{folder_path}' is not a valid directory.")
-        return
-
-    full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
-    try:
-        ensure_directory_exists(os.path.dirname(full_output_path))
-    except Exception as e:
-        logging.error(f"Error while saving dictionary: {e}")
-        return
-    try:
-        with open(full_output_path, 'wb') as fp:
-            pickle.dump(dictionary, fp)
-    except IOError as e:
-        logging.error(f"Error while dumping the dictionary into a pickle file: {e}")
 
 
 def preprocess_enums(data) -> Union[Union[dict, list[str]], Any]:
