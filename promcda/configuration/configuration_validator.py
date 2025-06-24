@@ -3,7 +3,7 @@ import logging
 
 import numpy as np
 import pandas as pd
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional, Dict
 
 from pandas.core import series
 
@@ -175,11 +175,17 @@ def _handle_polarities_and_weights(robustness: RobustnessAnalysisType,
                                    mc_runs: int,
                                    num_indicators: int,
                                    weights: List[str]) \
-        -> Union[Tuple[List[str], list, None, None], Tuple[List[str], None, List[List], None],
-        Tuple[Tuple[str, ...], None, None, dict]]:
+        -> Tuple[List[str], Optional[List[float]], Optional[List[List[float]]], Optional[Dict[str, List[float]]]]:
     """
     Manage polarities and weights based on the specified robustness settings, ensuring that the appropriate adjustments
     and normalizations are applied before returning the necessary data structures.
+
+    Returns:
+    - polarity: updated polarity list
+    - norm_fixed_weights: normalized fixed weights, if applicable
+    - norm_random_weights: randomly generated weights, if applicable
+    - rand_weight_per_indicator: dict of weights per indicator if SINGLE_WEIGHTS is used
+
     """
     norm_random_weights = []
     rand_weight_per_indicator = {}
@@ -196,15 +202,13 @@ def _handle_polarities_and_weights(robustness: RobustnessAnalysisType,
         if (weights is not None
                 and robustness != RobustnessAnalysisType.ALL_WEIGHTS
                 and robustness != RobustnessAnalysisType.SINGLE_WEIGHTS):
-            fixed_weights = weights
-            norm_fixed_weights = check_norm_sum_weights(fixed_weights)
-            logger.info("Weights: {}".format(fixed_weights))
+            norm_fixed_weights = check_norm_sum_weights(weights)
+            logger.info("Weights: {}".format(weights))
             logger.info("Normalized weights: {}".format(norm_fixed_weights))
             return polarity, norm_fixed_weights, None, None
             #  Return None for norm_random_weights and rand_weight_per_indicator
         else:
             output_weights = handle_robustness_weights(mc_runs, num_indicators, robustness)
-        if output_weights is not None:
             norm_random_weights, rand_weight_per_indicator = output_weights
         if norm_random_weights:
             return polarity, None, norm_random_weights, None
@@ -212,8 +216,7 @@ def _handle_polarities_and_weights(robustness: RobustnessAnalysisType,
             return polarity, None, None, rand_weight_per_indicator
         #  Return None for norm_fixed_weights and one of the other two cases of randomness
     else: # robustness_indicators is True - in this case no columns are dropped!
-        fixed_weights = weights
-        norm_fixed_weights = check_norm_sum_weights(fixed_weights)
+        norm_fixed_weights = check_norm_sum_weights(weights)
         return polarity, norm_fixed_weights, None, None
 
 
@@ -263,15 +266,13 @@ def handle_robustness_weights(mc_runs: int, num_indicators: int, robustness: Rob
             norm_random_weights.append(weights)
         return norm_random_weights, None  # Return norm_random_weights, and None for rand_weight_per_indicator
     elif robustness == RobustnessAnalysisType.SINGLE_WEIGHTS :
-        i = 0
-        while i < num_indicators:
+        for i in range(num_indicators):
             random_weights = randomly_sample_ix_weight(num_indicators, i, mc_runs)
             norm_random_weight = []
             for weights in random_weights:
                 weights = check_norm_sum_weights(weights)
                 norm_random_weight.append(weights)
             rand_weight_per_indicator["indicator_{}".format(i + 1)] = norm_random_weight
-            i += 1
         return None, rand_weight_per_indicator  # Return None for norm_random_weights, and rand_weight_per_indicator
 
 

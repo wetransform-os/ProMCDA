@@ -137,19 +137,19 @@ class MCDAWithRobustness:
 
             distribution_type = marginal_pdf[i].value
 
-            if distribution_type == 'exact':
+            if distribution_type == PDFType.EXACT.value:
                 samples = self.repeat_series_to_create_df(
                     parameter1, num_runs).T
-            elif distribution_type == 'normal':
+            elif distribution_type == PDFType.NORMAL.value:
                 samples = np.random.normal(
                     loc=parameter1, scale=parameter2, size=(num_runs, len(parameter1)))
-            elif distribution_type == 'uniform':
+            elif distribution_type == PDFType.UNIFORM.value:
                 samples = np.random.uniform(
                     low=parameter1, high=parameter2, size=(num_runs, len(parameter1)))
-            elif distribution_type == 'lognormal':
+            elif distribution_type == PDFType.LOGNORMAL.value:
                 samples = np.random.lognormal(
                     mean=parameter1, sigma=parameter2, size=(num_runs, len(parameter1)))
-            elif distribution_type == 'poisson':
+            elif distribution_type == PDFType.POISSON.value:
                 samples = np.random.poisson(
                     lam=parameter1, size=(num_runs, len(parameter1)))
             else:

@@ -4,8 +4,6 @@ from unittest.mock import MagicMock
 
 from pandas.testing import assert_frame_equal
 
-from promcda.models import ProMCDA
-from promcda.models.mcda_without_robustness import *
 from promcda.utils.utils_for_parallelization import *
 
 

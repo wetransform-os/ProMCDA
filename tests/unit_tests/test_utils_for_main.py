@@ -42,7 +42,7 @@ class TestUtils(unittest.TestCase):
 
     @staticmethod
     def get_list_pdf() -> list:
-        list_pdf = ['exact', 'lnorm', 'norm', 'poisson', 'exact']
+        list_pdf = [PDFType.EXACT, PDFType.LOGNORMAL, PDFType.NORMAL, PDFType.POISSON, PDFType.UNIFORM]
         return list_pdf
 
     @staticmethod
@@ -119,12 +119,28 @@ class TestUtils(unittest.TestCase):
         input_matrix_1 = TestUtils.get_input_matrix_1()
         input_matrix_2 = TestUtils.get_input_matrix_2()
         input_matrix_3 = TestUtils.get_input_matrix_3()
-        marginal_distributions = ['exact', 'uniform', 'normal', 'poisson']
+        marginal_distributions = (PDFType.EXACT, PDFType.UNIFORM, PDFType.NORMAL, PDFType.POISSON)
 
         # When
-        are_parameters_correct_1 = check_parameters_pdf(input_matrix_1, marginal_distributions, True)
-        are_parameters_correct_2 = check_parameters_pdf(input_matrix_2, marginal_distributions, True)
-        are_parameters_correct_3 = check_parameters_pdf(input_matrix_3, marginal_distributions, True)
+        is_exact_pdf_mask = check_if_pdf_is_exact(marginal_distributions)
+        is_poisson_pdf_mask = check_if_pdf_is_poisson(marginal_distributions)
+        is_uniform_pdf_mask = check_if_pdf_is_uniform(marginal_distributions)
+
+        are_parameters_correct_1 = check_parameters_pdf(input_matrix_1,
+                                                        is_uniform_pdf_mask,
+                                                        is_exact_pdf_mask,
+                                                        is_poisson_pdf_mask,
+                                                        True)
+        are_parameters_correct_2 = check_parameters_pdf(input_matrix_2,
+                                                        is_uniform_pdf_mask,
+                                                        is_exact_pdf_mask,
+                                                        is_poisson_pdf_mask,
+                                                        True)
+        are_parameters_correct_3 = check_parameters_pdf(input_matrix_3,
+                                                        is_uniform_pdf_mask,
+                                                        is_exact_pdf_mask,
+                                                        is_poisson_pdf_mask,
+                                                        True)
 
         # Then
         isinstance(are_parameters_correct_1, list)
@@ -160,7 +176,7 @@ class TestUtils(unittest.TestCase):
 
         # When
         output_mask = check_if_pdf_is_uniform(list_pdf)
-        expected_mask = [0, 0, 0, 0, 0]
+        expected_mask = [0, 0, 0, 0, 1]
 
         # Then
         isinstance(output_mask, list)
@@ -188,7 +204,7 @@ class TestUtils(unittest.TestCase):
 
         # When
         output_mask = check_if_pdf_is_exact(list_pdf)
-        expected_mask = [1, 0, 0, 0, 1]
+        expected_mask = [1, 0, 0, 0, 0]
 
         # Then
         isinstance(output_mask, list)

@@ -423,10 +423,8 @@ def aggregate_indicators_in_parallel(agg: object, normalized_indicators: dict,
 def parallelize_aggregation(args: List[tuple], aggregation_method=None) -> List[pd.DataFrame]:
     partial_func = partial(initialize_and_call_aggregation, method=aggregation_method)
     # create a synchronous multiprocessing pool with the desired number of processes
-    pool = multiprocessing.Pool()
-    res = pool.map(partial_func, args)
-    pool.close()
-    pool.join()
+    with multiprocessing.Pool() as pool:
+        res = pool.map(partial_func, args)
 
     return res
 
@@ -463,11 +461,9 @@ def parallelize_normalization(input_matrices: List[pd.DataFrame], polar: Tuple[s
     :param method: str
     :return res: List[dict]
     """
-    pool = multiprocessing.Pool()
     args_for_parallel_norm = [(df, polar, method) for df in input_matrices]
-    res = pool.map(initialize_and_call_normalization, args_for_parallel_norm)
-    pool.close()
-    pool.join()
+    with multiprocessing.Pool() as pool:
+        res = pool.map(initialize_and_call_normalization, args_for_parallel_norm)
 
     return res
 

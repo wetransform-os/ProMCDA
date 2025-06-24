@@ -1,5 +1,4 @@
 import os
-import argparse
 import json
 import pickle
 import random
@@ -107,6 +106,7 @@ def reset_index_if_needed(series):
     """
     if not isinstance(series.index, pd.RangeIndex):
         series = series.reset_index(drop=True)
+
     return series
 
 
@@ -440,7 +440,9 @@ def pop_indexed_elements(indexes: np.ndarray, original_list: Union[List[str], Tu
     return tuple(mutable_list) if isinstance(original_list, tuple) else mutable_list
 
 
-def check_parameters_pdf(input_matrix: pd.DataFrame, marginal_distributions: Tuple[PDFType, ...], for_testing=False) \
+def check_parameters_pdf(input_matrix: pd.DataFrame,
+                         is_uniform_pdf_mask: list, is_exact_pdf_mask: list, is_poisson_pdf_mask: list,
+                         for_testing=False) \
         -> Union[List[bool], None]:
     """
     Check conditions on parameters based on the type of probability distribution function (PDF) for each indicator and
@@ -455,6 +457,9 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, marginal_distributions: Tup
     Parameters:
     - input_matrix: the input matrix containing uncertainties for indicators, no alternatives.
     - marginal_distributions: the PDFs associated to each indicator.
+    - is_uniform_pdf_mask: a binary mask indicating whether the PDF for each indicator is 'uniform' (1) or not (0).
+    - is_exact_pdf_mask: a binary mask indicating whether the PDF for each indicator is 'exact' (1) or not (0).
+    - is_poisson_pdf_mask: a binary mask indicating whether the PDF for each indicator is 'poisson' (1) or not (0).
     - for_testing: true only for unit testing
 
     Returns:
@@ -462,7 +467,9 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, marginal_distributions: Tup
     - None: default
 
     :param input_matrix: pd.DataFrame
-    :param marginal_distributions: PDFType
+    :param is_poisson_pdf_mask: list
+    :param is_exact_pdf_mask: list
+    :param is_uniform_pdf_mask: list
     :param for_testing: bool
     :return: Union[list, None]
     """
@@ -470,10 +477,6 @@ def check_parameters_pdf(input_matrix: pd.DataFrame, marginal_distributions: Tup
     satisfies_condition = False
     problem_logged = False
 
-    marginal_pdf = marginal_distributions
-    is_exact_pdf_mask = check_if_pdf_is_exact(marginal_pdf)
-    is_poisson_pdf_mask = check_if_pdf_is_poisson(marginal_pdf)
-    is_uniform_pdf_mask = check_if_pdf_is_uniform(marginal_pdf)
 
     j = 0
     list_of_satisfied_conditions = []
@@ -538,7 +541,7 @@ def check_if_pdf_is_exact(marginal_pdf: tuple[PDFType, ...]) -> list:
     :param marginal_pdf: list
     :return exact_pdf_mask: List[int]
     """
-    exact_pdf_mask = [1 if pdf == PDFType.EXACT.value else 0 for pdf in marginal_pdf]
+    exact_pdf_mask = [1 if pdf == PDFType.EXACT else 0 for pdf in marginal_pdf]
 
     return exact_pdf_mask
 
@@ -562,7 +565,7 @@ def check_if_pdf_is_poisson(marginal_pdf: tuple[PDFType, ...]) -> list:
     :param marginal_pdf: list
     :return poisson_pdf_mask: List[int]
     """
-    poisson_pdf_mask = [1 if pdf == PDFType.POISSON.value else 0 for pdf in marginal_pdf]
+    poisson_pdf_mask = [1 if pdf == PDFType.POISSON else 0 for pdf in marginal_pdf]
 
     return poisson_pdf_mask
 
@@ -586,7 +589,7 @@ def check_if_pdf_is_uniform(marginal_pdf: tuple[PDFType, ...]) -> list:
     :param marginal_pdf: list
     :return uniform_pdf_mask: List[int]
     """
-    uniform_pdf_mask = [1 if pdf == PDFType.UNIFORM.value else 0 for pdf in marginal_pdf]
+    uniform_pdf_mask = [1 if pdf == PDFType.UNIFORM else 0 for pdf in marginal_pdf]
 
     return uniform_pdf_mask
 
@@ -644,7 +647,7 @@ def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.Dat
 
 
 def compute_scores_for_all_random_weights(indicators: pd.DataFrame,
-                                          weights: Union[List[str], List[pd.DataFrame], dict, None],
+                                          random_weights: Union[List[str], List[pd.DataFrame], dict, None],
                                           aggregation_method: Optional[AggregationFunctions] = None) \
                                            -> tuple[Any, Any, Any, Any]:
     """
@@ -654,8 +657,6 @@ def compute_scores_for_all_random_weights(indicators: pd.DataFrame,
 
     logger.info("All weights are randomly sampled from a uniform distribution.")
     all_weights_scores_normalized = []
-
-    random_weights = weights
 
     args_for_parallel_agg = [(lst, indicators) for lst in random_weights]
 

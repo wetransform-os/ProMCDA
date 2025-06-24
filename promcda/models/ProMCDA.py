@@ -6,7 +6,7 @@ from typing import Tuple, List, Union, Optional
 from promcda.configuration import process_indicators_and_weights
 from promcda.enums import PDFType, NormalizationFunctions, AggregationFunctions, RobustnessAnalysisType
 from promcda.utils import check_parameters_pdf, check_if_pdf_is_exact, check_if_pdf_is_poisson, rescale_minmax, \
-    compute_scores_for_single_random_weight, compute_scores_for_all_random_weights
+    compute_scores_for_single_random_weight, compute_scores_for_all_random_weights, check_if_pdf_is_uniform
 
 log = logging.getLogger(__name__)
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
@@ -31,6 +31,7 @@ class ProMCDA:
         :param polarity: Tuple of polarities for each indicator ("+" or "-").
 
         # Optional parameters
+        : weights: List of weights for each criterion (default: None, which sets all weights to 0.5).
         :param robustness_weights: Boolean flag indicating whether to perform robustness analysis on weights
                                    (True or False).
         :param robustness_single_weights: Boolean flag indicating whether to perform robustness analysis on one single
@@ -44,7 +45,8 @@ class ProMCDA:
         :param random_seed: The random seed used for the sampling (default: 43).
 
         Notes:
-        - The input_matrix should contain the alternatives as rows and the criteria as columns.
+        - The input_matrix should contain the alternatives as rows and the criteria as columns, 
+          including row and column names.
         - If weights are not provided, they are set to 0.5 for each criterion.
         - If robustness_weights is enabled, the robustness_single_weights should be disabled, and viceversa.
         - If robustness_indicators is enabled, the robustness on weights should be disabled.
@@ -106,7 +108,7 @@ class ProMCDA:
         if not isinstance(robustness, RobustnessAnalysisType):
             raise TypeError(f"'robustness' must be of type RobustnessAnalysisType, got {type(robustness).__name__}")
 
-        if self.weights is None and RobustnessAnalysisType.INDICATORS.value is not "indicators":
+        if self.weights is None and RobustnessAnalysisType.INDICATORS.value != "indicators":
             self.weights = [0.5] * self.input_matrix_no_alternatives.shape[1]
         elif self.weights is None and self.robustness == RobustnessAnalysisType.INDICATORS:
             self.input_matrix, num_indicators, polarity, weights = process_indicators_and_weights( # an input matrix without alternatives & unuseful columns
@@ -173,9 +175,12 @@ class ProMCDA:
             return self.normalized_values_without_robustness
 
         elif self.robustness == RobustnessAnalysisType.INDICATORS and not self.robustness == RobustnessAnalysisType.ALL_WEIGHTS:
-            check_parameters_pdf(input_matrix_no_alternatives, self.marginal_distributions, for_testing=False)
             is_exact_pdf_mask = check_if_pdf_is_exact(self.marginal_distributions)
             is_poisson_pdf_mask = check_if_pdf_is_poisson(self.marginal_distributions)
+            is_uniform_pdf_mask = check_if_pdf_is_uniform(self.marginal_distributions)
+            check_parameters_pdf(input_matrix_no_alternatives,
+                                 is_uniform_pdf_mask, is_exact_pdf_mask, is_poisson_pdf_mask,
+                                 for_testing=False)
 
             mcda_with_robustness = MCDAWithRobustness(input_matrix_no_alternatives, self.marginal_distributions,
                                                       self.num_runs, is_exact_pdf_mask, is_poisson_pdf_mask,
