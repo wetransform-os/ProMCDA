@@ -46,7 +46,7 @@ class ProMCDA:
 
         Notes:
         - The input_matrix should contain the alternatives as rows and the criteria as columns, 
-          including row and column names.
+          including row and column names. Alternatives are set as index.
         - If weights are not provided, they are set to 0.5 for each criterion.
         - If robustness_weights is enabled, the robustness_single_weights should be disabled, and viceversa.
         - If robustness_indicators is enabled, the robustness on weights should be disabled.
@@ -108,7 +108,7 @@ class ProMCDA:
         if not isinstance(robustness, RobustnessAnalysisType):
             raise TypeError(f"'robustness' must be of type RobustnessAnalysisType, got {type(robustness).__name__}")
 
-        if self.weights is None and RobustnessAnalysisType.INDICATORS.value != "indicators":
+        if self.weights is None and self.robustness != RobustnessAnalysisType.INDICATORS:
             self.weights = [0.5] * self.input_matrix_no_alternatives.shape[1]
         elif self.weights is None and self.robustness == RobustnessAnalysisType.INDICATORS:
             self.input_matrix, num_indicators, polarity, weights = process_indicators_and_weights( # an input matrix without alternatives & unuseful columns
@@ -185,7 +185,9 @@ class ProMCDA:
             mcda_with_robustness = MCDAWithRobustness(input_matrix_no_alternatives, self.marginal_distributions,
                                                       self.num_runs, is_exact_pdf_mask, is_poisson_pdf_mask,
                                                       self.random_seed)
+
             n_random_input_matrices = mcda_with_robustness.create_n_randomly_sampled_matrices()
+
 
             if not normalization_method:
                 n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(

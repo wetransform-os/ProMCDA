@@ -110,6 +110,7 @@ class MCDAWithRobustness:
         is_poisson_pdf_mask = self.is_poisson_pdf_mask
         random_seed = self.random_seed
 
+
         if random_seed is not None:
             np.random.seed(random_seed)
         else:
@@ -135,21 +136,21 @@ class MCDAWithRobustness:
                 parameter1 = input_matrix[parameter1_col]
                 j += 1
 
-            distribution_type = marginal_pdf[i].value
+            distribution_type = marginal_pdf[i]
 
-            if distribution_type == PDFType.EXACT.value:
+            if distribution_type == PDFType.EXACT:
                 samples = self.repeat_series_to_create_df(
                     parameter1, num_runs).T
-            elif distribution_type == PDFType.NORMAL.value:
+            elif distribution_type == PDFType.NORMAL:
                 samples = np.random.normal(
                     loc=parameter1, scale=parameter2, size=(num_runs, len(parameter1)))
-            elif distribution_type == PDFType.UNIFORM.value:
+            elif distribution_type == PDFType.UNIFORM:
                 samples = np.random.uniform(
                     low=parameter1, high=parameter2, size=(num_runs, len(parameter1)))
-            elif distribution_type == PDFType.LOGNORMAL.value:
+            elif distribution_type == PDFType.LOGNORMAL:
                 samples = np.random.lognormal(
                     mean=parameter1, sigma=parameter2, size=(num_runs, len(parameter1)))
-            elif distribution_type == PDFType.POISSON.value:
+            elif distribution_type == PDFType.POISSON:
                 samples = np.random.poisson(
                     lam=parameter1, size=(num_runs, len(parameter1)))
             else:
@@ -165,5 +166,9 @@ class MCDAWithRobustness:
             sampled_matrices.append(sampled_df)
 
         list_random_matrix = self.convert_list(sampled_matrices)
+
+        for i, df in enumerate(list_random_matrix):
+            if df.isna().any().any():
+                raise ValueError(f"Il DataFrame all'indice {i} contiene valori NaN, che non sono ammessi.")
 
         return list_random_matrix

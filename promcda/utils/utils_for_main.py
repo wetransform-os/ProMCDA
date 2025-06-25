@@ -108,90 +108,6 @@ def preprocess_enums(data) -> Union[Union[dict, list[str]], Any]:
     return data
 
 
-def save_config(config: dict, folder_path: str, filename: str):
-    """
-    Save a configuration dictionary to a JSON file with a timestamped filename.
-
-    Note: a default output path is assigned, and it is used unless
-    a custom path is set in an environmental variable in the environment.
-
-    Parameters:
-    - config (dict): The configuration dictionary to be saved.
-    - folder_path (str): The path to the folder where the file will be saved.
-    - filename (str): The original filename for the JSON file.
-
-    Example:
-    ```python
-    save_config(my_config, '/path/to/folder', 'config.json')
-    ```
-
-    :param config: dict
-    :param folder_path: str
-    :param filename: str
-    :return: None
-    """
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    new_filename = f"{timestamp}_{filename}"
-
-    if not os.path.isdir(folder_path):
-        logging.error(f"The provided folder path '{folder_path}' is not a valid directory.")
-        return
-
-    full_output_path = os.path.join(output_directory_path, folder_path, new_filename)
-    try:
-        ensure_directory_exists(os.path.dirname(full_output_path))
-    except Exception as e:
-        logging.error(f"Error while saving configuration: {e}")
-        return
-
-    try:
-        with open(full_output_path, 'w') as fp:
-            processed_config = preprocess_enums(config)
-            serializable_config = _prepare_config_for_json(processed_config)
-            json.dump(serializable_config, fp)
-    except IOError as e:
-        logging.error(f"Error while dumping the configuration into a JSON file: {e}")
-
-
-def _convert_dataframe_to_serializable(df):
-    """
-    Convert a pandas DataFrame into a serializable dictionary format.
-    """
-    return {
-        'data': df.values.tolist(),  # Convert data to list of lists
-        'columns': df.columns.tolist(),  # Convert column names to list
-        'index': df.index.tolist()  # Convert index labels to list
-    }
-
-
-def _prepare_config_for_json(config):
-    """
-    Prepare the config dictionary by converting non-serializable objects into serializable ones.
-    """
-    config_copy = config.copy()  # Create a copy to avoid modifying the original config
-    if isinstance(config_copy['input_matrix'], pd.DataFrame):
-        # Convert DataFrame to serializable format
-        config_copy['input_matrix'] = _convert_dataframe_to_serializable(config_copy['input_matrix'])
-    return config_copy
-
-
-def check_path_exists(path: str):
-    """
-    Check if a directory path exists, and create it if it doesn't.
-
-    Example:
-    ```python
-    check_path_exists('/path/to/directory')
-    ```
-
-    :param path: str
-    :return: None
-    """
-    is_exist = os.path.exists(path)
-    if not is_exist:
-        os.makedirs(path)
-
-
 def rescale_minmax(scores: pd.DataFrame) -> pd.DataFrame:
     """
     Rescale the values in a DataFrame to a [0,1] range using Min-Max scaling.
@@ -502,7 +418,7 @@ def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
      :rtype: pd.DataFrame
      :return: input_matrix
     """
-    alternative_names = input_matrix.iloc[:, 0]
+    alternative_names = input_matrix.index
     if alternative_names.duplicated().any():
         raise ValueError("Error: Duplicate alternative names found in the first column.")
 
@@ -513,10 +429,7 @@ def check_input_matrix(input_matrix: pd.DataFrame) -> pd.DataFrame:
 
     input_matrix_indexed_by_alternatives = input_matrix.reset_index(drop=True)
 
-
-    input_matrix_indexed_by_alternatives = _check_and_rescale_negative_indicators(input_matrix_indexed_by_alternatives)
-
-    return input_matrix_indexed_by_alternatives
+    return _check_and_rescale_negative_indicators(input_matrix_indexed_by_alternatives)
 
 
 def _check_and_rescale_negative_indicators(input_matrix: pd.DataFrame) -> pd.DataFrame:
