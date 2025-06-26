@@ -1,6 +1,7 @@
 import copy
 import logging
 import sys
+import warnings
 from typing import List, Tuple
 
 import pandas as pd
@@ -129,11 +130,26 @@ class MCDAWithRobustness:
                 parameter2_col = input_matrix.columns[par2_position]
                 parameter1 = input_matrix[parameter1_col]
                 parameter2 = input_matrix[parameter2_col]
+
+                if (parameter1 > 1e6).any():
+                    warnings.warn(
+                        f"⚠️ Very large std/sigma for indicator {i}: max = {parameter1.max()}. This may produce unstable results.")
+
+                if (parameter2 > 1e6).any():
+                    warnings.warn(
+                        f"⚠️ Very large std/sigma for indicator {i}: max = {parameter2.max()}. This may produce unstable results.")
+
                 j += 2
 
             elif pdf_exact == 1 or pdf_poisson == 1:  # exact PDF or Poisson
                 parameter1_col = input_matrix.columns[par1_position]
                 parameter1 = input_matrix[parameter1_col]
+
+                if (parameter1 > 1e6).any():
+                    warnings.warn(
+                        f" Very large std/sigma for indicator {i}: max = {parameter1.max()}. This may produce unstable results.")
+
+
                 j += 1
 
             distribution_type = marginal_pdf[i]
@@ -169,6 +185,6 @@ class MCDAWithRobustness:
 
         for i, df in enumerate(list_random_matrix):
             if df.isna().any().any():
-                raise ValueError(f"Il DataFrame all'indice {i} contiene valori NaN, che non sono ammessi.")
+                raise ValueError(f"The DataFrame at index {i} show NaNs, this is not allowed.")
 
         return list_random_matrix

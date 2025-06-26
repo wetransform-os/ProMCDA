@@ -1,4 +1,6 @@
 import copy
+import warnings
+
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing
@@ -205,32 +207,58 @@ class Normalization(object):
 
         :return indicators_scaled_standardized: pd.DataFrame
         """
-        original_shape = self._input_matrix.shape
+        if self._input_matrix.isnull().values.any():
+            raise ValueError("Input matrix contains NaN values, cannot proceed with standardization.")
 
+        original_shape = self._input_matrix.shape
         pol = Normalization._cast_polarities(self)
+
         ind_plus = pol[0]
         ind_minus = pol[1]
         indicators_plus = pol[2]
         indicators_minus = pol[3]
 
-        indicators_scaled_stand_plus = (indicators_plus - indicators_plus.mean(axis=0)) / indicators_plus.std(
-            axis=0)  # for + polarity
-        indicators_scaled_stand_minus = (indicators_minus.mean(axis=0) - indicators_minus) / indicators_minus.std(
-            axis=0)  # for - polarity
+        all_indices = set(range(original_shape[1]))
+        assigned_indices = set(ind_plus + ind_minus)
+        unassigned_indices = all_indices - assigned_indices
+        if unassigned_indices:
+            raise ValueError(
+                f"Missing polarity assignment for indicator columns: {sorted(unassigned_indices)}. "
+                "Each indicator must have a defined polarity (positive or negative)."
+            )
 
-        # merge back scaled values for positive and negative polarities
-        indicators_scaled_standardized = pd.DataFrame(index=range(
-            original_shape[0]), columns=range(original_shape[1]))
-        for i, index_p in enumerate(ind_plus):
-            indicators_scaled_standardized.iloc[:,
-                                                index_p] = indicators_scaled_stand_plus.iloc[:, i]
-        for j, index_n in enumerate(ind_minus):
-            indicators_scaled_standardized.iloc[:,
-                                                index_n] = indicators_scaled_stand_minus.iloc[:, j]
+        indicators_scaled_standardized = pd.DataFrame(index=range(original_shape[0]), columns=range(original_shape[1]))
+
+        # Standardize positively oriented indicators
+        if ind_plus:
+            indicators_scaled_stand_plus = (indicators_plus - indicators_plus.mean(axis=0)
+                                           ) / indicators_plus.std(axis=0)
+            indicators_scaled_standardized.iloc[:, ind_plus] = indicators_scaled_stand_plus.values
+        else:
+            warnings.warn("No positively oriented indicators found — skipping positive standardization.")
+
+        # Standardize negatively oriented indicators
+        if ind_minus:
+            indicators_scaled_stand_minus = (indicators_minus.mean(axis=0) - indicators_minus) / indicators_minus.std(
+                axis=0)
+            for j, index_n in enumerate(ind_minus):
+                indicators_scaled_standardized.iloc[:, index_n] = indicators_scaled_stand_minus.iloc[:, j]
+        else:
+            warnings.warn("No negatively oriented indicators found — skipping negative standardization.")
 
         if feature_range == ('-inf', '+inf'):
             pass
         else:
+            if indicators_scaled_standardized.isnull().any().any():
+                print(indicators_scaled_standardized.columns)
+                cols_with_nan = indicators_scaled_standardized.columns[
+                    indicators_scaled_standardized.isnull().any()].tolist()
+                raise ValueError(f"Empty (NaN) columns after standardization: {cols_with_nan}")
+
+            if indicators_scaled_standardized.isnull().values.any():
+                raise ValueError(
+                    "Standardization produced NaN values. Check if all indicators were processed correctly.")
+
             indicators_scaled_standardized = indicators_scaled_standardized + abs(
                 indicators_scaled_standardized.min()) + 0.1
 

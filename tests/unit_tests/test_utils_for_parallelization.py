@@ -69,7 +69,7 @@ class TestUtilsForParallelization(unittest.TestCase):
 
 
     def test_normalize_with_minmax(self):
-        result = normalize_indicators_in_parallel(self.norm_mock, method='minmax')
+        result = normalize_indicators_in_parallel(self.norm_mock, method=NormalizationFunctions.MINMAX)
 
         self.assertIn(NormalizationNames4Sensitivity.MINMAX_01.value, result)
         self.assertIn(NormalizationNames4Sensitivity.MINMAX_WITHOUT_ZERO.value, result)
@@ -80,7 +80,7 @@ class TestUtilsForParallelization(unittest.TestCase):
         self.norm_mock.rank.assert_not_called()
 
     def test_normalize_with_target(self):
-        result = normalize_indicators_in_parallel(self.norm_mock, method='target')
+        result = normalize_indicators_in_parallel(self.norm_mock, method=NormalizationFunctions.TARGET)
 
         self.assertIn(NormalizationNames4Sensitivity.TARGET_01.value, result)
         self.assertIn(NormalizationNames4Sensitivity.TARGET_WITHOUT_ZERO.value, result)
@@ -91,7 +91,7 @@ class TestUtilsForParallelization(unittest.TestCase):
         self.norm_mock.rank.assert_not_called()
 
     def test_normalize_with_standardized(self):
-        result = normalize_indicators_in_parallel(self.norm_mock, method='standardized')
+        result = normalize_indicators_in_parallel(self.norm_mock, method=NormalizationFunctions.STANDARDIZED)
 
         self.assertIn(NormalizationNames4Sensitivity.STANDARDIZED_ANY.value, result)
         self.assertIn(NormalizationNames4Sensitivity.STANDARDIZED_WITHOUT_ZERO.value, result)
@@ -102,7 +102,7 @@ class TestUtilsForParallelization(unittest.TestCase):
         self.norm_mock.rank.assert_not_called()
 
     def test_normalize_with_rank(self):
-        result = normalize_indicators_in_parallel(self.norm_mock, method='rank')
+        result = normalize_indicators_in_parallel(self.norm_mock, method=NormalizationFunctions.RANK)
 
         self.assertIn(NormalizationNames4Sensitivity.RANK.value, result)
 

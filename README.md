@@ -252,17 +252,18 @@ simplicity, with no real-world meaning. It is useful to quickly understand the s
 The second is a playful, real-world inspired example showing how ProMCDA can support group decision-making. 
 In this case, how a group of friends might choose a weekend destination. Though informal, this example demonstrates 
 how uncertainties and preferences come into play in practical scenarios. 
-Together, these examples show both the mechanics of using the library and the applicability of its concepts.
+Together, these examples show both the mechanics of using the library and the applicability of its concepts. 
+The examples are provided as Jupyter notebooks. To run them, basic familiarity with Jupyter notebooks is required.
 
-In particular, `demo_in_notebook` contains:
-- Two examples of setups for instatiating the ProMCDA object: one with a dataset without uncertainties and one with a dataset with uncertainties.
+In particular, the `demo` directory contains:
+- Two examples of setups for instatiating the ProMCDA object (directly created in the Jupyter notebook): one with a dataset without uncertainties and one with a dataset with uncertainties.
 - A mock dataset is created in each setup representing three alternatives evaluated against two criteria.
 - A ProMCDA object is created with the data.
 - The data is normalized using the ```normalize``` method.
 - The data is aggregated using the ```aggregate``` method.
 - The ranks are evaluated using the ```evaluate_ranks``` method.
 
-In the `training_notebook`, you can find a playful example that shows how ProMCDA can support group decision-making in everyday life.
+In the `training` directory, you can find a playful example that shows how ProMCDA can support group decision-making in everyday life.
 Scenario: A group of friends is trying to decide where to go for a weekend trip. They have a few options, and they evaluate 
 these alternatives based on a few criteria like cost (lower is better); travel time (lower is better); and weather (higher is better).
 Each friend has slightly different preferences, which are reflected in the weights assigned to the criteria. 

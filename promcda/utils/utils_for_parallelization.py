@@ -100,7 +100,7 @@ def initialize_and_call_normalization(args: Tuple[pd.DataFrame, Tuple[str, ...],
     return dict_normalized_matrix
 
 
-def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
+def normalize_indicators_in_parallel(norm: object, method: Optional[NormalizationFunctions] = None) -> dict:
     """
         Normalize indicators in parallel using different normalization methods.
 
@@ -142,26 +142,28 @@ def normalize_indicators_in_parallel(norm: object, method=None) -> dict:
     # To ensure compatibility, consider passing only simple types (e.g., strings or integers)
     # derived from Enum values.
 
-    if method is None or method == 'minmax':
+    if method is None or method == NormalizationFunctions.MINMAX:
         indicators_scaled_minmax_01 = norm.minmax(feature_range=(0, 1))
         # for aggregation "geometric" and "harmonic" that accept no 0
         indicators_scaled_minmax_without_zero = norm.minmax(feature_range=(0.1, 1))
 
-    if method is None or method == 'target':
+    if method is None or method == NormalizationFunctions.TARGET:
         indicators_scaled_target_01 = norm.target(feature_range=(0, 1))
         # for aggregation "geometric" and "harmonic" that accept no 0
         indicators_scaled_target_without_zero = norm.target(feature_range=(0.1, 1))
 
-    if method is None or method == 'standardized':
+    if method is None or method == NormalizationFunctions.STANDARDIZED:
         indicators_scaled_standardized_any = norm.standardized(
             feature_range=('-inf', '+inf'))
         indicators_scaled_standardized_without_zero = norm.standardized(
             feature_range=(0.1, '+inf'))
 
-    if method is None or method == 'rank':
+    if method is None or method == NormalizationFunctions.RANK:
         indicators_scaled_rank = norm.rank()
 
-    elif method is not None and (method != 'minmax' and method != 'target' and method != 'standardized' and method != 'rank'):
+    elif method is not None and (method != NormalizationFunctions.MINMAX and method != NormalizationFunctions.TARGET
+                                 and method != NormalizationFunctions.STANDARDIZED
+                                 and method != NormalizationFunctions.RANK):
         logger.error('Error Message', stack_info=True)
         raise ValueError('The selected normalization method is not supported')
 
@@ -450,7 +452,6 @@ def parallelize_normalization(input_matrices: List[pd.DataFrame], polar: Tuple[s
     normalized_results = parallelize_normalization(input_matrices, polar, method='minmax')
 
     ```
-
     This example parallelizes the normalization process for multiple input matrices using multiprocessing.
     It creates a synchronous multiprocessing pool with the desired number of processes and maps the initialization
     and normalization calls across the input matrices. The function returns a list of dictionaries containing the

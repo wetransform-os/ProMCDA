@@ -32,12 +32,7 @@ class ProMCDA:
 
         # Optional parameters
         : weights: List of weights for each criterion (default: None, which sets all weights to 0.5).
-        :param robustness_weights: Boolean flag indicating whether to perform robustness analysis on weights
-                                   (True or False).
-        :param robustness_single_weights: Boolean flag indicating whether to perform robustness analysis on one single
-                                   weight at time (True or False).
-        :param robustness_indicators: Boolean flag indicating whether to perform robustness analysis on indicators
-                                      (True or False).
+        :param robustness: An instance of the class RobustnessType that defines the type of robustness analysis to perform.
         :param marginal_distributions: Tuple of marginal distributions, which describe the indicators
                                        (the distribution types are defined in the enums class).
         :param num_runs: Number of Monte Carlo sampling runs (default: 10000).
@@ -48,8 +43,6 @@ class ProMCDA:
         - The input_matrix should contain the alternatives as rows and the criteria as columns, 
           including row and column names. Alternatives are set as index.
         - If weights are not provided, they are set to 0.5 for each criterion.
-        - If robustness_weights is enabled, the robustness_single_weights should be disabled, and viceversa.
-        - If robustness_indicators is enabled, the robustness on weights should be disabled.
 
         # Example of instantiating the class and using its methods:
         from promcda import ProMCDA
@@ -188,12 +181,10 @@ class ProMCDA:
 
             n_random_input_matrices = mcda_with_robustness.create_n_randomly_sampled_matrices()
 
-
             if not normalization_method:
                 n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(
                     n_random_input_matrices, polarity)
             else:
-                normalization_method = normalization_method.value
                 n_normalized_input_matrices = utils_for_parallelization.parallelize_normalization(
                     n_random_input_matrices, polarity, normalization_method)
 
@@ -263,9 +254,7 @@ class ProMCDA:
 
         # Apply aggregation in the different configuration settings
         # NO UNCERTAINTY ON INDICATORS AND WEIGHTS
-        if (not self.robustness == RobustnessAnalysisType.INDICATORS
-                and not self.robustness == RobustnessAnalysisType.ALL_WEIGHTS
-                and not self.robustness == RobustnessAnalysisType.SINGLE_WEIGHTS):
+        if self.robustness == RobustnessAnalysisType.NONE:
             mcda_without_robustness = MCDAWithoutRobustness(self.polarity, input_matrix_no_alternatives)
             normalized_indicators = self.normalized_values_without_robustness
             if normalized_indicators is None:
@@ -289,9 +278,7 @@ class ProMCDA:
             return self.aggregated_scores
 
         # NO UNCERTAINTY ON INDICATORS, ALL RANDOMLY SAMPLED WEIGHTS (MCDA runs num_samples times)
-        elif (self.robustness == RobustnessAnalysisType.ALL_WEIGHTS
-              and self.robustness != RobustnessAnalysisType.SINGLE_WEIGHTS
-              and self.robustness != RobustnessAnalysisType.INDICATORS):
+        elif self.robustness == RobustnessAnalysisType.ALL_WEIGHTS:
             logger.info("Start ProMCDA with uncertainty on the weights")
             all_weights_score_means, all_weights_score_stds, \
                 all_weights_score_means_normalized, all_weights_score_stds_normalized = \
@@ -304,9 +291,7 @@ class ProMCDA:
             return "Aggregation considered uncertainty on all weights, results are not explicitly shown."
 
         # NO UNCERTAINTY ON INDICATORS, ONE SINGLE RANDOM WEIGHT AT TIME
-        elif (self.robustness == RobustnessAnalysisType.SINGLE_WEIGHTS
-              and self.robustness != RobustnessAnalysisType.ALL_WEIGHTS
-              and self.robustness != RobustnessAnalysisType.INDICATORS):
+        elif self.robustness == RobustnessAnalysisType.SINGLE_WEIGHTS:
             logger.info("Start ProMCDA with uncertainty on one weight at time")
             iterative_random_weights_statistics: dict = compute_scores_for_single_random_weight(
                 self.normalized_values_without_robustness, norm_weights, index_column_name, index_column_values,
@@ -321,9 +306,7 @@ class ProMCDA:
             return "Aggregation considered uncertainty on one weight at time, results are not explicitly shown."
 
         # UNCERTAINTY ON INDICATORS, NO UNCERTAINTY ON WEIGHTS
-        elif (self.robustness == RobustnessAnalysisType.INDICATORS
-              and self.robustness != RobustnessAnalysisType.ALL_WEIGHTS
-              and self.robustness != RobustnessAnalysisType.SINGLE_WEIGHTS):
+        elif self.robustness == RobustnessAnalysisType.INDICATORS:
             all_indicators_scores_normalized = []
             logger.info("Start ProMCDA with uncertainty on the indicators")
             n_normalized_input_matrices = self.normalized_values_with_robustness
