@@ -375,3 +375,70 @@ def plot_bar_with_std(mean_df, std_df, alternatives):
     )
 
     fig.show()
+
+def plot_grouped_bar_with_std_selected(means, std, alternatives, selected_pairs):
+
+    def simplify_label(label):
+        label = label.replace('_any', '')
+        label = label.replace('_without_zero', '')
+        label = label.replace('_01', '')
+        return label
+
+    colors = px.colors.qualitative.Set2
+    fig = go.Figure()
+
+    for i, pair in enumerate(selected_pairs):
+        if pair not in means.columns:
+            raise ValueError(f"Coppia '{pair}' non trovata in means/std.")
+        
+        simplified_name = simplify_label(pair)
+
+        fig.add_trace(
+            go.Bar(
+                name=simplified_name,
+                x=alternatives,
+                y=means[pair],
+                error_y=dict(
+                    type='data',
+                    array=std[pair],
+                    visible=True,
+                    thickness=1.5,
+                    width=6,
+                    color='black'
+                ),
+                marker=dict(
+                    color=colors[i % len(colors)],
+                    line=dict(color='black', width=0.8)
+                )
+            )
+        )
+
+    fig.update_layout(
+        title="Sensitivity analysis across normalization + aggregation strategies",
+        barmode='group',
+        xaxis_title='Alternatives',
+        yaxis_title='Mean Rank ± Std Dev',
+        legend_title='Method (Agg-Norm)',
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        margin=dict(t=100, b=120, l=80, r=40),
+        font=dict(size=12),
+        height=500,
+        width=950,
+    )
+
+    fig.update_xaxes(
+        tickangle=45,
+        linecolor='black',
+        mirror=True
+    )
+
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor='lightgrey',
+        zeroline=False,
+        linecolor='black',
+        mirror=True
+    )
+
+    fig.show()

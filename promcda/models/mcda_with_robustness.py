@@ -131,24 +131,11 @@ class MCDAWithRobustness:
                 parameter1 = input_matrix[parameter1_col]
                 parameter2 = input_matrix[parameter2_col]
 
-                if (parameter1 > 1e6).any():
-                    warnings.warn(
-                        f"⚠️ Very large std/sigma for indicator {i}: max = {parameter1.max()}. This may produce unstable results.")
-
-                if (parameter2 > 1e6).any():
-                    warnings.warn(
-                        f"⚠️ Very large std/sigma for indicator {i}: max = {parameter2.max()}. This may produce unstable results.")
-
                 j += 2
 
             elif pdf_exact == 1 or pdf_poisson == 1:  # exact PDF or Poisson
                 parameter1_col = input_matrix.columns[par1_position]
                 parameter1 = input_matrix[parameter1_col]
-
-                if (parameter1 > 1e6).any():
-                    warnings.warn(
-                        f" Very large std/sigma for indicator {i}: max = {parameter1.max()}. This may produce unstable results.")
-
 
                 j += 1
 

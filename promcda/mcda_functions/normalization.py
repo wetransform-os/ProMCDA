@@ -188,6 +188,10 @@ class Normalization(object):
         Normalizes the indicators using the scaling method standardized (i.e. Z-score).
         The returned indicators_scaled_standardized is of same shape as the input data.
 
+        Note:
+        If std == 0 for a column (i.e. no variation), all values are set to 0.0
+        to avoid division by zero and preserve neutrality in MCDA.
+
         Example:
         ```python
         input_data = pd.DataFrame([[10, 20, 30], [40, 50, 60], [70, 80, 90]])
@@ -231,17 +235,39 @@ class Normalization(object):
 
         # Standardize positively oriented indicators
         if ind_plus:
-            indicators_scaled_stand_plus = (indicators_plus - indicators_plus.mean(axis=0)
-                                           ) / indicators_plus.std(axis=0)
+            mean_plus = indicators_plus.mean(axis=0)
+            std_plus = indicators_plus.std(axis=0)
+
+            zero_std_cols_plus = std_plus[std_plus == 0].index
+            if not zero_std_cols_plus.empty:
+                print(f"[WARNING] Indicators with zero std deviation in columns: {list(zero_std_cols_plus)}")
+                std_plus.loc[zero_std_cols_plus] = 1.0  # elude 0 division
+
+            indicators_scaled_stand_plus = (indicators_plus - mean_plus) / std_plus
+            # std=0 columns set to 0 (i.e., equal to the mean)
+            for col in zero_std_cols_plus:
+                col_idx = indicators_plus.columns.get_loc(col)
+                indicators_scaled_stand_plus.iloc[:, col_idx] = 0.0
+
             indicators_scaled_standardized.iloc[:, ind_plus] = indicators_scaled_stand_plus.values
         else:
             warnings.warn("No positively oriented indicators found — skipping positive standardization.")
 
         # Standardize negatively oriented indicators
         if ind_minus:
-            indicators_scaled_stand_minus = (indicators_minus.mean(axis=0) - indicators_minus) / indicators_minus.std(
-                axis=0)
+            mean_minus = indicators_minus.mean(axis=0)
+            std_minus = indicators_minus.std(axis=0)
+
+            zero_std_cols_minus = std_minus[std_minus == 0].index
+            if not zero_std_cols_minus.empty:
+                print(f"[WARNING] Indicators with zero std deviation in columns: {list(zero_std_cols_minus)}")
+                std_minus.loc[zero_std_cols_minus] = 1.0
+
+            indicators_scaled_stand_minus = (mean_minus - indicators_minus) / std_minus
             for j, index_n in enumerate(ind_minus):
+                if j in zero_std_cols_minus:
+                    col_idx = indicators_minus.columns.get_loc(col)
+                    indicators_scaled_stand_minus.iloc[:, col_idx] = 0.0 #std=0 -> z=0
                 indicators_scaled_standardized.iloc[:, index_n] = indicators_scaled_stand_minus.iloc[:, j]
         else:
             warnings.warn("No negatively oriented indicators found — skipping negative standardization.")
@@ -250,7 +276,6 @@ class Normalization(object):
             pass
         else:
             if indicators_scaled_standardized.isnull().any().any():
-                print(indicators_scaled_standardized.columns)
                 cols_with_nan = indicators_scaled_standardized.columns[
                     indicators_scaled_standardized.isnull().any()].tolist()
                 raise ValueError(f"Empty (NaN) columns after standardization: {cols_with_nan}")
