@@ -2,34 +2,11 @@ import unittest
 from unittest import TestCase
 from unittest.mock import patch
 
-from mcda.utils.utils_for_main import *
-from mcda.utils.utils_for_main import _check_and_rescale_negative_indicators
+from promcda.utils.utils_for_main import *
+from promcda.utils.utils_for_main import _check_and_rescale_negative_indicators
 
 
 class TestUtils(unittest.TestCase):
-
-    @staticmethod
-    def get_test_config():
-        return {
-            "input_matrix_path": "/path/to/input_matrix.csv",
-            "polarity_for_each_indicator": ["-", "-", "+", "+"],
-            "sensitivity": {
-                "sensitivity_on": "yes",
-                "normalization": "minmax",
-                "aggregation": "weighted_sum"},
-            "robustness": {
-                "robustness_on": "yes",
-                "on_single_weights": "no",
-                "on_all_weights": "no",
-                "given_weights": [0.5, 0.5, 0.5, 0.5],
-                "on_indicators": "yes"},
-            "monte_carlo_sampling": {
-                "monte_carlo_runs": 10000,
-                "num_cores": 1,
-                "random_seed": 42,
-                "marginal_distribution_for_each_indicator": ['exact', 'uniform', 'normal', 'poisson']},
-            "output_directory_path": "/path/to/output"
-        }
 
     @staticmethod
     def get_input_matrix_1() -> pd.DataFrame:
@@ -65,7 +42,7 @@ class TestUtils(unittest.TestCase):
 
     @staticmethod
     def get_list_pdf() -> list:
-        list_pdf = ['exact', 'lnorm', 'norm', 'poisson', 'exact']
+        list_pdf = [PDFType.EXACT, PDFType.LOGNORMAL, PDFType.NORMAL, PDFType.POISSON, PDFType.UNIFORM]
         return list_pdf
 
     @staticmethod
@@ -142,12 +119,28 @@ class TestUtils(unittest.TestCase):
         input_matrix_1 = TestUtils.get_input_matrix_1()
         input_matrix_2 = TestUtils.get_input_matrix_2()
         input_matrix_3 = TestUtils.get_input_matrix_3()
-        config = TestUtils.get_test_config()
+        marginal_distributions = (PDFType.EXACT, PDFType.UNIFORM, PDFType.NORMAL, PDFType.POISSON)
 
         # When
-        are_parameters_correct_1 = check_parameters_pdf(input_matrix_1, config, True)
-        are_parameters_correct_2 = check_parameters_pdf(input_matrix_2, config, True)
-        are_parameters_correct_3 = check_parameters_pdf(input_matrix_3, config, True)
+        is_exact_pdf_mask = check_if_pdf_is_exact(marginal_distributions)
+        is_poisson_pdf_mask = check_if_pdf_is_poisson(marginal_distributions)
+        is_uniform_pdf_mask = check_if_pdf_is_uniform(marginal_distributions)
+
+        are_parameters_correct_1 = check_parameters_pdf(input_matrix_1,
+                                                        is_uniform_pdf_mask,
+                                                        is_exact_pdf_mask,
+                                                        is_poisson_pdf_mask,
+                                                        True)
+        are_parameters_correct_2 = check_parameters_pdf(input_matrix_2,
+                                                        is_uniform_pdf_mask,
+                                                        is_exact_pdf_mask,
+                                                        is_poisson_pdf_mask,
+                                                        True)
+        are_parameters_correct_3 = check_parameters_pdf(input_matrix_3,
+                                                        is_uniform_pdf_mask,
+                                                        is_exact_pdf_mask,
+                                                        is_poisson_pdf_mask,
+                                                        True)
 
         # Then
         isinstance(are_parameters_correct_1, list)
@@ -176,13 +169,42 @@ class TestUtils(unittest.TestCase):
         isinstance(non_rescaled_matrix, pd.DataFrame)
         assert non_rescaled_matrix.equals(input_matrix_positive)
 
+
+    def test_check_if_pdf_is_uniform(self):
+        # Given
+        list_pdf = TestUtils.get_list_pdf()
+
+        # When
+        output_mask = check_if_pdf_is_uniform(list_pdf)
+        expected_mask = [0, 0, 0, 0, 1]
+
+        # Then
+        isinstance(output_mask, list)
+        assert (len(output_mask) == len(expected_mask))
+        self.assertListEqual(output_mask, expected_mask)
+
+
+    def test_check_if_pdf_is_poisson(self):
+        # Given
+        list_pdf = TestUtils.get_list_pdf()
+
+        # When
+        output_mask = check_if_pdf_is_poisson(list_pdf)
+        expected_mask = [0, 0, 0, 1, 0]
+
+        # Then
+        isinstance(output_mask, list)
+        assert (len(output_mask) == len(expected_mask))
+        self.assertListEqual(output_mask, expected_mask)
+
+
     def test_check_if_pdf_is_exact(self):
         # Given
         list_pdf = TestUtils.get_list_pdf()
 
         # When
         output_mask = check_if_pdf_is_exact(list_pdf)
-        expected_mask = [1, 0, 0, 0, 1]
+        expected_mask = [1, 0, 0, 0, 0]
 
         # Then
         isinstance(output_mask, list)

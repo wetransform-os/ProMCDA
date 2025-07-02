@@ -1,5 +1,8 @@
 import os
-import setuptools
+import sys
+from setuptools import setup, find_packages
+
+sys.path.insert(0, os.path.dirname(__file__))
 from setup_utils import get_requirements
 
 current_dirpath = os.path.dirname(os.path.abspath(__file__))
@@ -18,7 +21,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
 
-setuptools.setup(
+setup(
     name="ProMCDA",
     version="1.0.2",
     license='EPL v 2.0',
@@ -30,9 +33,10 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url='https://github.com/wetransform-os/ProMCDA',
     classifiers=classifiers,
-    platform=['Linux', 'MacOS', 'Windows'],
+    platforms=['Linux', 'MacOS', 'Windows'],
     python_requires='>=3.9',
-    packages=['mcda'],
+    packages=find_packages(),
+    include_package_data=True,
     test_suite="tests",
     install_requires=get_requirements(req_filepath)
 )
