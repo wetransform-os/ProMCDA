@@ -289,6 +289,29 @@ class TestMCDA_without_robustness(unittest.TestCase):
                 msg=f"No column ending with '{suffix}' found in {list(result.columns)}"
             )
 
+    def test_aggregate_with_indicator_names_containing_norm_keywords(self):
+        """Indicator names that include normalization keywords (e.g. 'minmax_score')
+        must not confuse column filtering during aggregation."""
+        input_matrix = pd.DataFrame(
+            {
+                'alternative': ['A', 'B', 'C'],
+                'minmax_score': [1.0, 2.0, 3.0],
+                'target_value': [4.0, 5.0, 6.0],
+            }
+        ).set_index('alternative')
+        polarity = ('+', '+')
+        weights = [0.5, 0.5]
+
+        promcda = ProMCDA(input_matrix, polarity, weights)
+        promcda.normalize(NormalizationFunctions.MINMAX)
+        result = promcda.aggregate(AggregationFunctions.WEIGHTED_SUM)
+
+        assert isinstance(result, pd.DataFrame)
+        self.assertIn('ws-minmax_01', result.columns.tolist())
+        self.assertEqual(result.shape[0], input_matrix.shape[0])
+        # Ensure exactly the expected columns and no duplicates
+        self.assertEqual(len(result.columns), 1)
+
     def test_normalize_indicators_with_multiple_consecutive_underscores(self):
         """Indicator names with multiple underscores must produce correct column suffixes."""
         input_matrix = pd.DataFrame(
