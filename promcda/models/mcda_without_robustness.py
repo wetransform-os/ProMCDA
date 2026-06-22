@@ -14,6 +14,27 @@ from promcda.mcda_functions.aggregation import Aggregation
 
 log = logging.getLogger(__name__)
 
+# Maps each known normalized-column suffix to its base normalization method name.
+# Column names have the form '{indicator_name}_{suffix}'. Splitting on '_' and
+# taking a positional index breaks when indicator names themselves contain '_'.
+_NORM_SUFFIX_TO_METHOD = {
+    f"{NormalizationFunctions.MINMAX.value}_01": NormalizationFunctions.MINMAX.value,
+    f"{NormalizationFunctions.MINMAX.value}_without_zero": NormalizationFunctions.MINMAX.value,
+    f"{NormalizationFunctions.TARGET.value}_01": NormalizationFunctions.TARGET.value,
+    f"{NormalizationFunctions.TARGET.value}_without_zero": NormalizationFunctions.TARGET.value,
+    f"{NormalizationFunctions.STANDARDIZED.value}_any": NormalizationFunctions.STANDARDIZED.value,
+    f"{NormalizationFunctions.STANDARDIZED.value}_without_zero": NormalizationFunctions.STANDARDIZED.value,
+    NormalizationFunctions.RANK.value: NormalizationFunctions.RANK.value,
+}
+
+
+def _extract_norm_method(col_name: str):
+    """Return the normalization method for a normalized column name, or None if unrecognised."""
+    for suffix, method in _NORM_SUFFIX_TO_METHOD.items():
+        if col_name.endswith(f"_{suffix}"):
+            return method
+    return None
+
 formatter = '%(levelname)s: %(asctime)s - %(name)s - %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 logger = logging.getLogger("ProMCDA aggregation")
@@ -147,7 +168,11 @@ class MCDAWithoutRobustness:
                     raise ValueError(f"Column name '{column_name}' not found in OutputColumnNames4Sensitivity")
                 score_list.append(aggregated_scores)
 
-        for norm_method in self.normalized_indicators.columns.str.split("_", n=0).str[1].unique():
+        norm_methods = list(dict.fromkeys(
+            m for col in self.normalized_indicators.columns
+            if (m := _extract_norm_method(col)) is not None
+        ))
+        for norm_method in norm_methods:
             score_list = []
 
             norm_method_columns = self.normalized_indicators.filter(regex=rf"{norm_method}")
