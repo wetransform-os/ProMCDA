@@ -226,5 +226,118 @@ class TestMCDA_without_robustness(unittest.TestCase):
         assert res[0].to_numpy().all() == TestMCDA_without_robustness.get_input_matrix().to_numpy().all()
         assert res[1].to_numpy().all() == df_std.to_numpy().all()
 
+    def test_aggregate_indicators_with_underscores_in_column_names(self):
+        """Aggregation must work correctly when indicator names contain underscores."""
+        input_matrix = pd.DataFrame(
+            {
+                'alternative': ['A', 'B', 'C'],
+                'my_indicator_one': [1.0, 2.0, 3.0],
+                'my_indicator_two': [4.0, 5.0, 6.0],
+            }
+        ).set_index('alternative')
+        polarity = ('+', '+')
+        weights = [0.5, 0.5]
+
+        promcda = ProMCDA(input_matrix, polarity, weights)
+        promcda.normalize(NormalizationFunctions.MINMAX)
+        result = promcda.aggregate(AggregationFunctions.WEIGHTED_SUM)
+
+        assert isinstance(result, pd.DataFrame)
+        self.assertIn('ws-minmax_01', result.columns.tolist())
+        self.assertEqual(result.shape[0], input_matrix.shape[0])
+
+    def test_aggregate_all_methods_with_underscores_in_column_names(self):
+        """Full sensitivity run (all norm + agg methods) must succeed with underscored names."""
+        input_matrix = pd.DataFrame(
+            {
+                'alternative': ['A', 'B', 'C'],
+                'ind_a_b': [1.0, 2.0, 3.0],
+                'ind_c_d': [4.0, 5.0, 6.0],
+            }
+        ).set_index('alternative')
+        polarity = ('+', '+')
+        weights = [0.5, 0.5]
+
+        promcda = ProMCDA(input_matrix, polarity, weights)
+        promcda.normalize()
+        result = promcda.aggregate()
+
+        expected_columns = [e.value for e in OutputColumnNames4Sensitivity]
+        assert isinstance(result, pd.DataFrame)
+        self.assertListEqual(result.columns.tolist(), expected_columns)
+        self.assertEqual(result.shape[0], input_matrix.shape[0])
+
+    def test_normalize_indicators_with_underscores_in_column_names(self):
+        """Indicator names containing underscores must not break column suffix parsing."""
+        input_matrix = pd.DataFrame(
+            {
+                'alternative': ['A', 'B', 'C'],
+                'my_indicator_one': [1.0, 2.0, 3.0],
+                'my_indicator_two': [4.0, 5.0, 6.0],
+            }
+        ).set_index('alternative')
+        polarity = ('+', '+')
+
+        promcda = ProMCDA(input_matrix, polarity)
+        result = promcda.normalize(NormalizationFunctions.MINMAX)
+
+        assert isinstance(result, pd.DataFrame)
+        expected_suffixes = ['minmax_01', 'minmax_without_zero']
+        for suffix in expected_suffixes:
+            self.assertTrue(
+                any(col.endswith(suffix) for col in result.columns),
+                msg=f"No column ending with '{suffix}' found in {list(result.columns)}"
+            )
+
+    def test_aggregate_with_indicator_names_containing_norm_keywords(self):
+        """Indicator names that include normalization keywords (e.g. 'minmax_score')
+        must not confuse column filtering during aggregation."""
+        input_matrix = pd.DataFrame(
+            {
+                'alternative': ['A', 'B', 'C'],
+                'minmax_score': [1.0, 2.0, 3.0],
+                'target_value': [4.0, 5.0, 6.0],
+            }
+        ).set_index('alternative')
+        polarity = ('+', '+')
+        weights = [0.5, 0.5]
+
+        promcda = ProMCDA(input_matrix, polarity, weights)
+        promcda.normalize(NormalizationFunctions.MINMAX)
+        result = promcda.aggregate(AggregationFunctions.WEIGHTED_SUM)
+
+        assert isinstance(result, pd.DataFrame)
+        self.assertIn('ws-minmax_01', result.columns.tolist())
+        self.assertEqual(result.shape[0], input_matrix.shape[0])
+        # Ensure exactly the expected columns and no duplicates
+        self.assertEqual(len(result.columns), 1)
+
+    def test_normalize_indicators_with_multiple_consecutive_underscores(self):
+        """Indicator names with multiple underscores must produce correct column suffixes."""
+        input_matrix = pd.DataFrame(
+            {
+                'alternative': ['A', 'B', 'C'],
+                'ind_a_b_c': [1.0, 2.0, 3.0],
+                'ind_x_y_z': [4.0, 5.0, 6.0],
+            }
+        ).set_index('alternative')
+        polarity = ('+', '+')
+
+        promcda = ProMCDA(input_matrix, polarity)
+        result = promcda.normalize()
+
+        expected_suffixes = [
+            'minmax_01', 'minmax_without_zero',
+            'target_01', 'target_without_zero',
+            'standardized_any', 'standardized_without_zero',
+            'rank',
+        ]
+        for suffix in expected_suffixes:
+            self.assertTrue(
+                any(col.endswith(suffix) for col in result.columns),
+                msg=f"No column ending with '{suffix}' found — underscore in indicator name broke suffix detection"
+            )
+
+
 if __name__ == '__main__':
     unittest.main()
