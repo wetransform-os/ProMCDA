@@ -153,7 +153,7 @@ class MCDAWithoutRobustness:
             norm_method_columns = self.normalized_indicators.filter(regex=rf"{norm_method}")
 
             without_zero_columns = norm_method_columns.filter(regex="without_zero$")
-            with_zero_columns = norm_method_columns[norm_method_columns.columns.difference(without_zero_columns.columns)]
+            with_zero_columns = norm_method_columns.drop(columns = without_zero_columns.columns)
             rank_columns = norm_method_columns.filter(regex="rank$")
             without_zero_columns_rank = pd.concat([without_zero_columns, rank_columns], axis=1)
 
